@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  BookOpen, 
-  CheckCircle2, 
-  Lock, 
-  History, 
-  Home as HomeIcon, 
-  BarChart2, 
-  User,
-  ArrowRight,
-  Flame,
-  ChevronRight,
-  PlayCircle
+  BookOpen, CheckCircle2, Lock, History, Home as HomeIcon, 
+  BarChart2, User, ArrowRight, Flame, ChevronRight, PlayCircle, RefreshCw
 } from 'lucide-react';
+import { api } from '../api';
 
 interface ModuleCardProps {
   id: number;
@@ -45,7 +37,6 @@ function ModuleCard({
         'bg-bg-card border-border'
       } ${isProminent ? 'scale-[1.02]' : ''}`}
     >
-      {/* Top Row */}
       <div className="flex justify-between items-center mb-3">
         <span className="text-[10px] font-mono text-text-muted uppercase tracking-widest">{number}</span>
         <div className={`px-2 py-0.5 rounded flex items-center space-x-1 ${
@@ -55,26 +46,21 @@ function ModuleCard({
         }`}>
           {status === 'COMPLETED' && <CheckCircle2 size={10} />}
           {isLocked && <Lock size={10} />}
-          <span className="text-[9px] font-bold uppercase tracking-wider">
-            {status.replace('_', ' ')}
-          </span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">{status.replace('_', ' ')}</span>
         </div>
       </div>
 
-      {/* Content */}
       <h3 className={`text-xl font-heading font-bold mb-1 ${isLocked ? 'text-text-muted' : 'text-text-primary'}`}>
         {title}
       </h3>
-      <p className="text-xs text-text-muted mb-4 leading-relaxed">
-        {description}
-      </p>
+      <p className="text-xs text-text-muted mb-4 leading-relaxed">{description}</p>
+      
+      {caseStudy && (
+        <div className="bg-bg-secondary/50 rounded-lg px-3 py-2 mb-4 inline-block">
+          <span className="text-[10px] font-mono text-text-primary">{caseStudy}</span>
+        </div>
+      )}
 
-      {/* Case Study Tag */}
-      <div className="bg-bg-secondary/50 rounded-lg px-3 py-2 mb-4 inline-block">
-        <span className="text-[10px] font-mono text-text-primary">{caseStudy}</span>
-      </div>
-
-      {/* Progress Section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <div className="flex-1 h-1.5 bg-bg-secondary rounded-full mr-4 overflow-hidden">
@@ -82,29 +68,24 @@ function ModuleCard({
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 1, delay: 0.5 }}
-              className={`h-full rounded-full ${
-                status === 'COMPLETED' ? 'bg-accent-green' : 'bg-accent-gold'
-              }`}
+              className={`h-full rounded-full ${status === 'COMPLETED' ? 'bg-accent-green' : 'bg-accent-gold'}`}
             />
           </div>
           <span className="text-[10px] font-mono text-text-muted whitespace-nowrap">{lessons}</span>
         </div>
         
         <div className="flex justify-between items-center">
-          <span className={`text-[10px] font-bold ${
-            status === 'COMPLETED' ? 'text-accent-green' : 'text-text-muted'
-          }`}>
+          <span className={`text-[10px] font-bold ${status === 'COMPLETED' ? 'text-accent-green' : 'text-text-muted'}`}>
             {status === 'COMPLETED' ? 'EARNED' : 'REWARD'}: {xp}
           </span>
           {isLocked && (
             <span className="text-[9px] text-accent-red font-bold uppercase tracking-tighter">
-              {status === 'LOCKED_TIER' ? 'Reach Tier 3 to unlock' : 'Complete Module 3 to unlock'}
+              {status === 'LOCKED_TIER' ? 'Reach Higher Tier to unlock' : 'Complete Module to unlock'}
             </span>
           )}
         </div>
       </div>
 
-      {/* CTA Button for In Progress */}
       {status === 'IN_PROGRESS' && (
         <button className="w-full mt-5 bg-accent-gold text-bg-primary py-3 rounded-xl font-bold text-sm flex items-center justify-center space-x-2">
           <span>Continue Learning</span>
@@ -112,7 +93,6 @@ function ModuleCard({
         </button>
       )}
 
-      {/* CTA Button for Not Started */}
       {status === 'NOT_STARTED' && (
         <button className="w-full mt-5 border border-accent-gold text-accent-gold py-3 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 bg-transparent">
           <span>Start Module</span>
@@ -120,10 +100,7 @@ function ModuleCard({
         </button>
       )}
 
-      {/* Locked Overlay */}
-      {isLocked && (
-        <div className="absolute inset-0 bg-bg-primary/20 pointer-events-none" />
-      )}
+      {isLocked && <div className="absolute inset-0 bg-bg-primary/20 pointer-events-none" />}
     </motion.div>
   );
 }
@@ -131,83 +108,72 @@ function ModuleCard({
 export default function Learn() {
   const navigate = useNavigate();
   const [toast, setToast] = useState<string | null>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const showToast = (message: string) => {
     setToast(message);
     setTimeout(() => setToast(null), 2000);
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [modulesRes, userRes] = await Promise.all([
+          api.getLearnModules(),
+          api.getUser()
+        ]);
+        setData(modulesRes);
+        setUser(userRes);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleModuleTap = (id: number, status: string) => {
     if (status.startsWith('LOCKED')) {
-      showToast("🔒 Complete previous module first");
+      showToast("🔒 Locked. Tier requirements not met.");
       return;
     }
     navigate(`/learn/${id}`);
   };
 
-  const modules: ModuleCardProps[] = [
-    {
-      id: 1,
-      number: 'MODULE 01',
-      status: 'COMPLETED',
-      title: 'What is a Stock?',
-      description: 'Ownership, shares, and why companies list publicly',
-      caseStudy: '📊 Case Study: Reliance 1977 IPO',
-      progress: 100,
-      lessons: '5/5 lessons',
-      xp: '+50 XP',
-      onTap: handleModuleTap
-    },
-    {
-      id: 2,
-      number: 'MODULE 02',
-      status: 'IN_PROGRESS',
-      title: 'Reading the Market',
-      description: 'Candlesticks, charts, volume, and what they reveal',
-      caseStudy: '📊 Case Study: NIFTY COVID Crash 2020',
-      progress: 60,
-      lessons: '3/5 lessons',
-      xp: '+75 XP',
-      isProminent: true,
-      onTap: handleModuleTap
-    },
-    {
-      id: 3,
-      number: 'MODULE 03',
-      status: 'NOT_STARTED',
-      title: 'Understanding Risk',
-      description: 'Concentration, regulatory, market risk — with real stories',
-      caseStudy: '📊 Case Study: Yes Bank Collapse 2020',
-      progress: 0,
-      lessons: '0/5 lessons',
-      xp: '+100 XP',
-      onTap: handleModuleTap
-    },
-    {
-      id: 4,
-      number: 'MODULE 04',
-      status: 'LOCKED',
-      title: 'Portfolio & Diversification',
-      description: 'Why spreading risk is armour, not just advice',
-      caseStudy: '📊 Case Study: 2008 Financial Crisis',
-      progress: 0,
-      lessons: '0/5 lessons',
-      xp: '+125 XP',
-      onTap: handleModuleTap
-    },
-    {
-      id: 5,
-      number: 'MODULE 05',
-      status: 'LOCKED_TIER',
-      title: 'Advanced Trading & F&O Basics',
-      description: 'Stop losses, options, futures — the full toolkit',
-      caseStudy: '📊 Case Study: GameStop Short Squeeze',
-      progress: 0,
-      lessons: '0/5 lessons',
-      xp: '+150 XP',
-      onTap: handleModuleTap
+  if (loading || !user) {
+    return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Modules...</div>;
+  }
+
+  // Map Backend Modules to UI Props
+  const modules: ModuleCardProps[] = data.map((mod: any, index: number) => {
+    // Derive Mock states for demo
+    let status: 'COMPLETED' | 'IN_PROGRESS' | 'NOT_STARTED' | 'LOCKED' | 'LOCKED_TIER' = 'NOT_STARTED';
+    let progress = 0;
+    
+    if (mod.id === 1) { status = 'COMPLETED'; progress = 100; }
+    else if (mod.id === 2) { status = 'IN_PROGRESS'; progress = 60; }
+    
+    if (user.currentTier < mod.requiredTier) {
+       status = 'LOCKED_TIER';
     }
-  ];
+
+    return {
+      id: mod.id,
+      number: `MODULE 0${mod.id}`,
+      status,
+      title: mod.title,
+      description: mod.description,
+      caseStudy: mod.caseStudy,
+      progress,
+      lessons: `${mod.id === 1 ? mod.totalLessons : mod.id === 2 ? 3 : 0}/${mod.totalLessons} lessons`,
+      xp: `+${mod.xpReward} XP`,
+      isProminent: status === 'IN_PROGRESS',
+      onTap: handleModuleTap
+    };
+  });
 
   const quickConcepts = [
     { title: '🐂 Bull vs Bear Market', time: '2 min' },
@@ -219,7 +185,6 @@ export default function Learn() {
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col">
-      {/* TOP BAR */}
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border h-[60px] flex items-center justify-between px-4">
         <h1 className="text-xl font-heading font-bold text-text-primary">📚 Learning</h1>
         <div className="flex items-center space-x-1 text-accent-gold">
@@ -228,30 +193,27 @@ export default function Learn() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <main className="flex-1 pt-[80px] pb-[90px] px-4 overflow-y-auto no-scrollbar">
-        {/* SECTION 1: XP Progress Banner */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-5 rounded-2xl bg-gradient-to-br from-accent-gold/20 to-transparent border border-accent-gold/30 mb-8"
         >
           <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-mono font-bold text-accent-gold uppercase tracking-widest">TIER 2 — Rising Investor 🚀</span>
-            <span className="text-[10px] font-mono text-text-primary">340 / 500 XP</span>
+            <span className="text-[10px] font-mono font-bold text-accent-gold uppercase tracking-widest">TIER {user.currentTier} — Rising Investor 🚀</span>
+            <span className="text-[10px] font-mono text-text-primary">{user.xpPoints} XP</span>
           </div>
           <div className="h-2 bg-bg-secondary rounded-full overflow-hidden mb-2">
             <motion.div 
               initial={{ width: 0 }}
-              animate={{ width: '68%' }}
+              animate={{ width: `${Math.min(100, (user.xpPoints / 500) * 100)}%` }}
               transition={{ duration: 1.5, ease: "easeOut" }}
               className="h-full bg-accent-gold shadow-[0_0_10px_#F0A500]"
             />
           </div>
-          <p className="text-[11px] text-text-muted">160 XP to Tier 3 — Full Sandbox</p>
+          <p className="text-[11px] text-text-muted">Keep learning to increase your Tier level</p>
         </motion.div>
 
-        {/* SECTION 2: Module Cards */}
         <div className="space-y-2">
           {modules.map((module, index) => (
             <motion.div
@@ -265,7 +227,6 @@ export default function Learn() {
           ))}
         </div>
 
-        {/* SECTION 3: Quick Concepts */}
         <div className="mt-10 mb-4">
           <div className="mb-4">
             <h2 className="text-lg font-heading font-bold text-text-primary">Quick Concepts</h2>
@@ -294,7 +255,6 @@ export default function Learn() {
         </div>
       </main>
 
-      {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {toast && (
           <motion.div
