@@ -2,23 +2,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
 import { 
-  ArrowLeft, 
-  Star, 
-  Plus, 
-  Minus, 
-  ChevronDown, 
-  RefreshCw,
-  Check,
-  TrendingUp
+  ArrowLeft, Star, Plus, Minus, ChevronDown, RefreshCw, Check
 } from 'lucide-react';
-
-interface Candle {
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
+import { api } from '../api';
 
 const TIMEFRAMES = ['1D', '1W', '1M', '3M', '1Y'];
 
@@ -26,7 +12,8 @@ export default function StockDetail() {
   const { symbol = 'RELIANCE' } = useParams();
   const navigate = useNavigate();
   
-  // State
+  const [stockDetail, setStockDetail] = useState<any>(null);
+  const [candles, setCandles] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('1D');
   const [isWatchlisted, setIsWatchlisted] = useState(true);
   const [quantity, setQuantity] = useState(5);
@@ -35,44 +22,39 @@ export default function StockDetail() {
   const [orderType, setOrderType] = useState('Market');
   const [productType, setProductType] = useState<'CNC' | 'MIS'>('CNC');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
-  const [tooltipData, setTooltipData] = useState<Candle | null>(null);
+  const [aiInsight, setAiInsight] = useState<any>(null);
+  const [tooltipData, setTooltipData] = useState<any>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [loading, setLoading] = useState(true);
+  const [cash, setCash] = useState(0);
 
-  // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Price Animation
-  const priceValue = useMotionValue(2813.60);
-  const roundedPrice = useTransform(priceValue, (latest) => 
-    latest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  );
-
-  useEffect(() => {
-    const controls = animate(priceValue, 2847.30, { duration: 1.5, ease: "easeOut" });
-    return () => controls.stop();
-  }, []);
-
-  // Mock Data Generation
-  const generateCandles = (count: number, startPrice: number): Candle[] => {
-    let current = startPrice;
-    return Array.from({ length: count }, () => {
-      const open = current;
-      const close = current + (Math.random() - 0.45) * 40;
-      const high = Math.max(open, close) + Math.random() * 10;
-      const low = Math.min(open, close) - Math.random() * 10;
-      const volume = Math.random() * 5000000;
-      current = close;
-      return { open, high, low, close, volume };
-    });
+  const loadData = async () => {
+    try {
+      const [detailRes, historyRes, dashRes] = await Promise.all([
+        api.getStockDetail(symbol),
+        api.getStockHistory(symbol, activeTab.toLowerCase()),
+        api.getDashboard()
+      ]);
+      setStockDetail(detailRes);
+      setCandles(historyRes.data || []);
+      setCash(dashRes.portfolioSummary.virtualCash);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const candles = useMemo(() => generateCandles(25, 2800), [activeTab]);
+  useEffect(() => {
+    setLoading(true);
+    loadData();
+  }, [symbol, activeTab]);
 
-  // Chart Drawing
   const drawChart = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || Object.keys(candles).length === 0) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -84,27 +66,23 @@ export default function StockDetail() {
 
     const width = rect.width;
     const height = rect.height;
-    const padding = 40;
-    const chartHeight = height - padding;
+    const chartHeight = height - 40;
     const chartWidth = width - 60;
 
-    // Clear
     ctx.fillStyle = '#0A0A0F';
     ctx.fillRect(0, 0, width, height);
 
-    // Grid Lines
     ctx.strokeStyle = '#1A1A26';
     ctx.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
-      const y = (chartHeight / 4) * i;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(chartWidth, y);
-      ctx.stroke();
+       const y = (chartHeight / 4) * i;
+       ctx.beginPath();
+       ctx.moveTo(0, y);
+       ctx.lineTo(chartWidth, y);
+       ctx.stroke();
     }
 
-    // Find Min/Max
-    const allPrices = candles.flatMap(c => [c.high, c.low]);
+    const allPrices = candles.flatMap(c => [c.High, c.Low]);
     const minPrice = Math.min(...allPrices) * 0.995;
     const maxPrice = Math.max(...allPrices) * 1.005;
     const priceRange = maxPrice - minPrice;
@@ -112,7 +90,6 @@ export default function StockDetail() {
     const getX = (index: number) => (index / (candles.length - 1)) * chartWidth;
     const getY = (price: number) => chartHeight - ((price - minPrice) / priceRange) * chartHeight;
 
-    // Y-Axis Labels
     ctx.fillStyle = '#6B6B8A';
     ctx.font = '9px "IBM Plex Mono"';
     for (let i = 0; i < 5; i++) {
@@ -120,46 +97,32 @@ export default function StockDetail() {
       ctx.fillText(`₹${Math.round(price)}`, chartWidth + 5, (chartHeight / 4) * i + 3);
     }
 
-    // Volume Bars
     candles.forEach((candle, i) => {
       const x = getX(i);
-      const barWidth = (chartWidth / candles.length) * 0.7;
-      const volHeight = (candle.volume / 5000000) * 40;
-      ctx.fillStyle = candle.close >= candle.open ? 'rgba(0, 212, 161, 0.2)' : 'rgba(255, 71, 87, 0.2)';
-      ctx.fillRect(x - barWidth / 2, height - volHeight, barWidth, volHeight);
-    });
-
-    // Candles
-    candles.forEach((candle, i) => {
-      const x = getX(i);
-      const isGreen = candle.close >= candle.open;
+      const isGreen = candle.Close >= candle.Open;
       const color = isGreen ? '#00D4A1' : '#FF4757';
       const bodyColor = isGreen ? 'rgba(0, 212, 161, 0.2)' : 'rgba(255, 71, 87, 0.2)';
 
-      // Wick
       ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x, getY(candle.high));
-      ctx.lineTo(x, getY(candle.low));
+      ctx.moveTo(x, getY(candle.High));
+      ctx.lineTo(x, getY(candle.Low));
       ctx.stroke();
 
-      // Body
-      const bodyTop = getY(Math.max(candle.open, candle.close));
-      const bodyBottom = getY(Math.min(candle.open, candle.close));
+      const bodyTop = getY(Math.max(candle.Open, candle.Close));
+      const bodyBottom = getY(Math.min(candle.Open, candle.Close));
       const bodyHeight = Math.max(bodyBottom - bodyTop, 1);
       const bodyWidth = (chartWidth / candles.length) * 0.6;
 
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
-      ctx.strokeRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+      ctx.fillRect(x - bodyWidth / 2, bodyTop, Math.max(bodyWidth, 1), bodyHeight);
     });
 
-    // Moving Average
     ctx.strokeStyle = 'rgba(240, 165, 0, 0.5)';
     ctx.beginPath();
     candles.forEach((candle, i) => {
       const x = getX(i);
-      const mid = (candle.open + candle.close) / 2;
+      const mid = (candle.Open + candle.Close) / 2;
       if (i === 0) ctx.moveTo(x, getY(mid));
       else ctx.lineTo(x, getY(mid));
     });
@@ -174,7 +137,7 @@ export default function StockDetail() {
 
   const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || candles.length === 0) return;
     const rect = canvas.getBoundingClientRect();
     const x = ('touches' in e) ? e.touches[0].clientX - rect.left : (e as React.MouseEvent).clientX - rect.left;
     
@@ -187,14 +150,45 @@ export default function StockDetail() {
     }
   };
 
-  const handleRefreshAI = () => {
-    setIsRefreshingAI(true);
-    setTimeout(() => setIsRefreshingAI(false), 1000);
+  const executeOrder = async () => {
+    try {
+      if (buySell === 'BUY') {
+        await api.buyTrade(symbol, quantity, orderType.toUpperCase());
+      } else {
+        await api.sellTrade(symbol, quantity);
+      }
+      setShowModal(true);
+      setTimeout(async () => {
+        const insight = await api.getMentorInsight(buySell, symbol);
+        setAiInsight(insight);
+      }, 500);
+      loadData(); // refresh cash
+    } catch (e: any) {
+      alert(e.message || "Failed to execute order.");
+    }
   };
+
+  const handleRefreshAI = async () => {
+    setIsRefreshingAI(true);
+    try {
+      const insight = await api.getMentorInsight("VIEW", symbol);
+      setAiInsight(insight);
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setIsRefreshingAI(false);
+    }
+  };
+
+  if (loading || !stockDetail) {
+    return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Stock...</div>;
+  }
+
+  const { meta, currentPrice, change, changePercent } = stockDetail;
+  const isPositive = change >= 0;
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col overflow-x-hidden">
-      {/* TOP BAR */}
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/90 backdrop-blur-md h-[60px] flex items-center justify-between px-4">
         <button onClick={() => navigate('/trade')} className="p-2 -ml-2 text-text-primary">
           <ArrowLeft size={24} />
@@ -208,23 +202,22 @@ export default function StockDetail() {
         </button>
       </header>
 
-      {/* CONTENT */}
       <main className="flex-1 pt-[70px] pb-[300px] px-4 overflow-y-auto no-scrollbar">
-        {/* PRICE HEADER */}
         <div className="mb-6">
           <div className="flex items-baseline space-x-1">
             <span className="text-2xl font-heading font-bold text-text-primary">₹</span>
-            <motion.span className="text-[44px] font-heading font-bold text-text-primary leading-none tracking-tight">
-              {roundedPrice}
-            </motion.span>
+            <span className="text-[44px] font-heading font-bold text-text-primary leading-none tracking-tight">
+              {currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </span>
           </div>
           <div className="flex items-center space-x-2 mt-1">
-            <span className="text-sm font-mono font-bold text-accent-green">+₹33.70 (+1.20%) ▲ Today</span>
+            <span className={`text-sm font-mono font-bold ${isPositive ? 'text-accent-green' : 'text-accent-red'}`}>
+              {isPositive ? '+' : ''}₹{change.toFixed(2)} ({isPositive ? '+' : ''}{changePercent.toFixed(2)}%) {isPositive ? '▲' : '▼'} Today
+            </span>
           </div>
-          <p className="text-[12px] text-text-muted mt-1">Reliance Industries Limited</p>
+          <p className="text-[12px] text-text-muted mt-1">{meta.companyName}</p>
         </div>
 
-        {/* CHART SECTION */}
         <div className="mb-8">
           <div className="flex justify-between border-b border-border mb-4">
             {TIMEFRAMES.map(tf => (
@@ -251,8 +244,6 @@ export default function StockDetail() {
             onTouchEnd={() => setTooltipData(null)}
           >
             <canvas ref={canvasRef} className="w-full h-full" />
-            
-            {/* Tooltip */}
             <AnimatePresence>
               {tooltipData && (
                 <motion.div 
@@ -263,12 +254,9 @@ export default function StockDetail() {
                 >
                   <div className="bg-bg-card/90 backdrop-blur-sm border border-border p-2 rounded-lg shadow-xl flex justify-between items-center text-[10px] font-mono">
                     <div className="space-x-2">
-                      <span className="text-text-muted">O: <span className="text-text-primary">₹{tooltipData.open.toFixed(0)}</span></span>
-                      <span className="text-text-muted">H: <span className="text-text-primary">₹{tooltipData.high.toFixed(0)}</span></span>
-                      <span className="text-text-muted">L: <span className="text-text-primary">₹{tooltipData.low.toFixed(0)}</span></span>
-                      <span className="text-text-muted">C: <span className="text-text-primary">₹{tooltipData.close.toFixed(0)}</span></span>
+                      <span className="text-text-muted">O: <span className="text-text-primary">₹{tooltipData.Open?.toFixed(2)}</span></span>
+                      <span className="text-text-muted">C: <span className="text-text-primary">₹{tooltipData.Close?.toFixed(2)}</span></span>
                     </div>
-                    <span className="text-text-muted">V: <span className="text-text-primary">{(tooltipData.volume / 1000000).toFixed(1)}M</span></span>
                   </div>
                 </motion.div>
               )}
@@ -276,44 +264,25 @@ export default function StockDetail() {
           </div>
         </div>
 
-        {/* AI EXPLAINER CARD */}
         <div className="bg-bg-card border border-accent-gold/30 rounded-2xl p-4 mb-6 relative overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center space-x-2">
               <span className="text-lg">🤖</span>
               <h3 className="text-sm font-heading font-bold text-text-primary">AI Insight</h3>
             </div>
-            <span className="text-[10px] text-text-muted uppercase tracking-widest">Powered by Claude</span>
+            <span className="text-[10px] text-text-muted uppercase tracking-widest">Powered by Groq</span>
           </div>
 
           <div className="space-y-4 text-[13px] text-text-primary leading-relaxed">
-            <p>Reliance Industries ek true conglomerate hai 🇮🇳</p>
-            <p>Think of it as 3 massive businesses in one stock:</p>
-            <ul className="space-y-1 pl-2">
-              <li>🛢️ Oil refining (Jio fuel)</li>
-              <li>📱 Telecom (Jio — 470M+ subscribers)</li>
-              <li>🛍️ Retail (Reliance Fresh, Trends, JioMart)</li>
-            </ul>
-            <div className="bg-accent-green/5 p-3 rounded-xl border border-accent-green/20">
-              <p className="font-bold text-accent-green mb-1">📈 Why it's up today:</p>
-              <p>Jio announced 8% subscriber growth this quarter — beating analyst estimates.</p>
-            </div>
-            <p><span className="font-bold">⚖️ Risk Level:</span> <span className="text-accent-green">LOW–MEDIUM</span></p>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-border">
-            <p className="text-[11px] text-text-muted mb-3">Investors like you also viewed:</p>
-            <div className="flex flex-wrap gap-2">
-              {['BHARTIARTL', 'IDEA', 'TATACOMM'].map(s => (
-                <button 
-                  key={s}
-                  onClick={() => navigate(`/trade/${s}`)}
-                  className="px-3 py-1.5 rounded-full bg-bg-secondary border border-border text-[10px] font-mono font-bold text-text-primary"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
+            {aiInsight ? (
+              <div>{aiInsight.insight}</div>
+            ) : (
+              <>
+                <p>{meta.about}</p>
+                <p><span className="font-bold">Sector:</span> {meta.sector}</p>
+                <p><span className="font-bold">⚖️ Risk Level:</span> <span className="text-accent-green">{meta.riskLevel}</span></p>
+              </>
+            )}
           </div>
 
           <button 
@@ -321,49 +290,17 @@ export default function StockDetail() {
             className="w-full mt-4 py-2 border border-border rounded-xl text-[11px] font-bold text-text-muted flex items-center justify-center space-x-2"
           >
             <RefreshCw size={12} className={isRefreshingAI ? "animate-spin" : ""} />
-            <span>{isRefreshingAI ? "Analyzing..." : "Refresh Insight ↻"}</span>
+            <span>{isRefreshingAI ? "Consulting Mentor..." : "Ask AI Mentor ↻"}</span>
           </button>
-        </div>
-
-        {/* YOUR POSITION */}
-        <div className="bg-accent-green/[0.03] border border-accent-green/30 rounded-2xl p-4 mb-6">
-          <p className="text-[11px] font-mono font-bold text-accent-green uppercase tracking-widest mb-3">Your Position in {symbol}</p>
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-lg font-mono font-bold text-text-primary">8 shares</p>
-              <p className="text-[11px] text-text-muted">Avg ₹2,801</p>
-            </div>
-            <div className="text-right">
-              <p className="text-lg font-mono font-bold text-accent-green">+₹368</p>
-              <p className="text-[11px] font-mono text-accent-green">(+1.6%)</p>
-            </div>
-          </div>
         </div>
       </main>
 
-      {/* ORDER PANEL */}
       <div className="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto bg-bg-secondary border-t border-border rounded-t-[24px] p-6 z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-        {/* Buy/Sell Toggle */}
         <div className="flex bg-bg-primary p-1 rounded-xl mb-6">
-          <button 
-            onClick={() => setBuySell('BUY')}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
-              buySell === 'BUY' ? 'bg-accent-green text-bg-primary' : 'text-text-muted'
-            }`}
-          >
-            BUY
-          </button>
-          <button 
-            onClick={() => setBuySell('SELL')}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
-              buySell === 'SELL' ? 'bg-accent-red text-white' : 'text-text-muted'
-            }`}
-          >
-            SELL
-          </button>
+          <button onClick={() => setBuySell('BUY')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${buySell === 'BUY' ? 'bg-accent-green text-bg-primary' : 'text-text-muted'}`}>BUY</button>
+          <button onClick={() => setBuySell('SELL')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${buySell === 'SELL' ? 'bg-accent-red text-white' : 'text-text-muted'}`}>SELL</button>
         </div>
 
-        {/* Order Type & Quantity */}
         <div className="space-y-4 mb-6">
           <div className="flex justify-between items-center">
             <span className="text-xs text-text-muted">Order Type</span>
@@ -372,70 +309,40 @@ export default function StockDetail() {
               <ChevronDown size={14} />
             </button>
           </div>
-
           <div className="flex justify-between items-center">
             <span className="text-xs text-text-muted">Quantity</span>
             <div className="flex items-center space-x-6">
               <button 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 className="w-8 h-8 rounded-full bg-bg-primary border border-border flex items-center justify-center text-text-primary"
-              >
-                <Minus size={16} />
-              </button>
+              ><Minus size={16} /></button>
               <span className="text-2xl font-mono font-bold text-text-primary">{quantity}</span>
               <button 
                 onClick={() => setQuantity(quantity + 1)}
                 className="w-8 h-8 rounded-full bg-bg-primary border border-border flex items-center justify-center text-text-primary"
-              >
-                <Plus size={16} />
-              </button>
+              ><Plus size={16} /></button>
             </div>
           </div>
         </div>
 
-        {/* Summary */}
         <div className="bg-bg-primary rounded-xl p-4 mb-6 space-y-2">
           <div className="flex justify-between text-[11px]">
             <span className="text-text-muted">Market Price</span>
-            <span className="text-text-primary font-mono">₹2,847.30</span>
-          </div>
-          <div className="flex justify-between text-[11px]">
-            <span className="text-text-muted">Quantity</span>
-            <span className="text-text-primary font-mono">× {quantity} shares</span>
+            <span className="text-text-primary font-mono">₹{currentPrice.toFixed(2)}</span>
           </div>
           <div className="h-[1px] bg-border my-2" />
           <div className="flex justify-between text-sm font-bold">
             <span className="text-text-primary">Total</span>
-            <span className="text-text-primary font-mono">₹{(2847.30 * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span className="text-text-primary font-mono">₹{(currentPrice * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="flex justify-between text-[10px] pt-1">
             <span className="text-text-muted">Available Cash</span>
-            <span className="text-text-primary">₹37,450.00</span>
+            <span className="text-text-primary">₹{cash.toLocaleString('en-IN')}</span>
           </div>
         </div>
 
-        {/* Product Type */}
-        <div className="flex space-x-3 mb-6">
-          <button 
-            onClick={() => setProductType('CNC')}
-            className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${
-              productType === 'CNC' ? 'border-accent-gold bg-accent-gold/5 text-accent-gold' : 'border-border text-text-muted'
-            }`}
-          >
-            CNC — Delivery 📦
-          </button>
-          <button 
-            onClick={() => setProductType('MIS')}
-            className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${
-              productType === 'MIS' ? 'border-accent-gold bg-accent-gold/5 text-accent-gold' : 'border-border text-text-muted'
-            }`}
-          >
-            MIS — Intraday ⚡
-          </button>
-        </div>
-
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={executeOrder}
           className={`w-full py-4 rounded-2xl font-heading font-bold text-lg shadow-lg transition-transform active:scale-95 ${
             buySell === 'BUY' ? 'bg-accent-green text-bg-primary' : 'bg-accent-red text-white'
           }`}
@@ -444,62 +351,30 @@ export default function StockDetail() {
         </button>
       </div>
 
-      {/* ORDER CONFIRMATION MODAL */}
       <AnimatePresence>
         {showModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-bg-primary/95 flex items-center justify-center p-6"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-[320px] bg-bg-card border border-border rounded-[32px] p-8 text-center"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-bg-primary/95 flex items-center justify-center p-6">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-[320px] bg-bg-card border border-border rounded-[32px] p-8 text-center">
               <div className="relative w-24 h-24 mx-auto mb-6">
                 <svg className="w-full h-full" viewBox="0 0 100 100">
-                  <motion.circle
-                    cx="50" cy="50" r="45"
-                    fill="none" stroke="#F0A500" strokeWidth="4"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                  />
+                  <motion.circle cx="50" cy="50" r="45" fill="none" stroke="#F0A500" strokeWidth="4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.8, ease: "easeInOut" }} />
                 </svg>
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.8 }}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
+                <div className="absolute inset-0 flex items-center justify-center">
                   <Check size={48} className="text-accent-gold" />
-                </motion.div>
+                </div>
               </div>
-
-              <h2 className="text-2xl font-heading font-bold text-text-primary mb-2">Order Placed!</h2>
-              <p className="text-sm text-text-primary mb-1">Bought {quantity} shares of {symbol}</p>
-              <p className="text-xs text-text-muted mb-8">₹{(2847.30 * quantity).toLocaleString('en-IN')} deducted</p>
+              <h2 className="text-2xl font-heading font-bold text-text-primary mb-2">Order Executed!</h2>
+              <p className="text-sm text-text-primary mb-1">{buySell === 'BUY' ? 'Bought' : 'Sold'} {quantity} shares of {symbol}</p>
               
-              <div className="bg-bg-secondary p-3 rounded-xl mb-8">
-                <p className="text-[10px] text-text-muted uppercase tracking-widest mb-1">New Portfolio Value</p>
-                <p className="text-lg font-heading font-bold text-accent-gold">₹1,14,230</p>
-              </div>
+              {aiInsight && (
+                <div className="bg-bg-secondary p-4 mt-6 text-left rounded-xl text-xs border border-accent-gold/20 leading-relaxed text-text-primary">
+                  <span className="text-lg">🤖</span> {aiInsight.insight}
+                </div>
+              )}
 
-              <div className="space-y-3">
-                <button 
-                  onClick={() => navigate('/portfolio')}
-                  className="w-full py-3.5 bg-accent-gold text-bg-primary rounded-xl font-bold"
-                >
-                  View Portfolio
-                </button>
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className="w-full py-3.5 border border-border text-text-primary rounded-xl font-bold"
-                >
-                  Trade More
-                </button>
+              <div className="space-y-3 mt-8">
+                <button onClick={() => navigate('/portfolio')} className="w-full py-3.5 bg-accent-gold text-bg-primary rounded-xl font-bold">View Portfolio</button>
+                <button onClick={() => { setShowModal(false); setAiInsight(null); }} className="w-full py-3.5 border border-border text-text-primary rounded-xl font-bold">Trade More</button>
               </div>
             </motion.div>
           </motion.div>

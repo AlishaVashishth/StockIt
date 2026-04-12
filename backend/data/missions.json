@@ -1,0 +1,5 @@
+[
+  {"id": "m1", "missionKey": "first_large_cap", "title": "Buy your first Large Cap stock", "xpReward": 50, "completed": true, "completedAt": "2025-04-10T09:20:00Z"},
+  {"id": "m2", "missionKey": "hold_3_days", "title": "Hold a stock for 3 days", "xpReward": 75, "completed": false, "progress": 2, "total": 3, "completedAt": null},
+  {"id": "m3", "missionKey": "five_stock_portfolio", "title": "Build a 5-stock portfolio", "xpReward": 100, "completed": false, "locked": true, "requiredTier": 2, "completedAt": null}
+]

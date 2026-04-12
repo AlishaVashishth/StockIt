@@ -1,0 +1,7 @@
+[
+  {"id": "l1", "lessonId": 1, "moduleId": 1, "title": "What is a Stock?", "completed": true, "quizScore": 5},
+  {"id": "l2", "lessonId": 2, "moduleId": 2, "title": "Candlestick Basics", "completed": true, "quizScore": 4},
+  {"id": "l3", "lessonId": 3, "moduleId": 2, "title": "Reading Candlestick Charts", "completed": true, "quizScore": 5},
+  {"id": "l4", "lessonId": 4, "moduleId": 2, "title": "Support and Resistance", "completed": false, "quizScore": 0},
+  {"id": "l5", "lessonId": 5, "moduleId": 2, "title": "Volume Analysis", "completed": false, "quizScore": 0}
+]

@@ -1,0 +1,7 @@
+[
+  {"id": "h1", "stockSymbol": "RELIANCE", "companyName": "Reliance Industries Ltd", "quantity": 8, "avgBuyPrice": 2801.20, "sector": "Energy & Telecom"},
+  {"id": "h2", "stockSymbol": "TCS", "companyName": "Tata Consultancy Services", "quantity": 5, "avgBuyPrice": 3200.00, "sector": "Technology"},
+  {"id": "h3", "stockSymbol": "TATAMOTORS", "companyName": "Tata Motors Ltd", "quantity": 15, "avgBuyPrice": 820.00, "sector": "Automobile"},
+  {"id": "h4", "stockSymbol": "YESBANK", "companyName": "Yes Bank Ltd", "quantity": 100, "avgBuyPrice": 36.00, "sector": "Banking"},
+  {"id": "h5", "stockSymbol": "ZOMATO", "companyName": "Zomato Ltd", "quantity": 50, "avgBuyPrice": 195.00, "sector": "Food Tech"}
+]
