@@ -58,9 +58,20 @@ const BADGES = [
 ];
 
 export default function Profile() {
+  const USER_NAME_STORAGE_KEY = 'investsim_user_name';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'returns' | 'learning' | 'risk'>('returns');
   const [showShare, setShowShare] = useState(false);
+  const displayName = localStorage.getItem(USER_NAME_STORAGE_KEY)?.trim() || 'Investor';
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'IN';
+  const leaderboardForTab = LEADERBOARD_DATA[activeTab].map((entry) =>
+    entry.isUser ? { ...entry, name: displayName, initial: initials } : entry
+  );
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col font-mono text-text-primary">
@@ -83,9 +94,9 @@ export default function Profile() {
           
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-accent-gold flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(240,165,0,0.3)]">
-              <span className="text-2xl font-heading font-extrabold text-black">AK</span>
+              <span className="text-2xl font-heading font-extrabold text-black">{initials}</span>
             </div>
-            <h2 className="text-2xl font-heading font-bold text-text-primary">Arjun Kumar</h2>
+            <h2 className="text-2xl font-heading font-bold text-text-primary">{displayName}</h2>
             <p className="text-xs text-text-muted mb-6">Member since March 2025</p>
             
             <div className="w-full p-4 rounded-2xl border border-accent-gold/30 bg-bg-secondary/50 backdrop-blur-sm">
@@ -220,43 +231,43 @@ export default function Profile() {
                 {/* #2 */}
                 <div className="flex-1 flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full bg-bg-card border-2 border-slate-400 flex items-center justify-center mb-2 relative">
-                    <span className="text-sm font-bold">{LEADERBOARD_DATA[activeTab][1].initial}</span>
+                    <span className="text-sm font-bold">{leaderboardForTab[1].initial}</span>
                     <div className="absolute -top-2 -right-2 w-5 h-5 bg-slate-400 rounded-full flex items-center justify-center text-[10px] font-bold text-black">2</div>
                   </div>
                   <div className="w-full h-16 bg-bg-card border-t-2 border-slate-400 rounded-t-lg flex flex-col items-center justify-center p-1">
-                    <span className="text-[10px] font-bold truncate w-full text-center">{LEADERBOARD_DATA[activeTab][1].name}</span>
-                    <span className="text-[10px] text-accent-green">{LEADERBOARD_DATA[activeTab][1].value}</span>
+                    <span className="text-[10px] font-bold truncate w-full text-center">{leaderboardForTab[1].name}</span>
+                    <span className="text-[10px] text-accent-green">{leaderboardForTab[1].value}</span>
                   </div>
                 </div>
 
                 {/* #1 */}
                 <div className="flex-1 flex flex-col items-center">
                   <div className="w-16 h-16 rounded-full bg-bg-card border-2 border-accent-gold flex items-center justify-center mb-2 relative shadow-[0_0_20px_rgba(240,165,0,0.2)]">
-                    <span className="text-lg font-bold">{LEADERBOARD_DATA[activeTab][0].initial}</span>
+                    <span className="text-lg font-bold">{leaderboardForTab[0].initial}</span>
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent-gold rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
                   </div>
                   <div className="w-full h-24 bg-bg-card border-t-2 border-accent-gold rounded-t-lg flex flex-col items-center justify-center p-1 shadow-[0_-5px_15px_rgba(240,165,0,0.1)]">
-                    <span className="text-xs font-bold truncate w-full text-center">{LEADERBOARD_DATA[activeTab][0].name}</span>
-                    <span className="text-xs text-accent-gold font-bold">{LEADERBOARD_DATA[activeTab][0].value}</span>
+                    <span className="text-xs font-bold truncate w-full text-center">{leaderboardForTab[0].name}</span>
+                    <span className="text-xs text-accent-gold font-bold">{leaderboardForTab[0].value}</span>
                   </div>
                 </div>
 
                 {/* #3 */}
                 <div className="flex-1 flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full bg-bg-card border-2 border-amber-700 flex items-center justify-center mb-2 relative">
-                    <span className="text-sm font-bold">{LEADERBOARD_DATA[activeTab][2].initial}</span>
+                    <span className="text-sm font-bold">{leaderboardForTab[2].initial}</span>
                     <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-700 rounded-full flex items-center justify-center text-[10px] font-bold text-black">3</div>
                   </div>
                   <div className="w-full h-12 bg-bg-card border-t-2 border-amber-700 rounded-t-lg flex flex-col items-center justify-center p-1">
-                    <span className="text-[10px] font-bold truncate w-full text-center">{LEADERBOARD_DATA[activeTab][2].name}</span>
-                    <span className="text-[10px] text-accent-green">{LEADERBOARD_DATA[activeTab][2].value}</span>
+                    <span className="text-[10px] font-bold truncate w-full text-center">{leaderboardForTab[2].name}</span>
+                    <span className="text-[10px] text-accent-green">{leaderboardForTab[2].value}</span>
                   </div>
                 </div>
               </div>
 
               {/* LIST */}
               <div className="space-y-2">
-                {LEADERBOARD_DATA[activeTab].slice(3).map((item) => (
+                {leaderboardForTab.slice(3).map((item) => (
                   <div 
                     key={item.rank}
                     className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
@@ -325,9 +336,9 @@ export default function Profile() {
                 
                 <div className="z-10">
                   <div className="w-16 h-16 rounded-full bg-accent-gold flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent-gold/20">
-                    <span className="text-xl font-heading font-extrabold text-black">AK</span>
+                    <span className="text-xl font-heading font-extrabold text-black">{initials}</span>
                   </div>
-                  <h3 className="text-xl font-heading font-bold text-text-primary mb-1">Arjun Kumar</h3>
+                  <h3 className="text-xl font-heading font-bold text-text-primary mb-1">{displayName}</h3>
                   <p className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">Rising Investor</p>
                 </div>
 

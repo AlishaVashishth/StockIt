@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from services.stock_service import get_all_stocks, get_stock_price, get_historical_data
+from services.stock_service import get_all_stocks, get_stock_price, get_historical_data, get_market_indices
 
 router = APIRouter()
 
@@ -16,3 +16,7 @@ async def get_single_stock(symbol: str):
 async def get_stock_history(symbol: str, period: str = Query("1d")):
     data = await get_historical_data(symbol.upper(), period)
     return data
+
+@router.get("/indices/live")
+async def get_indices_live():
+    return await get_market_indices()

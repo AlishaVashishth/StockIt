@@ -1,7 +1,1 @@
-[
-  {"id": "t1", "stockSymbol": "TCS", "companyName": "Tata Consultancy Services", "type": "BUY", "quantity": 5, "price": 3421.55, "totalAmount": 17107.75, "createdAt": "2025-04-13T10:30:00Z"},
-  {"id": "t2", "stockSymbol": "ZOMATO", "companyName": "Zomato Ltd", "type": "SELL", "quantity": 10, "price": 182.30, "totalAmount": 1823.00, "createdAt": "2025-04-12T14:20:00Z"},
-  {"id": "t3", "stockSymbol": "RELIANCE", "companyName": "Reliance Industries Ltd", "type": "BUY", "quantity": 2, "price": 2847.30, "totalAmount": 5694.60, "createdAt": "2025-04-11T11:00:00Z"},
-  {"id": "t4", "stockSymbol": "YESBANK", "companyName": "Yes Bank Ltd", "type": "BUY", "quantity": 100, "price": 36.00, "totalAmount": 3600.00, "createdAt": "2025-04-10T09:15:00Z"},
-  {"id": "t5", "stockSymbol": "TATAMOTORS", "companyName": "Tata Motors Ltd", "type": "BUY", "quantity": 15, "price": 820.00, "totalAmount": 12300.00, "createdAt": "2025-04-09T13:45:00Z"}
-]
+[]

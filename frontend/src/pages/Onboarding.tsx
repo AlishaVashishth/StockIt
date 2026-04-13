@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useTransform, animate } from 'motion/react';
 import { Check } from 'lucide-react';
+import { api } from '../api';
 
 interface SelectionCardProps {
   id: string;
@@ -56,20 +57,34 @@ function Counter({ value }: { value: number }) {
 }
 
 export default function Onboarding() {
+  const USER_NAME_STORAGE_KEY = 'investsim_user_name';
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [experience, setExperience] = useState<string | null>(null);
   const [goal, setGoal] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
   const handleNext = () => {
     if (step < 3) {
       setStep(step + 1);
     } else {
+      const trimmedName = name.trim();
+      setInitError(null);
+      localStorage.setItem(USER_NAME_STORAGE_KEY, trimmedName);
       setIsCreating(true);
-      setTimeout(() => {
-        navigate('/home');
+      setTimeout(async () => {
+        try {
+          await api.startSession(trimmedName);
+          navigate('/home');
+        } catch (error) {
+          console.error('Failed to initialize new user session:', error);
+          setInitError('Could not create fresh account data. Please ensure backend is running, then try again.');
+          setIsCreating(false);
+        } finally {
+          // no-op
+        }
       }, 3000);
     }
   };
@@ -187,6 +202,9 @@ export default function Onboarding() {
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-gold scale-x-0 focus-within:scale-x-100 transition-transform origin-left"
                   />
                 </div>
+                {initError && (
+                  <p className="text-xs font-mono text-accent-red mb-4">{initError}</p>
+                )}
 
                 <div className="text-center space-y-2">
                   <p className="text-xs font-mono text-text-muted uppercase tracking-wider">

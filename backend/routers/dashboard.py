@@ -66,6 +66,7 @@ async def get_dashboard_summary():
         "totalPnl": round(total_pnl, 2),
         "totalPnlPct": round(total_pnl_pct, 2),
         "virtualCash": round(v_cash, 2),
+        "holdingsCount": len(holdings),
         "bestPerformer": best_perf,
         "worstPerformer": worst_perf,
         "diversityScore": diversity_score
@@ -100,6 +101,15 @@ async def get_dashboard_summary():
             "description": f"Completed Lesson {l.get('lessonId')} (Module {l.get('moduleId')})",
             "timestamp": mock_time,
             "icon": "🎓"
+        })
+
+    mission_events = [m for m in missions if m.get("completed") and m.get("completedAt")]
+    for mission in mission_events:
+        recent_activity.append({
+            "type": "MISSION",
+            "description": f"Mission Completed: {mission.get('title', 'Unknown mission')}",
+            "timestamp": mission.get("completedAt", ""),
+            "icon": "🎯"
         })
         
     recent_activity.sort(key=lambda x: x["timestamp"], reverse=True)

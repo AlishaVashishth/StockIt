@@ -19,6 +19,7 @@ const SECTORS = [
 export default function Trade() {
   const navigate = useNavigate();
   const [stocks, setStocks] = useState<any[]>([]);
+  const [indices, setIndices] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [flashStates, setFlashStates] = useState<Record<string, 'up' | 'down' | null>>({});
@@ -26,7 +27,11 @@ export default function Trade() {
   useEffect(() => {
     const fetchStocks = async () => {
       try {
-        const data = await api.getStocks();
+        const [data, indicesData] = await Promise.all([
+          api.getStocks(),
+          api.getMarketIndices()
+        ]);
+        setIndices(indicesData);
         setStocks(prevStocks => {
           const newFlashStates: Record<string, 'up' | 'down' | null> = {};
           if (prevStocks.length > 0) {
@@ -54,9 +59,14 @@ export default function Trade() {
     return () => clearInterval(interval);
   }, []);
 
+  const nifty = indices?.nifty || { value: 0, changePct: 0 };
+  const sensex = indices?.sensex || { value: 0, changePct: 0 };
+  const niftyUp = Number(nifty.changePct) >= 0;
+  const sensexUp = Number(sensex.changePct) >= 0;
+
   const filteredStocks = stocks.filter(stock => 
     stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (stock.companyName || stock.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -80,20 +90,26 @@ export default function Trade() {
           <div className="flex items-center justify-between">
             <div className="flex-1 bg-accent-green/[0.03] p-2 rounded-xl">
               <p className="text-[11px] font-mono text-text-muted mb-1">NIFTY 50</p>
-              <p className="text-lg font-heading font-bold text-text-primary">22,347.80</p>
-              <p className="text-xs font-mono font-bold text-accent-green">▲ 0.42%</p>
+              <p className="text-lg font-heading font-bold text-text-primary">{Number(nifty.value).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+              <p className={`text-xs font-mono font-bold ${niftyUp ? 'text-accent-green' : 'text-accent-red'}`}>
+                {niftyUp ? '▲' : '▼'} {Math.abs(Number(nifty.changePct || 0)).toFixed(2)}%
+              </p>
             </div>
             
             <div className="w-[1px] h-12 bg-border mx-4" />
             
             <div className="flex-1 p-2">
               <p className="text-[11px] font-mono text-text-muted mb-1">SENSEX</p>
-              <p className="text-lg font-heading font-bold text-text-primary">73,847.45</p>
-              <p className="text-xs font-mono font-bold text-accent-green">▲ 0.38%</p>
+              <p className="text-lg font-heading font-bold text-text-primary">{Number(sensex.value).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+              <p className={`text-xs font-mono font-bold ${sensexUp ? 'text-accent-green' : 'text-accent-red'}`}>
+                {sensexUp ? '▲' : '▼'} {Math.abs(Number(sensex.changePct || 0)).toFixed(2)}%
+              </p>
             </div>
           </div>
           <div className="mt-3 text-center">
-            <p className="text-[12px] font-mono text-text-primary">Market Mood: <span className="text-accent-green font-bold">🟢 Bullish Today</span></p>
+            <p className="text-[12px] font-mono text-text-primary">
+              Market Mood: <span className={`font-bold ${niftyUp ? 'text-accent-green' : 'text-accent-red'}`}>{niftyUp ? '🟢 Bullish Today' : '🔴 Cautious Today'}</span>
+            </p>
           </div>
         </motion.div>
 
@@ -138,7 +154,7 @@ export default function Trade() {
                       </div>
                       <div>
                         <p className="text-sm font-mono font-bold text-text-primary">{stock.symbol.replace('.NS', '')}</p>
-                        <p className="text-[11px] text-text-muted truncate w-32">{stock.name}</p>
+                        <p className="text-[11px] text-text-muted truncate w-32">{stock.companyName || stock.name}</p>
                       </div>
                     </div>
                     

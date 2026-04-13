@@ -10,8 +10,10 @@ import {
 import { api } from '../api';
 
 export default function Home() {
+  const USER_NAME_STORAGE_KEY = 'investsim_user_name';
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
+  const [indices, setIndices] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   // Count-up
@@ -23,8 +25,12 @@ export default function Home() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const dashboardData = await api.getDashboard();
+        const [dashboardData, indicesData] = await Promise.all([
+          api.getDashboard(),
+          api.getMarketIndices()
+        ]);
         setData(dashboardData);
+        setIndices(indicesData);
         animate(count, dashboardData.portfolioSummary.totalValue, { duration: 2, ease: "easeOut" });
       } catch (err) {
         console.error(err);
@@ -33,6 +39,15 @@ export default function Home() {
       }
     };
     loadDashboard();
+    const interval = setInterval(async () => {
+      try {
+        const latestIndices = await api.getMarketIndices();
+        setIndices(latestIndices);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
   }, [count]);
 
   if (loading || !data) {
@@ -44,9 +59,13 @@ export default function Home() {
   }
 
   const { user, portfolioSummary, missions, recentActivity, dailyPnlPct, shouldTriggerLossDebrief } = data;
+  const persistedName = localStorage.getItem(USER_NAME_STORAGE_KEY)?.trim();
+  const displayName = persistedName || user.name;
 
-  // Simple sparkline purely visual trend upwards
-  const sparkPoints = [portfolioSummary.totalValue * 0.8, portfolioSummary.totalValue * 0.85, portfolioSummary.totalValue * 0.9, portfolioSummary.totalValue * 0.95, portfolioSummary.totalValue * 0.98, portfolioSummary.totalValue];
+  // For day-0 users with no holdings, keep baseline at the bottom.
+  const sparkPoints = portfolioSummary.holdingsCount === 0
+    ? [0, 0, 0, 0, 0, 0]
+    : [portfolioSummary.totalValue * 0.8, portfolioSummary.totalValue * 0.85, portfolioSummary.totalValue * 0.9, portfolioSummary.totalValue * 0.95, portfolioSummary.totalValue * 0.98, portfolioSummary.totalValue];
   const min = Math.min(...sparkPoints);
   const max = Math.max(...sparkPoints) || 1;
   const range = (max - min) || 1;
@@ -61,12 +80,23 @@ export default function Home() {
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
+  const handleMissionClick = (mission: any) => {
+    if (mission.completed || mission.requiredTier > user.currentTier) return;
+    if (mission.missionKey === 'hold_3_days') {
+      navigate('/portfolio');
+      return;
+    }
+    navigate('/trade');
+  };
+
+  const nifty = indices?.nifty || { value: 0, changePct: 0 };
+  const niftyUp = Number(nifty.changePct) >= 0;
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary bg-dots flex flex-col">
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border">
         <div className="h-[60px] flex items-center justify-between px-4">
-          <span className="font-heading font-bold text-base">Good morning, {user.name.split(' ')[0]} 👋</span>
+          <span className="font-heading font-bold text-base">Good morning, {displayName.split(' ')[0]} 👋</span>
         </div>
         <div className="h-[30px] bg-bg-secondary border-t border-border overflow-hidden flex items-center">
           <div className="flex animate-ticker whitespace-nowrap">
@@ -74,8 +104,10 @@ export default function Home() {
               <div key={i} className="flex items-center space-x-6 px-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-[11px] font-mono whitespace-nowrap text-text-muted">NIFTY</span>
-                  <span className="text-[11px] font-mono whitespace-nowrap font-bold">22,347</span>
-                  <span className="text-[11px] font-mono whitespace-nowrap font-bold text-accent-green">▲0.42%</span>
+                  <span className="text-[11px] font-mono whitespace-nowrap font-bold">{Number(nifty.value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                  <span className={`text-[11px] font-mono whitespace-nowrap font-bold ${niftyUp ? 'text-accent-green' : 'text-accent-red'}`}>
+                    {niftyUp ? '▲' : '▼'}{Math.abs(Number(nifty.changePct || 0)).toFixed(2)}%
+                  </span>
                 </div>
                 <span className="text-border">|</span>
               </div>
@@ -116,7 +148,7 @@ export default function Home() {
                 <p className="text-[11px] text-text-muted uppercase tracking-tight">Cash Available</p>
               </div>
               <div className="text-right">
-                <p className="text-[18px] font-mono font-bold text-text-primary">12 Days</p>
+                <p className="text-[18px] font-mono font-bold text-text-primary">{user.daysActive || 0} Days</p>
                 <p className="text-[11px] text-text-muted uppercase tracking-tight">Active Streak 🔥</p>
               </div>
             </div>
@@ -205,18 +237,26 @@ export default function Home() {
                 const isComplete = m.completed;
                 const isLocked = m.requiredTier > user.currentTier;
                 return (
-                  <div key={i} className={`flex items-center p-4 rounded-xl border border-border ${isComplete ? 'bg-bg-card opacity-80' : isLocked ? 'bg-bg-card opacity-50' : 'bg-bg-card'}`}>
+                  <button
+                    key={i}
+                    onClick={() => handleMissionClick(m)}
+                    className={`w-full flex items-center p-4 rounded-xl border border-border text-left ${isComplete ? 'bg-bg-card opacity-80' : isLocked ? 'bg-bg-card opacity-50 cursor-not-allowed' : 'bg-bg-card cursor-pointer'}`}
+                  >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 ${isComplete ? 'bg-accent-green/20' : isLocked ? 'bg-border' : 'bg-accent-gold/20'}`}>
                       {isComplete ? <CheckCircle2 size={18} className="text-accent-green" /> : isLocked ? <Lock size={18} className="text-text-muted" /> : <RefreshCw size={18} className="text-accent-gold animate-spin-slow" />}
                     </div>
                     <div className="flex-1">
                       <p className={`text-sm text-text-primary ${isComplete ? 'line-through decoration-text-muted' : ''}`}>{m.title}</p>
+                      {!isComplete && !isLocked && <p className="text-[10px] text-accent-gold mt-1">Tap to work on this mission</p>}
+                      {!isComplete && typeof m.progress === 'number' && typeof m.total === 'number' && (
+                        <p className="text-[10px] text-text-muted">{m.progress}/{m.total} complete</p>
+                      )}
                       {isLocked && <p className="text-[10px] text-text-muted">Unlock at Tier {m.requiredTier}</p>}
                     </div>
                     <div className={`px-2 py-0.5 rounded border ${isComplete ? 'bg-accent-green/10 border-accent-green/20 text-accent-green' : isLocked ? 'bg-bg-secondary border-border text-text-muted' : 'bg-accent-gold/10 border-accent-gold/20 text-accent-gold'}`}>
                       <span className="text-[10px] font-bold">+{m.xpReward} XP</span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>

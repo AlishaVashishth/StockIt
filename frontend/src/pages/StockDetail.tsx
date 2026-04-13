@@ -38,7 +38,7 @@ export default function StockDetail() {
         api.getDashboard()
       ]);
       setStockDetail(detailRes);
-      setCandles(historyRes.data || []);
+      setCandles(Array.isArray(historyRes) ? historyRes : (historyRes.data || []));
       setCash(dashRes.portfolioSummary.virtualCash);
     } catch (err) {
       console.error(err);
@@ -82,7 +82,7 @@ export default function StockDetail() {
        ctx.stroke();
     }
 
-    const allPrices = candles.flatMap(c => [c.High, c.Low]);
+    const allPrices = candles.flatMap(c => [c.high, c.low]);
     const minPrice = Math.min(...allPrices) * 0.995;
     const maxPrice = Math.max(...allPrices) * 1.005;
     const priceRange = maxPrice - minPrice;
@@ -99,18 +99,18 @@ export default function StockDetail() {
 
     candles.forEach((candle, i) => {
       const x = getX(i);
-      const isGreen = candle.Close >= candle.Open;
+      const isGreen = candle.close >= candle.open;
       const color = isGreen ? '#00D4A1' : '#FF4757';
       const bodyColor = isGreen ? 'rgba(0, 212, 161, 0.2)' : 'rgba(255, 71, 87, 0.2)';
 
       ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x, getY(candle.High));
-      ctx.lineTo(x, getY(candle.Low));
+      ctx.moveTo(x, getY(candle.high));
+      ctx.lineTo(x, getY(candle.low));
       ctx.stroke();
 
-      const bodyTop = getY(Math.max(candle.Open, candle.Close));
-      const bodyBottom = getY(Math.min(candle.Open, candle.Close));
+      const bodyTop = getY(Math.max(candle.open, candle.close));
+      const bodyBottom = getY(Math.min(candle.open, candle.close));
       const bodyHeight = Math.max(bodyBottom - bodyTop, 1);
       const bodyWidth = (chartWidth / candles.length) * 0.6;
 
@@ -122,7 +122,7 @@ export default function StockDetail() {
     ctx.beginPath();
     candles.forEach((candle, i) => {
       const x = getX(i);
-      const mid = (candle.Open + candle.Close) / 2;
+      const mid = (candle.open + candle.close) / 2;
       if (i === 0) ctx.moveTo(x, getY(mid));
       else ctx.lineTo(x, getY(mid));
     });
@@ -184,7 +184,10 @@ export default function StockDetail() {
     return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Stock...</div>;
   }
 
-  const { meta, currentPrice, change, changePercent } = stockDetail;
+  const meta = stockDetail.meta || stockDetail;
+  const currentPrice = Number(stockDetail.currentPrice || 0);
+  const change = Number(stockDetail.change || 0);
+  const changePercent = Number(stockDetail.changePercent ?? stockDetail.changePct ?? 0);
   const isPositive = change >= 0;
 
   return (
@@ -254,8 +257,8 @@ export default function StockDetail() {
                 >
                   <div className="bg-bg-card/90 backdrop-blur-sm border border-border p-2 rounded-lg shadow-xl flex justify-between items-center text-[10px] font-mono">
                     <div className="space-x-2">
-                      <span className="text-text-muted">O: <span className="text-text-primary">₹{tooltipData.Open?.toFixed(2)}</span></span>
-                      <span className="text-text-muted">C: <span className="text-text-primary">₹{tooltipData.Close?.toFixed(2)}</span></span>
+                      <span className="text-text-muted">O: <span className="text-text-primary">₹{tooltipData.open?.toFixed(2)}</span></span>
+                      <span className="text-text-muted">C: <span className="text-text-primary">₹{tooltipData.close?.toFixed(2)}</span></span>
                     </div>
                   </div>
                 </motion.div>

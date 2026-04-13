@@ -1,6 +1,7 @@
 import asyncio
-import random
 from datetime import datetime, timedelta
+import os
+import httpx
 import yfinance as yf
 
 STOCK_METADATA = {
@@ -73,6 +74,22 @@ FALLBACK_PRICES = {
     "ADANIPORTS": 1247.80
 }
 
+FINNHUB_SYMBOL_MAP = {
+    "RELIANCE": "RELIANCE.NS",
+    "TCS": "TCS.NS",
+    "HDFCBANK": "HDFCBANK.NS",
+    "INFY": "INFY.NS",
+    "TATAMOTORS": "TATAMOTORS.NS",
+    "ZOMATO": "ZOMATO.NS",
+    "YESBANK": "YESBANK.NS",
+    "ADANIPORTS": "ADANIPORTS.NS"
+}
+
+INDEX_SYMBOLS = {
+    "NIFTY": "^NSEI",
+    "SENSEX": "^BSESN"
+}
+
 async def get_stock_price(symbol: str) -> dict:
     meta = STOCK_METADATA.get(symbol, {})
     company_name = meta.get("companyName", symbol)
@@ -82,6 +99,47 @@ async def get_stock_price(symbol: str) -> dict:
     about = meta.get("about", "No description available.")
     
     fallback_price = FALLBACK_PRICES.get(symbol, 100.0)
+    finnhub_api_key = os.getenv("FINNHUB_API_KEY")
+
+    if finnhub_api_key:
+        finnhub_symbol = FINNHUB_SYMBOL_MAP.get(symbol, f"{symbol}.NS")
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                quote_res, profile_res = await asyncio.gather(
+                    client.get("https://finnhub.io/api/v1/quote", params={"symbol": finnhub_symbol, "token": finnhub_api_key}),
+                    client.get("https://finnhub.io/api/v1/stock/profile2", params={"symbol": finnhub_symbol, "token": finnhub_api_key})
+                )
+
+            quote = quote_res.json() if quote_res.status_code == 200 else {}
+            profile = profile_res.json() if profile_res.status_code == 200 else {}
+
+            current_price = float(quote.get("c") or 0.0)
+            prev_close = float(quote.get("pc") or 0.0)
+            day_high = float(quote.get("h") or current_price)
+            day_low = float(quote.get("l") or current_price)
+
+            if current_price > 0 and prev_close > 0:
+                change = current_price - prev_close
+                change_pct = (change / prev_close) * 100
+                return {
+                    "symbol": symbol,
+                    "name": profile.get("name") or company_name,
+                    "companyName": profile.get("name") or company_name,
+                    "currentPrice": round(current_price, 2),
+                    "previousClose": round(prev_close, 2),
+                    "change": round(change, 2),
+                    "changePct": round(change_pct, 2),
+                    "changePercent": round(change_pct, 2),
+                    "dayHigh": round(day_high, 2),
+                    "dayLow": round(day_low, 2),
+                    "volume": 0,
+                    "marketCap": market_cap,
+                    "sector": sector,
+                    "riskLevel": risk_level,
+                    "about": about
+                }
+        except Exception:
+            pass
     
     try:
         def fetch_yf():
@@ -118,11 +176,13 @@ async def get_stock_price(symbol: str) -> dict:
 
         return {
             "symbol": symbol,
+            "name": company_name,
             "companyName": company_name,
             "currentPrice": round(current_price, 2),
             "previousClose": round(prev_close, 2),
             "change": round(change, 2),
             "changePct": round(change_pct, 2),
+            "changePercent": round(change_pct, 2),
             "dayHigh": round(day_high, 2),
             "dayLow": round(day_low, 2),
             "volume": int(volume),
@@ -131,22 +191,24 @@ async def get_stock_price(symbol: str) -> dict:
             "riskLevel": risk_level,
             "about": about
         }
-    except Exception as e:
-        # Fallback to hardcoded mock prices
+    except Exception:
+        # Final fallback is stable (non-random) so UI never crashes.
         prev_close = fallback_price * 0.99
         current_price = fallback_price
         change = current_price - prev_close
         change_pct = ((current_price - prev_close) / prev_close) * 100
         return {
             "symbol": symbol,
+            "name": company_name,
             "companyName": company_name,
             "currentPrice": round(current_price, 2),
             "previousClose": round(prev_close, 2),
             "change": round(change, 2),
             "changePct": round(change_pct, 2),
+            "changePercent": round(change_pct, 2),
             "dayHigh": round(current_price * 1.01, 2),
             "dayLow": round(current_price * 0.98, 2),
-            "volume": random.randint(100000, 5000000),
+            "volume": 0,
             "marketCap": market_cap,
             "sector": sector,
             "riskLevel": risk_level,
@@ -167,6 +229,55 @@ async def get_historical_data(symbol: str, period: str) -> list:
         "1y": "1wk"
     }
     interval = interval_mapping.get(period, "1d")
+    finnhub_api_key = os.getenv("FINNHUB_API_KEY")
+
+    if finnhub_api_key:
+        now = int(datetime.now().timestamp())
+        lookback_seconds = {
+            "1d": 60 * 60 * 24,
+            "1wk": 60 * 60 * 24 * 7,
+            "1mo": 60 * 60 * 24 * 30,
+            "3mo": 60 * 60 * 24 * 90,
+            "1y": 60 * 60 * 24 * 365
+        }
+        resolution_map = {
+            "1d": "5",
+            "1wk": "60",
+            "1mo": "D",
+            "3mo": "D",
+            "1y": "W"
+        }
+        finnhub_symbol = FINNHUB_SYMBOL_MAP.get(symbol, f"{symbol}.NS")
+        start_time = now - lookback_seconds.get(period, 60 * 60 * 24 * 30)
+
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.get(
+                    "https://finnhub.io/api/v1/stock/candle",
+                    params={
+                        "symbol": finnhub_symbol,
+                        "resolution": resolution_map.get(period, "D"),
+                        "from": start_time,
+                        "to": now,
+                        "token": finnhub_api_key
+                    }
+                )
+            data = res.json() if res.status_code == 200 else {}
+            if data.get("s") == "ok":
+                candles = []
+                for i, ts in enumerate(data.get("t", [])):
+                    candles.append({
+                        "timestamp": datetime.fromtimestamp(ts).isoformat(),
+                        "open": round(float(data["o"][i]), 2),
+                        "high": round(float(data["h"][i]), 2),
+                        "low": round(float(data["l"][i]), 2),
+                        "close": round(float(data["c"][i]), 2),
+                        "volume": int(data["v"][i])
+                    })
+                if candles:
+                    return candles
+        except Exception:
+            pass
     
     try:
         def fetch_hist():
@@ -190,9 +301,8 @@ async def get_historical_data(symbol: str, period: str) -> list:
             })
         return candles
     except Exception:
-        # Generate 30 mock candles trending slightly upwards
+        # Final fallback: stable flat candles (not random/simulated trend)
         fallback_price = FALLBACK_PRICES.get(symbol, 100.0)
-        current_price = fallback_price * 0.95
         
         candles = []
         now = datetime.now()
@@ -206,12 +316,10 @@ async def get_historical_data(symbol: str, period: str) -> list:
         
         for i in range(30):
             timestamp = start_time + (time_delta * i)
-            # ±2% variation trending slightly upwards
-            change = current_price * random.uniform(-0.015, 0.02)
-            open_p = current_price
-            close_p = open_p + change
-            high_p = max(open_p, close_p) * random.uniform(1.0, 1.01)
-            low_p = min(open_p, close_p) * random.uniform(0.99, 1.0)
+            open_p = fallback_price
+            close_p = fallback_price
+            high_p = fallback_price
+            low_p = fallback_price
             
             candles.append({
                 "timestamp": timestamp.isoformat(),
@@ -219,8 +327,41 @@ async def get_historical_data(symbol: str, period: str) -> list:
                 "high": round(high_p, 2),
                 "low": round(low_p, 2),
                 "close": round(close_p, 2),
-                "volume": random.randint(10000, 1000000)
+                "volume": 0
             })
-            current_price = close_p
             
         return candles
+
+async def get_market_indices() -> dict:
+    async def fetch_index(name: str, yf_symbol: str):
+        try:
+            def fetch():
+                ticker = yf.Ticker(yf_symbol)
+                hist = ticker.history(period="2d")
+                return hist
+            hist = await asyncio.to_thread(fetch)
+            if hist is None or hist.empty:
+                raise Exception("No data")
+            current = float(hist["Close"].iloc[-1])
+            prev = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else current
+            change = current - prev
+            change_pct = (change / prev) * 100 if prev else 0.0
+            return {
+                "name": name,
+                "value": round(current, 2),
+                "change": round(change, 2),
+                "changePct": round(change_pct, 2)
+            }
+        except Exception:
+            return {
+                "name": name,
+                "value": 0.0,
+                "change": 0.0,
+                "changePct": 0.0
+            }
+
+    nifty, sensex = await asyncio.gather(
+        fetch_index("NIFTY 50", INDEX_SYMBOLS["NIFTY"]),
+        fetch_index("SENSEX", INDEX_SYMBOLS["SENSEX"])
+    )
+    return {"nifty": nifty, "sensex": sensex}

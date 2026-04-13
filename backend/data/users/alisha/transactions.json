@@ -1,0 +1,13 @@
+[
+  {
+    "id": "7fd7eefb-e5f9-4a70-a941-8b055ced8d77",
+    "stockSymbol": "HDFCBANK",
+    "companyName": "HDFC Bank Ltd",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 1,
+    "price": 794.85,
+    "totalAmount": 794.85,
+    "createdAt": "2026-04-13T09:14:10Z"
+  }
+]

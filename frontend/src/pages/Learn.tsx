@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, CheckCircle2, Lock, History, Home as HomeIcon, 
-  BarChart2, User, ArrowRight, Flame, ChevronRight, PlayCircle, RefreshCw
+  BarChart2, User, ArrowRight, Flame, ChevronRight, PlayCircle, RefreshCw, X
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -111,6 +111,7 @@ export default function Learn() {
   const [data, setData] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeConcept, setActiveConcept] = useState<any | null>(null);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -147,17 +148,19 @@ export default function Learn() {
     return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Modules...</div>;
   }
 
-  // Map Backend Modules to UI Props
+  // Map backend module progress to UI
   const modules: ModuleCardProps[] = data.map((mod: any, index: number) => {
-    // Derive Mock states for demo
     let status: 'COMPLETED' | 'IN_PROGRESS' | 'NOT_STARTED' | 'LOCKED' | 'LOCKED_TIER' = 'NOT_STARTED';
-    let progress = 0;
-    
-    if (mod.id === 1) { status = 'COMPLETED'; progress = 100; }
-    else if (mod.id === 2) { status = 'IN_PROGRESS'; progress = 60; }
-    
+    const completedLessons = Number(mod.completedLessons || 0);
+    const totalLessons = Number(mod.totalLessons || 1);
+    const progress = Math.min(100, Math.round((completedLessons / totalLessons) * 100));
+
     if (user.currentTier < mod.requiredTier) {
-       status = 'LOCKED_TIER';
+      status = 'LOCKED_TIER';
+    } else if (completedLessons >= totalLessons) {
+      status = 'COMPLETED';
+    } else if (completedLessons > 0) {
+      status = 'IN_PROGRESS';
     }
 
     return {
@@ -168,7 +171,7 @@ export default function Learn() {
       description: mod.description,
       caseStudy: mod.caseStudy,
       progress,
-      lessons: `${mod.id === 1 ? mod.totalLessons : mod.id === 2 ? 3 : 0}/${mod.totalLessons} lessons`,
+      lessons: `${completedLessons}/${mod.totalLessons} lessons`,
       xp: `+${mod.xpReward} XP`,
       isProminent: status === 'IN_PROGRESS',
       onTap: handleModuleTap
@@ -176,11 +179,11 @@ export default function Learn() {
   });
 
   const quickConcepts = [
-    { title: '🐂 Bull vs Bear Market', time: '2 min' },
-    { title: '📊 What is NIFTY 50?', time: '2 min' },
-    { title: '💰 What is a Dividend?', time: '3 min' },
-    { title: '🛑 Stop Loss Explained', time: '2 min' },
-    { title: '📈 What is SIP?', time: '3 min' },
+    { title: '🐂 Bull vs Bear Market', time: '2 min', brief: 'Bull market means prices are generally rising and confidence is strong. Bear market means broad declines with fear dominating. Both are normal phases of a market cycle.' },
+    { title: '📊 What is NIFTY 50?', time: '2 min', brief: 'NIFTY 50 tracks 50 major Indian companies from different sectors. If NIFTY rises, it usually means large-cap India is doing well overall.' },
+    { title: '💰 What is a Dividend?', time: '3 min', brief: 'A dividend is a portion of company profit paid to shareholders. Not all companies pay it, but stable businesses often use dividends to reward long-term investors.' },
+    { title: '🛑 Stop Loss Explained', time: '2 min', brief: 'A stop loss is a pre-set exit price to limit downside. It protects capital and helps avoid emotional decision-making during sharp market moves.' },
+    { title: '📈 What is SIP?', time: '3 min', brief: 'SIP is systematic investing at regular intervals. It spreads entry points over time and reduces timing pressure for beginners.' },
   ];
 
   return (
@@ -189,7 +192,7 @@ export default function Learn() {
         <h1 className="text-xl font-heading font-bold text-text-primary">📚 Learning</h1>
         <div className="flex items-center space-x-1 text-accent-gold">
           <Flame size={16} fill="currentColor" />
-          <span className="text-xs font-mono font-bold">4 Day Streak</span>
+          <span className="text-xs font-mono font-bold">{user.daysActive || 0} Day Streak</span>
         </div>
       </header>
 
@@ -238,6 +241,7 @@ export default function Learn() {
               <motion.div
                 key={i}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setActiveConcept(concept)}
                 className="flex-shrink-0 w-[160px] h-[120px] bg-bg-card border border-border rounded-2xl p-4 flex flex-col justify-between"
               >
                 <div>
@@ -264,6 +268,33 @@ export default function Learn() {
             className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-bg-card border border-border px-6 py-3 rounded-full shadow-2xl"
           >
             <span className="text-sm font-bold text-text-primary">{toast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {activeConcept && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-black/70 flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[340px] bg-bg-card border border-border rounded-2xl p-5"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-base font-heading font-bold text-text-primary pr-4">{activeConcept.title}</h3>
+                <button onClick={() => setActiveConcept(null)} className="text-text-muted">
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="text-xs text-text-muted mb-4">{activeConcept.time} quick concept</p>
+              <p className="text-sm text-text-primary leading-relaxed">{activeConcept.brief}</p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

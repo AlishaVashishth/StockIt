@@ -1,8 +1,58 @@
 from fastapi import APIRouter, HTTPException
 from services.db import read_json, write_json
-from models.schemas import XpUpdateRequest
+from models.schemas import XpUpdateRequest, StartSessionRequest
+from datetime import datetime, timezone
+import uuid
+import re
 
 router = APIRouter()
+
+def _username_to_key(name: str) -> str:
+    key = re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
+    return key or f"user_{uuid.uuid4().hex[:8]}"
+
+@router.post("/start-session")
+async def start_session(request: StartSessionRequest):
+    trimmed_name = request.name.strip()
+    if not trimmed_name:
+        raise HTTPException(status_code=400, detail="Name is required")
+
+    user_key = _username_to_key(trimmed_name)
+    write_json("current_user.json", {"userKey": user_key, "name": trimmed_name})
+
+    existing_user = read_json("user.json")
+    if isinstance(existing_user, dict) and existing_user.get("id"):
+        return existing_user
+
+    initials = "".join([part[0].upper() for part in trimmed_name.split() if part][:2]) or "IN"
+    user_id = f"user_{uuid.uuid4().hex[:8]}"
+    user_data = {
+        "id": user_id,
+        "name": trimmed_name,
+        "email": f"{trimmed_name.lower().replace(' ', '.')}@investsim.local",
+        "avatarInitials": initials,
+        "virtualCash": 100000.00,
+        "xpPoints": 0,
+        "currentTier": 1,
+        "daysActive": 0,
+        "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    }
+
+    default_missions = [
+        {"id": "m1", "missionKey": "first_large_cap", "title": "Buy your first Large Cap stock", "xpReward": 50, "completed": False, "completedAt": None},
+        {"id": "m2", "missionKey": "hold_3_days", "title": "Hold a stock for 3 days", "xpReward": 75, "completed": False, "progress": 0, "total": 3, "completedAt": None},
+        {"id": "m3", "missionKey": "five_stock_portfolio", "title": "Build a 5-stock portfolio", "xpReward": 100, "completed": False, "locked": True, "requiredTier": 2, "completedAt": None}
+    ]
+
+    write_json("user.json", user_data)
+    write_json("holdings.json", [])
+    write_json("transactions.json", [])
+    write_json("lessons.json", [])
+    write_json("missions.json", default_missions)
+    write_json("time_machine_attempts.json", [])
+    write_json("loss_debriefs.json", [])
+    write_json("ai_mentor_logs.json", [])
+    return user_data
 
 @router.get("")
 async def get_user():

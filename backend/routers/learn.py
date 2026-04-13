@@ -51,10 +51,31 @@ MODULES_STATIC = [
         "requiredTier": 3, 
         "caseStudy": "How stop losses saved investors during Adani Group crash 2023", 
         "totalLessons": 5
+    },
+    {
+        "id": 6,
+        "title": "Behavioral Finance & Trading Psychology",
+        "description": "Master fear, greed, and discipline to avoid emotional mistakes",
+        "xpReward": 120,
+        "requiredTier": 2,
+        "caseStudy": "How panic selling during COVID hurt retail investors",
+        "totalLessons": 4
     }
 ]
 
 LESSONS_STATIC = {
+    1: [
+        {
+            "id": 1, "moduleId": 1, "lessonNumber": 1, "title": "Why Stocks Exist", "xpReward": 20,
+            "content": [{"type": "text", "value": "Stocks represent ownership in a company. Companies sell shares to raise money for growth."}],
+            "quiz": [{"question": "Buying a stock means you own:", "options": ["Debt only", "A small part of the company", "Only voting rights", "Nothing legal"], "correctIndex": 1, "explanation": "Shareholders own a fractional stake in the business."}]
+        },
+        {
+            "id": 2, "moduleId": 1, "lessonNumber": 2, "title": "Primary vs Secondary Market", "xpReward": 20,
+            "content": [{"type": "text", "value": "IPO is the primary market where company raises funds. Stock exchanges are secondary markets where investors trade among themselves."}],
+            "quiz": [{"question": "Where does a company raise fresh capital?", "options": ["Secondary market", "IPO/primary market", "Only mutual funds", "Derivatives market"], "correctIndex": 1, "explanation": "Fresh capital is raised in the primary market."}]
+        }
+    ],
     2: [
         {
             "id": 1, "moduleId": 2, "lessonNumber": 1, "title": "The Anatomy of a Candlestick", "xpReward": 20,
@@ -100,6 +121,54 @@ LESSONS_STATIC = {
                     "explanation": "High volume confirms that institutional money is supporting the price trend."
                 }
             ]
+        }
+    ],
+    3: [
+        {
+            "id": 1, "moduleId": 3, "lessonNumber": 1, "title": "Types of Risk", "xpReward": 20,
+            "content": [{"type": "text", "value": "Market risk impacts all stocks. Company risk is specific to one business. Liquidity risk appears when buyers are limited."}],
+            "quiz": [{"question": "A sector-wide crash is mostly:", "options": ["Company risk", "Market risk", "Liquidity risk", "Broker risk"], "correctIndex": 1, "explanation": "A broad decline across many stocks is market risk."}]
+        },
+        {
+            "id": 2, "moduleId": 3, "lessonNumber": 2, "title": "Position Sizing Basics", "xpReward": 20,
+            "content": [{"type": "text", "value": "Don't put too much money in one stock. Position sizing protects your capital when a trade goes wrong."}],
+            "quiz": [{"question": "Good risk practice is to:", "options": ["All-in one stock", "Diversify and size positions", "Ignore downside", "Average down always"], "correctIndex": 1, "explanation": "Sizing and diversification limit large losses."}]
+        }
+    ],
+    4: [
+        {
+            "id": 1, "moduleId": 4, "lessonNumber": 1, "title": "What Diversification Really Means", "xpReward": 25,
+            "content": [{"type": "text", "value": "True diversification means spreading across sectors and business models, not just owning many names from one sector."}],
+            "quiz": [{"question": "Owning 5 IT stocks is:", "options": ["Highly diversified", "Partially diversified", "Not sector-diversified", "Risk-free"], "correctIndex": 2, "explanation": "Sector concentration still remains high."}]
+        },
+        {
+            "id": 2, "moduleId": 4, "lessonNumber": 2, "title": "Building Core-Satellite Portfolios", "xpReward": 25,
+            "content": [{"type": "text", "value": "Core holdings are stable leaders. Satellite positions are smaller tactical bets for higher growth."}],
+            "quiz": [{"question": "Core portfolio should usually be:", "options": ["Most volatile stocks", "Stable long-term businesses", "Only penny stocks", "Daily momentum picks"], "correctIndex": 1, "explanation": "Core is meant to provide stability over time."}]
+        }
+    ],
+    5: [
+        {
+            "id": 1, "moduleId": 5, "lessonNumber": 1, "title": "Limit vs Market Orders", "xpReward": 30,
+            "content": [{"type": "text", "value": "Market order executes immediately at current price. Limit order executes only at your chosen price or better."}],
+            "quiz": [{"question": "If price control is priority, use:", "options": ["Market order", "Limit order", "Random order", "No order type"], "correctIndex": 1, "explanation": "Limit orders let you define acceptable price."}]
+        },
+        {
+            "id": 2, "moduleId": 5, "lessonNumber": 2, "title": "Futures Basics", "xpReward": 30,
+            "content": [{"type": "text", "value": "Futures are leveraged contracts. Small moves can create large gains or losses, so risk control is critical."}],
+            "quiz": [{"question": "Futures trading usually has:", "options": ["No leverage", "Leverage and higher risk", "Guaranteed returns", "No margin"], "correctIndex": 1, "explanation": "Futures are leveraged instruments."}]
+        }
+    ],
+    6: [
+        {
+            "id": 1, "moduleId": 6, "lessonNumber": 1, "title": "Avoiding FOMO", "xpReward": 25,
+            "content": [{"type": "text", "value": "FOMO makes traders chase extended moves without a plan. Use rules before entering any momentum trade."}],
+            "quiz": [{"question": "FOMO usually leads to:", "options": ["Disciplined entries", "Impulsive trades", "Lower risk", "Better journaling"], "correctIndex": 1, "explanation": "Impulsive entries often come from fear of missing out."}]
+        },
+        {
+            "id": 2, "moduleId": 6, "lessonNumber": 2, "title": "Trading Journal Habit", "xpReward": 25,
+            "content": [{"type": "text", "value": "A simple journal of entry, exit, and emotion helps identify repeat mistakes and improve decision quality."}],
+            "quiz": [{"question": "A trading journal helps you:", "options": ["Hide mistakes", "Track patterns and improve", "Predict market exactly", "Avoid all losses"], "correctIndex": 1, "explanation": "Reviewing your decisions improves consistency over time."}]
         }
     ]
 }

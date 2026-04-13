@@ -23,6 +23,7 @@ const fetchJson = async (endpoint: string, options?: RequestInit) => {
 export const api = {
   // User
   getUser: () => fetchJson('/user'),
+  startSession: (name: string) => fetchJson('/user/start-session', { method: 'POST', body: JSON.stringify({ name }) }),
   patchXP: (xpPoints: number) => fetchJson('/user/xp', { method: 'PATCH', body: JSON.stringify({ xpPoints }) }),
   getLeaderboards: () => fetchJson('/user/leaderboard'),
   
@@ -35,6 +36,7 @@ export const api = {
   
   // Stocks
   getStocks: () => fetchJson('/stocks'),
+  getMarketIndices: () => fetchJson('/stocks/indices/live'),
   getStockDetail: (symbol: string) => fetchJson(`/stocks/${symbol}`),
   getStockHistory: (symbol: string, period = '1d') => fetchJson(`/stocks/${symbol}/history?period=${period}`),
   

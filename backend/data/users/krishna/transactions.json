@@ -1,0 +1,13 @@
+[
+  {
+    "id": "bd3d6d0c-e2db-4b05-8d39-a0c00b9f6ed6",
+    "stockSymbol": "RELIANCE",
+    "companyName": "Reliance Industries Ltd",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 1,
+    "price": 1317.2,
+    "totalAmount": 1317.2,
+    "createdAt": "2026-04-13T08:28:38Z"
+  }
+]

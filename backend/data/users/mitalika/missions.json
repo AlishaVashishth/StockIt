@@ -4,8 +4,8 @@
     "missionKey": "first_large_cap",
     "title": "Buy your first Large Cap stock",
     "xpReward": 50,
-    "completed": false,
-    "completedAt": null
+    "completed": true,
+    "completedAt": "2026-04-13T08:44:53Z"
   },
   {
     "id": "m2",
@@ -23,8 +23,10 @@
     "title": "Build a 5-stock portfolio",
     "xpReward": 100,
     "completed": false,
-    "locked": true,
+    "locked": false,
     "requiredTier": 2,
-    "completedAt": null
+    "completedAt": null,
+    "progress": 0,
+    "total": 5
   }
 ]

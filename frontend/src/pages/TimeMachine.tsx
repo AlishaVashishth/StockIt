@@ -15,6 +15,7 @@ export default function TimeMachine() {
   const [selectedScenario, setSelectedScenario] = useState<any | null>(null);
   const [gameState, setGameState] = useState<'browsing' | 'playing' | 'result'>('browsing');
   const [userChoice, setUserChoice] = useState<'BUY' | 'SKIP' | null>(null);
+  const [resultOutcome, setResultOutcome] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export default function TimeMachine() {
 
   const handleStartScenario = (scenario: any) => {
     setSelectedScenario(scenario);
+    setResultOutcome(null);
+    setUserChoice(null);
     setGameState('playing');
   };
 
@@ -44,10 +47,17 @@ export default function TimeMachine() {
     setUserChoice(choice);
     setIsSubmitting(true);
     try {
-      await api.saveAttempt(selectedScenario.id, choice);
+      const availableChoiceIds = (selectedScenario?.choices || []).map((c: any) => c.id);
+      let backendChoice = choice === 'BUY' ? 'buy' : 'skip';
+      if (!availableChoiceIds.includes(backendChoice)) {
+        backendChoice = availableChoiceIds.includes('wait') ? 'wait' : availableChoiceIds[0];
+      }
+      const response = await api.saveAttempt(selectedScenario.id, backendChoice);
+      setResultOutcome(response?.outcome || null);
       setGameState('result');
     } catch(err) {
       console.error(err);
+      setResultOutcome(null);
       setGameState('result');
     } finally {
       setIsSubmitting(false);
@@ -97,8 +107,8 @@ export default function TimeMachine() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-[10px] font-bold px-2 py-0.5 bg-bg-secondary rounded border border-border text-text-muted">{scenario.date}</span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${scenario.difficulty === 'Easy' ? 'bg-accent-green/10 border-accent-green/30 text-accent-green' : scenario.difficulty === 'Medium' ? 'bg-accent-gold/10 border-accent-gold/30 text-accent-gold' : 'bg-accent-red/10 border-accent-red/30 text-accent-red'}`}>
-                          {scenario.difficulty}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${scenario.id <= 2 ? 'bg-accent-green/10 border-accent-green/30 text-accent-green' : scenario.id <= 4 ? 'bg-accent-gold/10 border-accent-gold/30 text-accent-gold' : 'bg-accent-red/10 border-accent-red/30 text-accent-red'}`}>
+                          {scenario.id <= 2 ? 'Easy' : scenario.id <= 4 ? 'Medium' : 'Hard'}
                         </span>
                       </div>
                       <h4 className="text-base font-heading font-bold text-text-primary group-hover:text-accent-gold transition-colors">{scenario.title}</h4>
@@ -129,7 +139,7 @@ export default function TimeMachine() {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-text-muted uppercase mb-1">Price</p>
-                    <p className="text-xl font-heading font-bold text-text-primary">₹{selectedScenario.priceAtTime}</p>
+                    <p className="text-xl font-heading font-bold text-text-primary">₹{selectedScenario.startPrice}</p>
                   </div>
                 </div>
 
@@ -141,7 +151,7 @@ export default function TimeMachine() {
                   <Info size={18} className="text-accent-blue shrink-0 mt-0.5" />
                   <div>
                     <p className="text-[10px] font-bold text-accent-blue uppercase tracking-wider mb-1">Market Context</p>
-                    <p className="text-[11px] text-text-primary leading-relaxed">{selectedScenario.context}</p>
+                    <p className="text-[11px] text-text-primary leading-relaxed">{selectedScenario.concept}</p>
                   </div>
                 </div>
               </div>
@@ -156,12 +166,12 @@ export default function TimeMachine() {
           {gameState === 'result' && selectedScenario && (
             <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               <div className={`p-8 rounded-3xl border-2 text-center space-y-4 ${
-                (userChoice === 'BUY' && selectedScenario.outcome.isPositive) || (userChoice === 'SKIP' && !selectedScenario.outcome.isPositive)
+                resultOutcome?.isWin
                 ? 'bg-accent-green/10 border-accent-green/30'
                 : 'bg-accent-red/10 border-accent-red/30'
               }`}>
                 <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-2">
-                  {(userChoice === 'BUY' && selectedScenario.outcome.isPositive) || (userChoice === 'SKIP' && !selectedScenario.outcome.isPositive) ? (
+                  {resultOutcome?.isWin ? (
                     <CheckCircle2 size={64} className="text-accent-green" />
                   ) : (
                     <AlertCircle size={64} className="text-accent-red" />
@@ -169,25 +179,23 @@ export default function TimeMachine() {
                 </div>
                 
                 <h2 className="text-2xl font-heading font-bold text-text-primary">
-                  {(userChoice === 'BUY' && selectedScenario.outcome.isPositive) || (userChoice === 'SKIP' && !selectedScenario.outcome.isPositive) 
-                    ? 'Smart Move!' 
-                    : 'Ouch...'}
+                  {resultOutcome?.isWin ? 'Smart Move!' : 'Tough Call'}
                 </h2>
                 
                 <div className="space-y-1">
-                  <p className="text-sm text-text-muted">The stock went</p>
-                  <p className={`text-4xl font-heading font-extrabold ${selectedScenario.outcome.isPositive ? 'text-accent-green' : 'text-accent-red'}`}>
-                    {selectedScenario.outcome.priceChange}
+                  <p className="text-sm text-text-muted">Scenario outcome</p>
+                  <p className={`text-xl font-heading font-extrabold ${resultOutcome?.isWin ? 'text-accent-green' : 'text-accent-red'}`}>
+                    {resultOutcome?.result || 'No result available'}
                   </p>
                 </div>
               </div>
 
               <div className="bg-bg-card border border-border rounded-3xl p-6 space-y-4">
-                <h3 className="text-lg font-heading font-bold text-accent-gold">{selectedScenario.outcome.title}</h3>
-                <p className="text-sm text-text-primary leading-relaxed">{selectedScenario.outcome.text}</p>
+                <h3 className="text-lg font-heading font-bold text-accent-gold">{selectedScenario.title}</h3>
+                <p className="text-sm text-text-primary leading-relaxed">{resultOutcome?.result || 'Try another scenario to see the outcome.'}</p>
                 <div className="p-4 bg-bg-secondary rounded-2xl border border-border">
                   <p className="text-[10px] font-bold text-accent-gold uppercase tracking-widest mb-2">💡 THE LESSON</p>
-                  <p className="text-xs text-text-primary leading-relaxed font-bold">{selectedScenario.outcome.lesson}</p>
+                  <p className="text-xs text-text-primary leading-relaxed font-bold">{resultOutcome?.lesson || 'Every market cycle teaches risk management and patience.'}</p>
                 </div>
               </div>
 

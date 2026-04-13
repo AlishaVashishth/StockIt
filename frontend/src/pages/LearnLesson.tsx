@@ -8,8 +8,9 @@ export default function LearnLesson() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -31,13 +32,25 @@ export default function LearnLesson() {
     fetchLesson();
   }, [moduleId]);
 
-  if (loading || !data) {
+  useEffect(() => {
+    if (data.length === 0) return;
+    const firstIncompleteIndex = data.findIndex((lesson: any) => !lesson.completed);
+    setCurrentLessonIndex(firstIncompleteIndex >= 0 ? firstIncompleteIndex : data.length - 1);
+    setCurrentQuestionIndex(0);
+    setSelectedOption(null);
+    setIsAnswered(false);
+  }, [data]);
+
+  if (loading || data.length === 0) {
     return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Lesson...</div>;
   }
 
-  // The backend might return { lessonId, title, content, quiz } based on backend schema
-  const quiz = data.quiz; 
+  const currentLesson = data[currentLessonIndex];
+  const quiz = currentLesson.quiz || []; 
   const currentQuestion = quiz[currentQuestionIndex];
+  const contentHtml = Array.isArray(currentLesson.content)
+    ? currentLesson.content.map((c: any) => `<p>${c.value}</p>`).join('')
+    : (currentLesson.content || '');
 
   const handleOptionSelect = (index: number) => {
     if (isAnswered) return;
@@ -49,7 +62,14 @@ export default function LearnLesson() {
      try {
         // Simple logic for quiz score: assuming they got it right eventually
         const score = 100; 
-        await api.completeLesson(data.lessonId, Number(moduleId), score);
+        await api.completeLesson(currentLesson.id, Number(moduleId), score);
+        if (currentLessonIndex < data.length - 1) {
+          setCurrentLessonIndex(currentLessonIndex + 1);
+          setCurrentQuestionIndex(0);
+          setSelectedOption(null);
+          setIsAnswered(false);
+          return;
+        }
         setQuizComplete(true);
         setShowCompletion(true);
      } catch (e) {
@@ -76,11 +96,11 @@ export default function LearnLesson() {
           </button>
           <div className="text-center">
             <span className="text-[12px] font-mono text-text-muted">
-              Module {moduleId} · Lesson {data.lessonId}
+              Module {moduleId} · Lesson {currentLesson.lessonNumber}
             </span>
           </div>
           <div className="px-2 py-1 rounded bg-accent-gold/10 border border-accent-gold/20">
-            <span className="text-[10px] font-bold text-accent-gold">{data.xpReward} XP</span>
+            <span className="text-[10px] font-bold text-accent-gold">{currentLesson.xpReward} XP</span>
           </div>
         </div>
         <div className="h-[2px] w-full bg-bg-secondary">
@@ -98,12 +118,12 @@ export default function LearnLesson() {
             📊 EDUCATION
           </span>
           <h1 className="text-[28px] font-heading font-bold text-text-primary leading-tight mb-2">
-            {data.title}
+            {currentLesson.title}
           </h1>
           <span className="text-[12px] text-text-muted">⏱️ 3 min read</span>
         </div>
 
-        <div className="space-y-4 mb-10 text-sm font-mono text-text-primary leading-[1.8]" dangerouslySetInnerHTML={{ __html: data.content }}>
+        <div className="space-y-4 mb-10 text-sm font-mono text-text-primary leading-[1.8]" dangerouslySetInnerHTML={{ __html: contentHtml }}>
         </div>
 
         {/* Note: I removed the large static SVG Candlestick diagram for brevity in auto-generation, it would be mapped dynamically if content had custom SVGs in reality */}
@@ -207,7 +227,7 @@ export default function LearnLesson() {
             </motion.div>
 
             <h2 className="text-3xl font-heading font-bold text-text-primary mb-2">Lesson Complete!</h2>
-            <p className="text-2xl font-bold text-accent-gold mb-8">+{data.xpReward} XP Earned</p>
+            <p className="text-2xl font-bold text-accent-gold mb-8">+{currentLesson.xpReward} XP Earned</p>
             
             <div className="w-full space-y-4 mt-12">
               <button 

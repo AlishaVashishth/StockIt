@@ -1,0 +1,20 @@
+[
+  {
+    "trigger": "VIEW",
+    "symbol": "ZOMATO",
+    "response": "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching.",
+    "timestamp": "2026-04-13T09:12:22.146623+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ZOMATO",
+    "response": "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching.",
+    "timestamp": "2026-04-13T09:12:33.018146+00:00"
+  },
+  {
+    "trigger": "BUY",
+    "symbol": "HDFCBANK",
+    "response": "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching.",
+    "timestamp": "2026-04-13T09:14:12.377650+00:00"
+  }
+]

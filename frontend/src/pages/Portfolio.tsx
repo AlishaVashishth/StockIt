@@ -141,7 +141,15 @@ export default function Portfolio() {
     );
   }
 
-  const { metrics, holdings, transactions } = data;
+  const holdings = data.holdings || [];
+  const transactions = data.transactions || [];
+  const metrics = data.metrics || {
+    totalValue: Number(data.totalPortfolioValue || 0),
+    totalPnl: Number(data.totalPnl || 0),
+    totalPnlPct: Number(data.totalPnlPct || 0),
+    virtualCash: Number(data.virtualCash || 0),
+    diversityScore: Number(data.diversityScore || 0),
+  };
   const cashPercentage = metrics.totalValue > 0 ? (metrics.virtualCash / metrics.totalValue) * 100 : 100;
   
   // Apply visual colors to holdings
@@ -382,7 +390,7 @@ export default function Portfolio() {
                     </div>
                     <div>
                       <h4 className="text-sm font-mono font-bold text-text-primary">{t.stockSymbol}</h4>
-                      <p className="text-[10px] text-text-muted">{t.quantity} shares @ ₹{t.executionPrice.toFixed(2)}</p>
+                      <p className="text-[10px] text-text-muted">{t.quantity} shares @ ₹{Number(t.executionPrice ?? t.price ?? 0).toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="text-right">

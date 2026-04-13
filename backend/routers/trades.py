@@ -7,6 +7,88 @@ from datetime import datetime, timezone
 
 router = APIRouter()
 
+def _update_missions_after_trade() -> None:
+    missions = read_json("missions.json")
+    if not isinstance(missions, list):
+        missions = []
+
+    holdings = read_json("holdings.json")
+    if not isinstance(holdings, list):
+        holdings = []
+
+    transactions = read_json("transactions.json")
+    if not isinstance(transactions, list):
+        transactions = []
+
+    now = datetime.now(timezone.utc)
+    changed = False
+
+    first_mission = next((m for m in missions if m.get("missionKey") == "first_large_cap"), None)
+    if first_mission and not first_mission.get("completed"):
+        has_large_cap_buy = any(
+            t.get("type") == "BUY" and t.get("marketCap") == "Large Cap"
+            for t in transactions
+        )
+        if has_large_cap_buy:
+            first_mission["completed"] = True
+            first_mission["completedAt"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+            changed = True
+
+    hold_mission = next((m for m in missions if m.get("missionKey") == "hold_3_days"), None)
+    if hold_mission and not hold_mission.get("completed"):
+        held_symbols = {h.get("stockSymbol") for h in holdings if h.get("quantity", 0) > 0}
+        earliest_buy = None
+        for t in transactions:
+            if t.get("type") != "BUY" or t.get("stockSymbol") not in held_symbols:
+                continue
+            created_at = t.get("createdAt")
+            if not created_at:
+                continue
+            try:
+                tx_time = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                if earliest_buy is None or tx_time < earliest_buy:
+                    earliest_buy = tx_time
+            except ValueError:
+                continue
+
+        progress_days = 0
+        if earliest_buy is not None:
+            progress_days = max((now.date() - earliest_buy.date()).days, 0)
+
+        total_days = int(hold_mission.get("total", 3))
+        new_progress = min(progress_days, total_days)
+        if hold_mission.get("progress") != new_progress:
+            hold_mission["progress"] = new_progress
+            changed = True
+
+        if new_progress >= total_days:
+            hold_mission["completed"] = True
+            hold_mission["completedAt"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+            changed = True
+
+    portfolio_mission = next((m for m in missions if m.get("missionKey") == "five_stock_portfolio"), None)
+    if portfolio_mission:
+        unlocked = bool(portfolio_mission.get("locked"))
+        if unlocked and len(holdings) >= 1:
+            portfolio_mission["locked"] = False
+            changed = True
+
+        if not portfolio_mission.get("completed"):
+            if len(holdings) >= 5:
+                portfolio_mission["completed"] = True
+                portfolio_mission["completedAt"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                portfolio_mission["progress"] = 5
+                changed = True
+            else:
+                progress = len(holdings)
+                if portfolio_mission.get("progress") != progress:
+                    portfolio_mission["progress"] = progress
+                    portfolio_mission["total"] = 5
+                    changed = True
+
+    if changed:
+        write_json("missions.json", missions)
+
 @router.post("/buy")
 async def execute_buy(request: BuyTradeRequest):
     sym = request.stockSymbol.upper()
@@ -66,6 +148,7 @@ async def execute_buy(request: BuyTradeRequest):
         "id": str(uuid.uuid4()),
         "stockSymbol": sym,
         "companyName": company_name,
+        "marketCap": live_data.get("marketCap"),
         "type": "BUY",
         "quantity": qty,
         "price": current_price,
@@ -74,6 +157,7 @@ async def execute_buy(request: BuyTradeRequest):
     }
     transactions.append(new_txn)
     write_json("transactions.json", transactions)
+    _update_missions_after_trade()
     
     return {
         "success": True,
@@ -123,6 +207,7 @@ async def execute_sell(request: SellTradeRequest):
         "id": str(uuid.uuid4()),
         "stockSymbol": sym,
         "companyName": company_name,
+        "marketCap": live_data.get("marketCap"),
         "type": "SELL",
         "quantity": qty,
         "price": current_price,
@@ -131,6 +216,7 @@ async def execute_sell(request: SellTradeRequest):
     }
     transactions.append(new_txn)
     write_json("transactions.json", transactions)
+    _update_missions_after_trade()
     
     return {
         "success": True,

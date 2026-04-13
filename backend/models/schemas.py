@@ -4,6 +4,9 @@ from typing import Optional
 class XpUpdateRequest(BaseModel):
     xpPoints: int
 
+class StartSessionRequest(BaseModel):
+    name: str
+
 class BuyTradeRequest(BaseModel):
     stockSymbol: str
     quantity: int
