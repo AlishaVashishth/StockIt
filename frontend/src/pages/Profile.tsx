@@ -1,68 +1,93 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, animate, useMotionValue, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Settings, 
-  Trophy, 
-  BookOpen, 
-  ShieldCheck, 
-  TrendingUp, 
-  Share2, 
-  ChevronLeft,
-  Copy,
-  X,
-  Home as HomeIcon,
-  BarChart2,
-  History,
-  User,
-  BookOpen as BookIcon
+  Settings,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  ChevronDown,
+  Star
 } from 'lucide-react';
 import { api } from '../api';
 
-// --- MOCK DATA ---
-const LEADERBOARD_DATA = {
-  returns: [
-    { rank: 1, name: 'Priya S.', value: '+31.4%', sub: '₹1,31,400', initial: 'PS' },
-    { rank: 2, name: 'Rahul M.', value: '+28.7%', sub: '₹1,28,700', initial: 'RM' },
-    { rank: 3, name: 'Kavya T.', value: '+22.1%', sub: '₹1,22,100', initial: 'KT' },
-    { rank: 4, name: 'Arjun K.', value: '+14.2%', sub: '₹1,14,200', initial: 'AK', isUser: true },
-    { rank: 5, name: 'Sneha R.', value: '+12.8%', sub: '₹1,12,800', initial: 'SR' },
-    { rank: 6, name: 'Vikram M.', value: '+11.4%', sub: '₹1,11,400', initial: 'VM' },
-    { rank: 7, name: 'Pooja S.', value: '+9.7%', sub: '₹1,09,700', initial: 'PS' },
-    { rank: 8, name: 'Amit R.', value: '+8.2%', sub: '₹1,08,200', initial: 'AR' },
-    { rank: 9, name: 'Divya K.', value: '+7.1%', sub: '₹1,07,100', initial: 'DK' },
-    { rank: 10, name: 'Rohan S.', value: '+5.9%', sub: '₹1,05,900', initial: 'RS' },
-  ],
-  learning: [
-    { rank: 1, name: 'Kavya T.', value: '15/15', sub: '500 XP', initial: 'KT' },
-    { rank: 2, name: 'Priya S.', value: '14/15', sub: '475 XP', initial: 'PS' },
-    { rank: 3, name: 'Sneha R.', value: '12/15', sub: '410 XP', initial: 'SR' },
-    { rank: 4, name: 'Arjun K.', value: '8/15', sub: '340 XP', initial: 'AK', isUser: true },
-    { rank: 5, name: 'Rahul M.', value: '7/15', sub: '310 XP', initial: 'RM' },
-  ],
-  risk: [
-    { rank: 1, name: 'Priya S.', value: '9.2/10', sub: 'Exceptional', initial: 'PS' },
-    { rank: 2, name: 'Kavya T.', value: '8.7/10', sub: 'Excellent', initial: 'KT' },
-    { rank: 3, name: 'Arjun K.', value: '7.4/10', sub: 'Balanced', initial: 'AK', isUser: true },
-    { rank: 4, name: 'Vikram M.', value: '6.8/10', sub: 'Moderate', initial: 'VM' },
-    { rank: 5, name: 'Sneha R.', value: '6.2/10', sub: 'Moderate', initial: 'SR' },
-  ]
+interface Holding {
+  stockSymbol: string;
+  quantity: number;
+  avgBuyPrice: number;
+  currentValue?: number;
+  currentPrice: number;
+  color: string;
+  percentage: number;
+}
+
+const DonutChart = ({ holdings, cashPercentage }: { holdings: Holding[], cashPercentage: number }) => {
+  const radius = 70;
+  const strokeWidth = 20;
+  const normalizedRadius = radius - strokeWidth / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  
+  const data = [
+    ...holdings.map(h => ({ value: h.percentage, color: h.color })),
+    { value: cashPercentage, color: '#2A2A3E' }
+  ];
+
+  let currentOffset = 0;
+
+  return (
+    <div className="relative flex justify-center items-center py-8">
+      <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
+        {data.map((segment, i) => {
+          const strokeDashoffset = circumference - (segment.value / 100) * circumference;
+          const offset = currentOffset;
+          currentOffset += (segment.value / 100) * circumference;
+          
+          return (
+            <circle
+              key={i}
+              stroke={segment.color}
+              fill="transparent"
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${circumference} ${circumference}`}
+              style={{ strokeDashoffset, transform: `rotate(${(offset / circumference) * 360}deg)`, transformOrigin: 'center' }}
+              r={normalizedRadius}
+              cx={radius}
+              cy={radius}
+              className="transition-all duration-1000 ease-out"
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <span className="text-lg font-heading font-bold text-text-primary">{holdings.length + 1}</span>
+        <span className="text-[10px] text-text-muted uppercase tracking-widest">Assets</span>
+      </div>
+    </div>
+  );
 };
 
-const BADGES = [
-  { id: 1, emoji: '🎯', name: 'First Trade', sub: 'Completed', earned: true },
-  { id: 2, emoji: '📚', name: 'Scholar', sub: '5 lessons done', earned: true },
-  { id: 3, emoji: '💰', name: 'Profit Maker', sub: '10%+ returns', earned: true },
-  { id: 4, emoji: '🛡️', name: 'Risk Manager', sub: 'Diversify your portfolio', earned: false },
-  { id: 5, emoji: '⏪', name: 'Time Traveler', sub: 'Complete all scenarios', earned: false },
-  { id: 6, emoji: '🏆', name: 'Top 10', sub: 'Reach leaderboard top 10', earned: false },
-];
+const CountUp = ({ value, prefix = "₹" }: { value: number, prefix?: string }) => {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => 
+    `${prefix}${Math.round(latest).toLocaleString('en-IN')}`
+  );
+
+  useEffect(() => {
+    const controls = animate(count, value, { duration: 2, ease: "easeOut" });
+    return () => controls.stop();
+  }, [value]);
+
+  return <motion.span>{rounded}</motion.span>;
+};
 
 export default function Profile() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'returns' | 'learning' | 'risk'>('returns');
-  const [showShare, setShowShare] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
+  const [sortBy, setSortBy] = useState('P&L');
+  const [isRefreshingAI, setIsRefreshingAI] = useState(false);
+  const [aiInsight, setAiInsight] = useState<any>(null);
   const streakCount = userData?.streakCount ?? userData?.daysActive ?? 0;
   const displayName = userData?.name || 'Investor';
   const initials = displayName
@@ -71,20 +96,66 @@ export default function Profile() {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'IN';
-  const leaderboardForTab = LEADERBOARD_DATA[activeTab].map((entry) =>
-    entry.isUser ? { ...entry, name: displayName, initial: initials } : entry
-  );
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await api.getUser();
+        const [user, portfolio] = await Promise.all([
+          api.getUser(),
+          api.getPortfolio()
+        ]);
         setUserData(user);
+        setPortfolioData(portfolio);
       } catch (err) {
         console.error(err);
       }
     };
     loadUser();
   }, []);
+
+  const handleRefreshAI = async () => {
+    setIsRefreshingAI(true);
+    try {
+      const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const insight = await api.analyzePortfolio(requestId);
+      setAiInsight(insight);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRefreshingAI(false);
+    }
+  };
+
+  const holdings = portfolioData?.holdings || [];
+  const transactions = portfolioData?.transactions || [];
+  const metrics = {
+    totalValue: Number(portfolioData?.totalPortfolioValue || 0),
+    totalPnl: Number(portfolioData?.totalPnl || 0),
+    totalPnlPct: Number(portfolioData?.totalPnlPct || 0),
+    virtualCash: Number(portfolioData?.virtualCash || 0),
+    diversityScore: Number(portfolioData?.diversityScore || 0),
+  };
+  const cashPercentage = metrics.totalValue > 0 ? (metrics.virtualCash / metrics.totalValue) * 100 : 100;
+  const sortedHoldings = useMemo(() => {
+    const list = [...holdings];
+    switch (sortBy) {
+      case 'P&L':
+        return list.sort((a: any, b: any) => ((b.currentPrice - b.avgBuyPrice) * b.quantity) - ((a.currentPrice - a.avgBuyPrice) * a.quantity));
+      case 'Value':
+        return list.sort((a: any, b: any) => (b.currentPrice * b.quantity) - (a.currentPrice * a.quantity));
+      case 'Name':
+        return list.sort((a: any, b: any) => a.stockSymbol.localeCompare(b.stockSymbol));
+      case '% Returns':
+        return list.sort((a: any, b: any) => (b.currentPrice / b.avgBuyPrice) - (a.currentPrice / a.avgBuyPrice));
+      default:
+        return list;
+    }
+  }, [sortBy, holdings]);
+  const colors = ['#4A9EFF', '#A855F7', '#F0A500', '#F97316', '#FF4757', '#00D4A1'];
+  const enrichedHoldings = holdings.map((h: any, i: number) => ({
+    ...h,
+    color: colors[i % colors.length],
+    percentage: metrics.totalValue > 0 ? ((h.currentPrice * h.quantity) / metrics.totalValue) * 100 : 0
+  }));
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col font-mono text-text-primary">
@@ -159,248 +230,215 @@ export default function Profile() {
           ))}
         </div>
 
-        {/* SECTION 3: BADGES */}
-        <div className="mb-10">
-          <h3 className="text-lg font-heading font-bold mb-4 flex items-center">
-            <span className="mr-2">🏅</span> Badges Earned
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {BADGES.map((badge, i) => (
-              <motion.div
-                key={badge.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={`p-4 rounded-2xl border flex flex-col items-center text-center transition-all ${
-                  badge.earned 
-                    ? 'bg-bg-card border-accent-gold/30 shadow-[0_0_15px_rgba(240,165,0,0.05)]' 
-                    : 'bg-bg-secondary border-border opacity-60 grayscale'
-                }`}
-              >
-                <div className="relative">
-                  <span className="text-4xl mb-2 block">{badge.emoji}</span>
-                  {!badge.earned && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-bg-primary rounded-full flex items-center justify-center border border-border">
-                      <X size={10} className="text-text-muted" />
-                    </div>
-                  )}
-                  {badge.earned && (
-                    <motion.div 
-                      animate={{ opacity: [0.2, 0.5, 0.2] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 bg-accent-gold blur-xl rounded-full -z-10"
-                    />
-                  )}
-                </div>
-                <span className={`text-xs font-bold mt-2 ${badge.earned ? 'text-text-primary' : 'text-text-muted'}`}>
-                  {badge.name}
-                </span>
-                <span className="text-[9px] text-text-muted mt-1 leading-tight">
-                  {badge.sub}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* SECTION 4: LEADERBOARD */}
+        {/* SECTION 3: FULL PORTFOLIO CONTENT */}
         <div className="mb-8">
           <h3 className="text-xl font-heading font-bold mb-4 flex items-center">
-            <span className="mr-2">🏆</span> Leaderboard
+            <span className="mr-2">💼</span> Portfolio
           </h3>
-          
-          <div className="flex bg-bg-card rounded-xl p-1 mb-4 border border-border">
-            {(['returns', 'learning', 'risk'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                  activeTab === tab 
-                    ? 'bg-accent-gold text-black shadow-lg' 
-                    : 'text-text-muted hover:text-text-primary'
-                }`}
-              >
-                {tab === 'returns' ? '📈 Returns' : tab === 'learning' ? '📚 Learning' : '🛡️ Risk Score'}
-              </button>
-            ))}
-          </div>
 
-          <p className="text-[10px] text-text-muted mb-6 px-1">
-            {activeTab === 'returns' && "Based on total portfolio returns since start"}
-            {activeTab === 'learning' && "Ranked by lessons completed + XP earned"}
-            {activeTab === 'risk' && "Ranked by returns ÷ max loss (higher = smarter risk)"}
-          </p>
+          {!portfolioData ? (
+            <div className="p-4 rounded-xl bg-bg-card border border-border text-text-muted text-sm flex items-center">
+              <RefreshCw size={14} className="animate-spin mr-2" />
+              Loading portfolio...
+            </div>
+          ) : (
+            <>
+              <div className="relative p-6 rounded-[24px] bg-bg-card border border-accent-gold/20 mb-8 overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-accent-gold/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                <div className="relative z-10">
+                  <p className="text-xs font-mono text-text-muted mb-1">Total Value</p>
+                  <h2 className="text-[48px] font-heading font-bold text-text-primary leading-tight mb-1">
+                    <CountUp value={metrics.totalValue || 100000} />
+                  </h2>
+                  <div className="flex items-center space-x-2 mb-6">
+                    <span className={`text-sm font-mono font-bold ${metrics.totalPnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                      {metrics.totalPnl >= 0 ? '+' : ''}₹{metrics.totalPnl} ({metrics.totalPnlPct}%)
+                    </span>
+                    <span className="text-[10px] text-text-muted">Since you started</span>
+                  </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="space-y-4"
-            >
-              {/* PODIUM */}
-              <div className="flex items-end justify-center space-x-2 mb-8 px-2">
-                {/* #2 */}
-                <div className="flex-1 flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-bg-card border-2 border-slate-400 flex items-center justify-center mb-2 relative">
-                    <span className="text-sm font-bold">{leaderboardForTab[1].initial}</span>
-                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-slate-400 rounded-full flex items-center justify-center text-[10px] font-bold text-black">2</div>
-                  </div>
-                  <div className="w-full h-16 bg-bg-card border-t-2 border-slate-400 rounded-t-lg flex flex-col items-center justify-center p-1">
-                    <span className="text-[10px] font-bold truncate w-full text-center">{leaderboardForTab[1].name}</span>
-                    <span className="text-[10px] text-accent-green">{leaderboardForTab[1].value}</span>
-                  </div>
-                </div>
-
-                {/* #1 */}
-                <div className="flex-1 flex flex-col items-center">
-                  <div className="w-16 h-16 rounded-full bg-bg-card border-2 border-accent-gold flex items-center justify-center mb-2 relative shadow-[0_0_20px_rgba(240,165,0,0.2)]">
-                    <span className="text-lg font-bold">{leaderboardForTab[0].initial}</span>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent-gold rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
-                  </div>
-                  <div className="w-full h-24 bg-bg-card border-t-2 border-accent-gold rounded-t-lg flex flex-col items-center justify-center p-1 shadow-[0_-5px_15px_rgba(240,165,0,0.1)]">
-                    <span className="text-xs font-bold truncate w-full text-center">{leaderboardForTab[0].name}</span>
-                    <span className="text-xs text-accent-gold font-bold">{leaderboardForTab[0].value}</span>
-                  </div>
-                </div>
-
-                {/* #3 */}
-                <div className="flex-1 flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-bg-card border-2 border-amber-700 flex items-center justify-center mb-2 relative">
-                    <span className="text-sm font-bold">{leaderboardForTab[2].initial}</span>
-                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-700 rounded-full flex items-center justify-center text-[10px] font-bold text-black">3</div>
-                  </div>
-                  <div className="w-full h-12 bg-bg-card border-t-2 border-amber-700 rounded-t-lg flex flex-col items-center justify-center p-1">
-                    <span className="text-[10px] font-bold truncate w-full text-center">{leaderboardForTab[2].name}</span>
-                    <span className="text-[10px] text-accent-green">{leaderboardForTab[2].value}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* LIST */}
-              <div className="space-y-2">
-                {leaderboardForTab.slice(3).map((item) => (
-                  <div 
-                    key={item.rank}
-                    className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                      item.isUser 
-                        ? 'bg-accent-gold/10 border-accent-gold border-l-4' 
-                        : 'bg-bg-secondary border-border'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xs font-bold text-text-muted w-4">#{item.rank}</span>
-                      <div className="w-8 h-8 rounded-full bg-bg-card border border-border flex items-center justify-center text-[10px] font-bold">
-                        {item.initial}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold">{item.name}</p>
-                        <p className="text-[9px] text-text-muted">{item.sub}</p>
-                      </div>
+                  <div className="h-[1px] bg-border/50 w-full mb-6" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-lg font-mono font-bold text-text-primary">₹{metrics.virtualCash.toLocaleString('en-IN')}</p>
+                      <p className="text-[10px] text-text-muted uppercase tracking-widest">Cash</p>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-xs font-bold ${item.isUser ? 'text-accent-gold' : 'text-text-primary'}`}>
-                        {item.value}
+                    <div>
+                      <p className="text-lg font-mono font-bold text-text-primary">₹{(metrics.totalValue - metrics.virtualCash).toLocaleString('en-IN')}</p>
+                      <p className="text-[10px] text-text-muted uppercase tracking-widest">Invested</p>
+                    </div>
+                    <div>
+                      <p className={`text-lg font-mono font-bold ${metrics.totalPnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                        ₹{metrics.totalPnl.toLocaleString('en-IN')}
                       </p>
+                      <p className="text-[10px] text-text-muted uppercase tracking-widest">Returns</p>
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </motion.div>
-          </AnimatePresence>
 
-          <div className="mt-6 p-4 rounded-xl bg-accent-gold text-black flex justify-between items-center font-bold">
-            <span className="text-xs uppercase tracking-wider">Your Rank</span>
-            <span className="text-lg">#4 of 1,247</span>
-          </div>
+              <div className="mb-10">
+                <DonutChart holdings={enrichedHoldings} cashPercentage={cashPercentage} />
+                <div className="grid grid-cols-2 gap-y-3 gap-x-6 mt-4">
+                  {enrichedHoldings.map((h: any, i: number) => (
+                    <div key={i} className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: h.color }} />
+                      <span className="text-[11px] font-mono text-text-muted uppercase truncate w-20">{h.stockSymbol}</span>
+                      <span className="text-[11px] font-mono font-bold text-text-primary">{h.percentage.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 rounded-full bg-[#2A2A3E]" />
+                    <span className="text-[11px] font-mono text-text-muted uppercase">CASH</span>
+                    <span className="text-[11px] font-mono font-bold text-text-primary">{cashPercentage.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-bg-card border border-border rounded-2xl p-5 mb-8">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <p className="text-[11px] font-mono text-text-muted uppercase tracking-widest mb-1">Portfolio Diversity Score</p>
+                    <h3 className="text-[32px] font-heading font-bold text-accent-gold">{metrics.diversityScore} <span className="text-lg text-text-muted">/ 10</span></h3>
+                  </div>
+                  <div className="flex space-x-0.5">
+                    {[...Array(10)].map((_, i) => (
+                      <Star key={i} size={i < metrics.diversityScore ? 16 : 12} className={i < metrics.diversityScore ? "fill-accent-gold text-accent-gold" : "fill-accent-gold/30 text-accent-gold/30 mt-[2px]"} />
+                    ))}
+                  </div>
+                </div>
+                <div className="h-2 w-full bg-bg-primary rounded-full overflow-hidden mb-6">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${(metrics.diversityScore / 10) * 100}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full bg-accent-gold" />
+                </div>
+                {metrics.diversityScore < 5 && (
+                  <div className="bg-accent-gold/5 border-l-4 border-accent-gold p-4 rounded-r-xl">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <AlertTriangle size={14} className="text-accent-gold" />
+                      <p className="text-xs font-bold text-accent-gold">Concentration Alert</p>
+                    </div>
+                    <p className="text-xs text-text-primary leading-relaxed opacity-80">
+                      Your portfolio is highly concentrated. Consider buying diversified stocks.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-bg-card border border-accent-gold/30 rounded-2xl p-5 mb-10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3">
+                  <span className="text-[9px] font-mono text-text-muted uppercase tracking-widest">Groq Engine</span>
+                </div>
+                <div className="flex items-center space-x-2 mb-4">
+                  <span className="text-xl">🤖</span>
+                  <h3 className="text-sm font-heading font-bold text-text-primary">AI Portfolio Analysis</h3>
+                </div>
+                <div className="space-y-4 text-[13px] text-text-primary leading-relaxed">
+                  {aiInsight ? <div>{aiInsight.insight}</div> : <p className="text-text-muted italic">Click below to generate a deep dive analysis of your active positions.</p>}
+                </div>
+                <button onClick={handleRefreshAI} className="w-full mt-6 py-2 border border-border rounded-xl text-[11px] font-bold text-text-muted flex items-center justify-center space-x-2">
+                  <RefreshCw size={12} className={isRefreshingAI ? "animate-spin" : ""} />
+                  <span>{isRefreshingAI ? "Analyzing Portfolio..." : aiInsight ? "Refresh Analysis ↻" : "Generate Core Analysis"}</span>
+                </button>
+              </div>
+
+              <div className="mb-10">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-heading font-bold text-text-primary">Holdings ({holdings.length})</h2>
+                  <div className="flex items-center space-x-1 text-xs text-text-muted">
+                    <span>Sort by:</span>
+                    <button
+                      onClick={() => {
+                        const options = ['P&L', 'Value', 'Name', '% Returns'];
+                        const next = options[(options.indexOf(sortBy) + 1) % options.length];
+                        setSortBy(next);
+                      }}
+                      className="flex items-center space-x-1 font-bold text-text-primary"
+                    >
+                      <span>{sortBy}</span>
+                      <ChevronDown size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {holdings.length === 0 ? (
+                    <p className="text-center text-text-muted text-xs">No active holdings. Buy some stocks!</p>
+                  ) : (
+                    sortedHoldings.map((h: any, i: number) => {
+                      const pnl = (h.currentPrice - h.avgBuyPrice) * h.quantity;
+                      const pnlPercent = ((h.currentPrice / h.avgBuyPrice) - 1) * 100;
+                      const isPositive = pnl >= 0;
+                      return (
+                        <motion.div
+                          key={h.stockSymbol}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          onClick={() => navigate(`/trade/${h.stockSymbol}`)}
+                          className={`bg-bg-card p-4 rounded-2xl border transition-all active:scale-[0.98] ${isPositive ? 'border-accent-green/20 hover:border-accent-green/40' : 'border-accent-red/20 hover:border-accent-red/40'}`}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-full bg-bg-primary flex items-center justify-center text-lg font-bold border border-border">
+                                {h.stockSymbol[0]}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-mono font-bold text-text-primary">{h.stockSymbol}</h4>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-mono font-bold text-text-primary">₹{(h.currentPrice * h.quantity).toLocaleString('en-IN')}</p>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center mb-3">
+                            <p className="text-[10px] text-text-muted font-mono">{h.quantity} shares × ₹{h.avgBuyPrice.toFixed(2)}</p>
+                            <p className="text-[10px] text-text-muted font-mono">LTP: ₹{h.currentPrice.toFixed(2)}</p>
+                          </div>
+                          <div className="flex justify-between items-end">
+                            <div className={`flex items-center space-x-1 font-mono font-bold ${isPositive ? 'text-accent-green' : 'text-accent-red'}`}>
+                              {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                              <span className="text-sm">{isPositive ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                              <span className="text-[10px]">({isPositive ? '+' : ''}{pnlPercent.toFixed(1)}%)</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-12">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-heading font-bold text-text-primary">Transaction History</h2>
+                  <button className="text-xs font-bold text-accent-gold">See All →</button>
+                </div>
+                <div className="space-y-4">
+                  {Array.isArray(transactions) && transactions.length > 0 ? (
+                    [...transactions].reverse().slice(0, 10).map((t: any, i: number) => (
+                      <div key={t.id || `${t.stockSymbol}-${t.createdAt}-${i}`} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
+                        <div className="flex items-center space-x-4">
+                          <div className={`px-2 py-1 rounded text-[9px] font-bold ${t.type === 'BUY' ? 'bg-accent-green/10 text-accent-green' : 'bg-accent-red/10 text-accent-red'}`}>
+                            {t.type}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-mono font-bold text-text-primary">{t.stockSymbol}</h4>
+                            <p className="text-[10px] text-text-muted">{t.quantity} shares @ ₹{Number(t.executionPrice ?? t.price ?? 0).toFixed(2)}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-mono font-bold text-text-primary">₹{Number(t.totalAmount || 0).toLocaleString('en-IN')}</p>
+                          <p className="text-[10px] text-text-muted">{new Date(t.createdAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-text-muted text-xs">No entries in the ledger.</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
-
-        {/* SHARE BUTTON */}
-        <button 
-          onClick={() => setShowShare(true)}
-          className="w-full py-4 rounded-2xl border-2 border-accent-gold text-accent-gold font-heading font-bold flex items-center justify-center space-x-2 active:scale-95 transition-transform"
-        >
-          <Share2 size={18} />
-          <span>Share My Performance</span>
-        </button>
       </main>
-
-      {/* SHARE MODAL */}
-      <AnimatePresence>
-        {showShare && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowShare(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-[320px] bg-bg-primary border border-border rounded-[32px] overflow-hidden shadow-2xl"
-            >
-              {/* Story Content */}
-              <div className="aspect-[9/16] bg-gradient-to-b from-bg-card to-bg-primary p-8 flex flex-col items-center justify-between text-center relative">
-                <div className="absolute top-0 left-0 w-full h-full bg-dots opacity-10" />
-                
-                <div className="z-10">
-                  <div className="w-16 h-16 rounded-full bg-accent-gold flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent-gold/20">
-                    <span className="text-xl font-heading font-extrabold text-black">{initials}</span>
-                  </div>
-                  <h3 className="text-xl font-heading font-bold text-text-primary mb-1">{displayName}</h3>
-                  <p className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">Rising Investor</p>
-                </div>
-
-                <div className="z-10 py-10">
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", delay: 0.2 }}
-                  >
-                    <span className="text-6xl font-heading font-extrabold text-accent-green block mb-2">+14.2%</span>
-                    <p className="text-sm text-text-muted">I made +14.2% on InvestSim!</p>
-                    <p className="text-[10px] text-accent-gold mt-2 font-bold">#PaperTrading #InvestSim</p>
-                  </motion.div>
-                </div>
-
-                <div className="z-10 w-full">
-                  <div className="p-4 rounded-2xl border border-border bg-bg-secondary/50 backdrop-blur-md">
-                    <div className="flex justify-around items-center">
-                      <div className="text-center">
-                        <p className="text-[10px] text-text-muted uppercase mb-1">Rank</p>
-                        <p className="text-lg font-bold text-accent-gold">#4</p>
-                      </div>
-                      <div className="w-px h-8 bg-border" />
-                      <div className="text-center">
-                        <p className="text-[10px] text-text-muted uppercase mb-1">XP</p>
-                        <p className="text-lg font-bold text-accent-gold">340</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="p-4 bg-bg-secondary border-t border-border flex space-x-3">
-                <button className="flex-1 py-3 rounded-xl bg-accent-gold text-black font-bold text-sm flex items-center justify-center space-x-2">
-                  <Copy size={16} />
-                  <span>Copy Link</span>
-                </button>
-                <button 
-                  onClick={() => setShowShare(false)}
-                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center text-text-muted"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -9,9 +9,12 @@ router = APIRouter()
 async def get_portfolio():
     user_data = read_json("user.json")
     holdings_data = read_json("holdings.json")
+    transactions = read_json("transactions.json")
     
     if not isinstance(holdings_data, list):
         holdings_data = []
+    if not isinstance(transactions, list):
+        transactions = []
 
     virtual_cash = user_data.get("virtualCash", 0.0)
     
@@ -77,6 +80,7 @@ async def get_portfolio():
     return {
         "user": user_data,
         "holdings": enriched_holdings,
+        "transactions": sorted(transactions, key=lambda x: x.get("createdAt", ""), reverse=True),
         "totalPortfolioValue": round(total_portfolio_value, 2),
         "totalPnl": round(total_pnl, 2),
         "totalPnlPct": round(total_pnl_pct, 2),

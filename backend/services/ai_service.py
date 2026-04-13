@@ -1,6 +1,7 @@
 import os
 import json
 import httpx
+import asyncio
 from typing import Dict, Any, List
 from dotenv import load_dotenv
 
@@ -25,10 +26,26 @@ async def call_groq(messages: List[Dict[str, str]], max_tokens: int = 300) -> st
     }
     print(f"[DEBUG] Sending this prompt to Groq: {messages}")
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=payload, timeout=12.0)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+        for attempt in range(3):
+            try:
+                response = await client.post(url, headers=headers, json=payload, timeout=12.0)
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+            except httpx.HTTPStatusError as e:
+                status = e.response.status_code if e.response else None
+                if status == 429 and attempt < 2:
+                    await asyncio.sleep(0.8 * (attempt + 1))
+                    continue
+                if status == 429:
+                    raise RuntimeError("Groq rate limit reached. Please wait a few seconds and try again.")
+                raise RuntimeError(f"Groq API request failed with status {status}.")
+            except httpx.HTTPError as e:
+                if attempt < 2:
+                    await asyncio.sleep(0.8 * (attempt + 1))
+                    continue
+                raise RuntimeError(f"Groq API network error: {str(e)}")
+    raise RuntimeError("Groq API request failed after retries.")
 
 async def get_reactive_mentor_insight(action: str, symbol: str, portfolio_context: Dict[str, Any]) -> str:
     system_prompt = """

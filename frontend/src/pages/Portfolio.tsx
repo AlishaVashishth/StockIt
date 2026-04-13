@@ -107,7 +107,10 @@ export default function Portfolio() {
   const handleRefreshAI = async () => {
     setIsRefreshingAI(true);
     try {
-      const insight = await api.analyzePortfolio();
+      const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      console.log('[Portfolio] Sending AI analysis request', { requestId });
+      const insight = await api.analyzePortfolio(requestId);
+      console.log('[Portfolio] AI analysis response', insight);
       setAiInsight(insight);
     } catch(err) {
       console.error(err);
@@ -395,7 +398,7 @@ export default function Portfolio() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-mono font-bold text-text-primary">₹{t.totalAmount.toLocaleString('en-IN')}</p>
-                    <p className="text-[10px] text-text-muted">{new Date(t.createdAt).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-text-muted">{new Date(t.createdAt).toLocaleString()}</p>
                   </div>
                 </div>
               ))

@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from services.db import read_json, write_json
 from services.ai_service import get_reactive_mentor_insight, call_groq, generate_loss_debrief
-from models.schemas import MentorInsightRequest, LossDebriefRequest
+from models.schemas import MentorInsightRequest, LossDebriefRequest, AnalyzePortfolioRequest
 import json
 from datetime import datetime, timezone
 import asyncio
@@ -36,7 +36,13 @@ async def ai_mentor(request: MentorInsightRequest):
         "timeframe": selected_period
     }
     
-    insight = await get_reactive_mentor_insight(request.action, request.symbol, portfolio_context)
+    try:
+        insight = await get_reactive_mentor_insight(request.action, request.symbol, portfolio_context)
+    except RuntimeError as e:
+        message = str(e)
+        if "rate limit" in message.lower():
+            raise HTTPException(status_code=429, detail=message)
+        raise HTTPException(status_code=503, detail=message)
     
     logs = read_json("ai_mentor_logs.json")
     if not isinstance(logs, list): logs = []
@@ -86,14 +92,19 @@ async def loss_debrief(request: LossDebriefRequest):
     return debrief
 
 @router.post("/analyze-portfolio")
-async def analyze_portfolio():
+async def analyze_portfolio(request: AnalyzePortfolioRequest):
+    print(f"[AI_PORTFOLIO_ROUTE] request received requestId={request.requestId}")
     user_data = read_json("user.json")
     holdings = read_json("holdings.json")
     if not isinstance(holdings, list): holdings = []
     transactions = read_json("transactions.json")
     if not isinstance(transactions, list): transactions = []
     
-    tasks = [get_stock_price(h["stockSymbol"]) for h in holdings]
+    symbols_from_holdings = {h.get("stockSymbol") for h in holdings if h.get("stockSymbol")}
+    symbols_from_transactions = {t.get("stockSymbol") for t in transactions if t.get("stockSymbol")}
+    all_symbols = sorted(list(symbols_from_holdings.union(symbols_from_transactions)))
+
+    tasks = [get_stock_price(sym) for sym in all_symbols]
     prices = await asyncio.gather(*tasks, return_exceptions=True)
     price_map = {p["symbol"]: p for p in prices if isinstance(p, dict) and "symbol" in p}
     
@@ -126,8 +137,9 @@ async def analyze_portfolio():
             
     cash = user_data.get("virtualCash", 0.0)
     
+    tx_sorted = sorted(transactions, key=lambda x: x.get("createdAt", ""))
     trade_rows = []
-    for tx in sorted(transactions, key=lambda x: x.get("createdAt", "")):
+    for tx in tx_sorted:
         tx_type = tx.get("type", "UNKNOWN")
         symbol = tx.get("stockSymbol", "UNKNOWN")
         qty = tx.get("quantity", 0)
@@ -142,34 +154,75 @@ async def analyze_portfolio():
             "totalAmount": round(float(tx.get("totalAmount") or 0.0), 2)
         })
 
-    system_prompt = """You are an expert portfolio behavior coach for beginner stock traders in India.
-Analyze the user's REAL transaction history and return ONLY JSON.
-You must compare what the user did vs what an ideal disciplined trader would do.
-Keep observations specific and data-grounded, not generic.
-"""
+    behavior_events = []
+    running_pos = {}
+    for tx in tx_sorted:
+        symbol = tx.get("stockSymbol")
+        if not symbol:
+            continue
+        qty = float(tx.get("quantity") or 0.0)
+        price = float(tx.get("executionPrice") or tx.get("price") or 0.0)
+        tx_type = tx.get("type")
+        created_at = tx.get("createdAt", "")
+        if qty <= 0 or price <= 0:
+            continue
+
+        if symbol not in running_pos:
+            running_pos[symbol] = {"qty": 0.0, "avgCost": 0.0}
+
+        pos = running_pos[symbol]
+        if tx_type == "BUY":
+            new_qty = pos["qty"] + qty
+            pos["avgCost"] = ((pos["qty"] * pos["avgCost"]) + (qty * price)) / new_qty if new_qty > 0 else price
+            pos["qty"] = new_qty
+        elif tx_type == "SELL":
+            sold_qty = min(qty, pos["qty"]) if pos["qty"] > 0 else qty
+            realized = (price - pos["avgCost"]) * sold_qty
+            current_price = float(price_map.get(symbol, {}).get("currentPrice") or price)
+            missed_if_held = (current_price - price) * sold_qty
+            behavior_events.append({
+                "date": created_at,
+                "symbol": symbol,
+                "soldQty": round(sold_qty, 2),
+                "sellPrice": round(price, 2),
+                "avgCost": round(pos["avgCost"], 2),
+                "realizedPnl": round(realized, 2),
+                "currentPriceNow": round(current_price, 2),
+                "missedPnlIfHeldToNow": round(missed_if_held, 2)
+            })
+            pos["qty"] = max(pos["qty"] - sold_qty, 0.0)
+            if pos["qty"] == 0:
+                pos["avgCost"] = 0.0
 
     user_msg = f"""
-Return ONLY valid JSON with these exact keys:
-{{
-  "observations": [
-    "Specific behavior observation with symbol/date and consequence"
-  ],
-  "idealTraderComparison": [
-    "What user did vs what ideal trader would do"
-  ],
-  "actionableTips": [
-    "3 to 5 personalized action steps"
-  ],
-  "performanceSummary": "1 concise overall summary of the user's performance",
-  "insight": "A readable plain-language paragraph that combines key observations + next best actions"
-}}
+You are an institutional-grade portfolio analyst helping a beginner investor.
+Write the response in polished professional narrative style (NOT bullet points, NOT headings).
+Use this 4-paragraph structure exactly:
 
-Required analysis:
-1) Identify concrete behavioral patterns from buys/sells and timing.
-2) Include at least one 'panic sell / missed gain' style calculation WHEN data allows.
-3) Compare actual actions vs ideal trader behavior.
-4) Give 3-5 personalized actionable tips.
-5) Include overall performance summary.
+Paragraph 1:
+- Start with specific transaction recap using date, stock, quantity, buy/sell price, invested amount.
+- Mention current market value and exact P/L (or no P/L).
+- Mention current cash balance and invested vs uninvested capital.
+
+Paragraph 2:
+- Describe user behavior pattern (concentration, inactivity, premature selling, panic behavior, etc.).
+- Mention what is missing in their process (stop-loss, targets, position sizing, allocation discipline).
+- Explain opportunity cost if cash is idle.
+
+Paragraph 3:
+- Explain portfolio risk clearly (concentration risk, sector risk, volatility, lack of exit rules).
+- Give practical disciplined alternatives (diversification, staged deployment, rules-based exits, SIP/index approach).
+
+Paragraph 4:
+- Give an overall verdict in one concise concluding paragraph.
+- Tone: clear, analytical, constructive, and direct.
+
+Critical requirements:
+- Use exact numbers from provided data wherever possible.
+- Mention specific dates and symbols.
+- Do not use jargon-heavy language.
+- Keep total response concise (~170-240 words).
+- Return plain text only.
 
 Portfolio context:
 - Cash Remaining: ₹{cash:.2f}
@@ -182,51 +235,41 @@ Portfolio context:
 
 Full trade history (chronological):
 {json.dumps(trade_rows, ensure_ascii=True)}
+
+Computed sell-behavior events:
+{json.dumps(behavior_events, ensure_ascii=True)}
 """
     
     messages = [
-        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": "You are a precise trading performance analyst. Use user data, not generic advice. Match the exact requested narrative structure."},
         {"role": "user", "content": user_msg}
     ]
-    
-    response_str = await call_groq(messages, max_tokens=900)
-    
+
     try:
-        clean_json = response_str.strip()
-        if clean_json.startswith("```"):
-            lines = clean_json.splitlines()
-            if lines[0].startswith("```"): lines = lines[1:]
-            if lines and lines[-1].startswith("```"): lines = lines[:-1]
-            clean_json = "\n".join(lines).strip()
-            
-        parsed_dict = json.loads(clean_json)
-    except Exception as e:
-        parsed_dict = {
-            "observations": [
-                "Your transaction history is limited, so pattern confidence is low right now."
-            ],
-            "idealTraderComparison": [
-                "You are still building your process; an ideal trader would define entry, exit, and risk before each order."
-            ],
-            "actionableTips": [
-                "Set a max loss per trade before entering.",
-                "Write one-line reason for every buy and review after 7 days.",
-                "Avoid all-in exposure to a single stock early on."
-            ],
-            "performanceSummary": "Early-stage portfolio with room to improve process discipline.",
-            "insight": "You are in the learning phase. Build a repeatable plan for entries, exits, and risk per trade, then review outcomes weekly to improve consistency."
-        }
-    if "insight" not in parsed_dict:
-        observations = parsed_dict.get("observations", [])
-        actionable = parsed_dict.get("actionableTips", [])
-        summary = parsed_dict.get("performanceSummary", "")
-        parsed_dict["insight"] = (
-            f"{summary} "
-            f"Key observation: {(observations[0] if observations else 'No clear behavior pattern detected yet.')}"
-            f" Next step: {(actionable[0] if actionable else 'Define risk before every trade.')}"
-        ).strip()
-        
-    return parsed_dict
+        response_str = await call_groq(messages, max_tokens=950)
+    except RuntimeError as e:
+        message = str(e)
+        if "rate limit" in message.lower():
+            raise HTTPException(status_code=429, detail=message)
+        raise HTTPException(status_code=503, detail=message)
+
+    insight_text = response_str.strip()
+    if insight_text.startswith("```"):
+        lines = insight_text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        insight_text = "\n".join(lines).strip()
+
+    if not insight_text:
+        insight_text = "No analysis generated. Please try again in a few seconds."
+
+    return {
+        "insight": insight_text,
+        "requestId": request.requestId,
+        "tradeCount": len(trade_rows)
+    }
 
 @router.get("/mentor-history")
 async def mentor_history():

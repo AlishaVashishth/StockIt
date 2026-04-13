@@ -24,6 +24,9 @@ class MentorInsightRequest(BaseModel):
     timeframe: Optional[str] = "1d"
     requestId: Optional[str] = None
 
+class AnalyzePortfolioRequest(BaseModel):
+    requestId: Optional[str] = None
+
 class LossDebriefRequest(BaseModel):
     stockSymbol: str
     lossAmount: float

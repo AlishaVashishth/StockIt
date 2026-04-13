@@ -77,7 +77,7 @@ export const api = {
     fetchJson('/ai/mentor', { method: 'POST', body: JSON.stringify({ action, symbol, timeframe, requestId }) }),
   getLossDebrief: (stockSymbol: string, lossAmount: number) => 
     fetchJson('/ai/loss-debrief', { method: 'POST', body: JSON.stringify({ stockSymbol, lossAmount }) }),
-  analyzePortfolio: () => 
-    fetchJson('/ai/analyze-portfolio', { method: 'POST', body: "{}" }),
+  analyzePortfolio: (requestId?: string) => 
+    fetchJson('/ai/analyze-portfolio', { method: 'POST', body: JSON.stringify({ requestId }) }),
   getMentorHistory: () => fetchJson('/ai/mentor-history'),
 };
