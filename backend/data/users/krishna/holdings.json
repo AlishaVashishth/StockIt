@@ -6,5 +6,13 @@
     "quantity": 1,
     "avgBuyPrice": 1317.2,
     "sector": "Energy & Telecom"
+  },
+  {
+    "id": "eb239044-b157-4c05-860e-589d6e1fcc60",
+    "stockSymbol": "YESBANK",
+    "companyName": "Yes Bank Ltd",
+    "quantity": 5,
+    "avgBuyPrice": 18.92,
+    "sector": "Banking"
   }
 ]

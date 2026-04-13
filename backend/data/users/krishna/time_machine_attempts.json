@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "scenarioId": 1,
+    "choice": "buy",
+    "isWin": true,
+    "xpAwarded": 75
+  }
+]

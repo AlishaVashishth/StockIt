@@ -9,5 +9,16 @@
     "price": 1317.2,
     "totalAmount": 1317.2,
     "createdAt": "2026-04-13T08:28:38Z"
+  },
+  {
+    "id": "02a44c76-59f9-4ba0-a9e8-d2ac83729921",
+    "stockSymbol": "YESBANK",
+    "companyName": "Yes Bank Ltd",
+    "marketCap": "Small Cap",
+    "type": "BUY",
+    "quantity": 5,
+    "price": 18.92,
+    "totalAmount": 94.6,
+    "createdAt": "2026-04-13T09:28:42Z"
   }
 ]

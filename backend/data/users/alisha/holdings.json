@@ -6,5 +6,13 @@
     "quantity": 1,
     "avgBuyPrice": 794.85,
     "sector": "Banking"
+  },
+  {
+    "id": "17fedd57-3991-4422-abfb-f12474933aea",
+    "stockSymbol": "TCS",
+    "companyName": "Tata Consultancy Services",
+    "quantity": 5,
+    "avgBuyPrice": 2473.6,
+    "sector": "Technology"
   }
 ]

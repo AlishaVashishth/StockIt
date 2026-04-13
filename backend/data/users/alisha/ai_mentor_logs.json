@@ -16,5 +16,11 @@
     "symbol": "HDFCBANK",
     "response": "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching.",
     "timestamp": "2026-04-13T09:14:12.377650+00:00"
+  },
+  {
+    "trigger": "BUY",
+    "symbol": "TCS",
+    "response": "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching.",
+    "timestamp": "2026-04-13T09:36:35.768689+00:00"
   }
 ]

@@ -9,5 +9,16 @@
     "price": 794.85,
     "totalAmount": 794.85,
     "createdAt": "2026-04-13T09:14:10Z"
+  },
+  {
+    "id": "e53fc1d6-2876-40f6-95a2-1eb2bc58181e",
+    "stockSymbol": "TCS",
+    "companyName": "Tata Consultancy Services",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 5,
+    "price": 2473.6,
+    "totalAmount": 12368.0,
+    "createdAt": "2026-04-13T09:36:33Z"
   }
 ]

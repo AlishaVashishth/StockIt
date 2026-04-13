@@ -22,6 +22,21 @@ async def start_session(request: StartSessionRequest):
 
     existing_user = read_json("user.json")
     if isinstance(existing_user, dict) and existing_user.get("id"):
+        today = datetime.now(timezone.utc).date()
+        last_active_raw = existing_user.get("lastActiveDate") or existing_user.get("createdAt")
+        try:
+            last_active_date = datetime.strptime(last_active_raw, "%Y-%m-%d").date() if last_active_raw else today
+        except Exception:
+            last_active_date = today
+
+        if today > last_active_date:
+            day_diff = (today - last_active_date).days
+            existing_user["daysActive"] = int(existing_user.get("daysActive", 0)) + day_diff
+            existing_user["lastActiveDate"] = today.strftime("%Y-%m-%d")
+            write_json("user.json", existing_user)
+        elif not existing_user.get("lastActiveDate"):
+            existing_user["lastActiveDate"] = today.strftime("%Y-%m-%d")
+            write_json("user.json", existing_user)
         return existing_user
 
     initials = "".join([part[0].upper() for part in trimmed_name.split() if part][:2]) or "IN"
@@ -35,7 +50,8 @@ async def start_session(request: StartSessionRequest):
         "xpPoints": 0,
         "currentTier": 1,
         "daysActive": 0,
-        "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "lastActiveDate": datetime.now(timezone.utc).strftime("%Y-%m-%d")
     }
 
     default_missions = [

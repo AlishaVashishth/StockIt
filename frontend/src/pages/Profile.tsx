@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -17,6 +17,7 @@ import {
   User,
   BookOpen as BookIcon
 } from 'lucide-react';
+import { api } from '../api';
 
 // --- MOCK DATA ---
 const LEADERBOARD_DATA = {
@@ -62,6 +63,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'returns' | 'learning' | 'risk'>('returns');
   const [showShare, setShowShare] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
   const displayName = localStorage.getItem(USER_NAME_STORAGE_KEY)?.trim() || 'Investor';
   const initials = displayName
     .split(' ')
@@ -72,6 +74,17 @@ export default function Profile() {
   const leaderboardForTab = LEADERBOARD_DATA[activeTab].map((entry) =>
     entry.isUser ? { ...entry, name: displayName, initial: initials } : entry
   );
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await api.getUser();
+        setUserData(user);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadUser();
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col font-mono text-text-primary">
@@ -127,7 +140,7 @@ export default function Profile() {
             { label: 'Worst Trade', value: 'YESBANK', color: 'text-accent-red', sub: '-33.3% 📉', isSmall: true },
             { label: 'Lessons Done', value: '8 / 15', color: 'text-accent-gold', sub: 'Lessons Done' },
             { label: 'Time Machine', value: '225 XP', color: 'text-accent-gold', sub: 'History Score' },
-            { label: 'Active Days', value: '12', color: 'text-text-primary', sub: 'Day Streak 🔥' },
+            { label: 'Active Days', value: String(userData?.daysActive ?? 0), color: 'text-text-primary', sub: 'Day Streak 🔥' },
           ].map((stat, i) => (
             <motion.div
               key={i}

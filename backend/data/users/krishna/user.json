@@ -3,9 +3,10 @@
   "name": "Krishna",
   "email": "krishna@investsim.local",
   "avatarInitials": "K",
-  "virtualCash": 98682.8,
-  "xpPoints": 0,
+  "virtualCash": 98588.2,
+  "xpPoints": 75,
   "currentTier": 1,
-  "daysActive": 0,
-  "createdAt": "2026-04-13"
+  "daysActive": 1,
+  "createdAt": "2026-04-13",
+  "lastActiveDate": "2026-04-13"
 }

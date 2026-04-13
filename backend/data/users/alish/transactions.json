@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1c9d4421-349c-4df1-8a69-b03fb3b5a2fa",
+    "stockSymbol": "RELIANCE",
+    "companyName": "Reliance Industries Ltd",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 1,
+    "price": 1317.2,
+    "totalAmount": 1317.2,
+    "createdAt": "2026-04-13T09:33:54Z"
+  },
+  {
+    "id": "a9e5ba5e-178c-49da-ab2b-4b1f420fe670",
+    "stockSymbol": "TCS",
+    "companyName": "Tata Consultancy Services",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 1,
+    "price": 2473.5,
+    "totalAmount": 2473.5,
+    "createdAt": "2026-04-13T09:34:20Z"
+  },
+  {
+    "id": "0ce65b0e-4e37-4ae4-8e5c-5352aecb23d9",
+    "stockSymbol": "TCS",
+    "companyName": "Tata Consultancy Services",
+    "marketCap": "Large Cap",
+    "type": "SELL",
+    "quantity": 1,
+    "price": 2473.6,
+    "totalAmount": 2473.6,
+    "createdAt": "2026-04-13T09:34:26Z"
+  }
+]

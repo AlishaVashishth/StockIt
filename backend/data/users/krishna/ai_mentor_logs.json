@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "trigger": "BUY",
+    "symbol": "YESBANK",
+    "response": "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching.",
+    "timestamp": "2026-04-13T09:28:46.760793+00:00"
+  }
+]
