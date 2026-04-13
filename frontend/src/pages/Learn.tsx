@@ -112,6 +112,7 @@ export default function Learn() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeConcept, setActiveConcept] = useState<any | null>(null);
+  const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
 
   const showToast = (message: string) => {
     setToast(message);
@@ -192,7 +193,7 @@ export default function Learn() {
         <h1 className="text-xl font-heading font-bold text-text-primary">📚 Learning</h1>
         <div className="flex items-center space-x-1 text-accent-gold">
           <Flame size={16} fill="currentColor" />
-          <span className="text-xs font-mono font-bold">{user.daysActive || 0} Day Streak</span>
+          <span className="text-xs font-mono font-bold">{streakCount} Day Streak</span>
         </div>
       </header>
 

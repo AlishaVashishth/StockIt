@@ -57,13 +57,17 @@ function Counter({ value }: { value: number }) {
 }
 
 export default function Onboarding() {
-  const USER_NAME_STORAGE_KEY = 'investsim_user_name';
+  const USER_EMAIL_STORAGE_KEY = 'investsim_user_email';
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [experience, setExperience] = useState<string | null>(null);
   const [goal, setGoal] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
 
   const handleNext = () => {
@@ -72,20 +76,22 @@ export default function Onboarding() {
     } else {
       const trimmedName = name.trim();
       setInitError(null);
-      localStorage.setItem(USER_NAME_STORAGE_KEY, trimmedName);
-      setIsCreating(true);
-      setTimeout(async () => {
+      localStorage.setItem(USER_EMAIL_STORAGE_KEY, email.trim());
+      
+      (async () => {
         try {
-          await api.startSession(trimmedName);
-          navigate('/home');
-        } catch (error) {
-          console.error('Failed to initialize new user session:', error);
-          setInitError('Could not create fresh account data. Please ensure backend is running, then try again.');
+          const user = await api.startSession(trimmedName, email.trim(), password);
+          setIsNewUser(user.isNewUser);
+          setIsCreating(true);
+          setTimeout(() => {
+            navigate('/home');
+          }, 3000);
+        } catch (error: any) {
+          console.error('Failed to initialize session:', error);
+          setInitError(error.message || 'Could not access account. Please ensure backend is running or check credentials.');
           setIsCreating(false);
-        } finally {
-          // no-op
         }
-      }, 3000);
+      })();
     }
   };
 
@@ -101,10 +107,16 @@ export default function Onboarding() {
     { id: 'beat', title: '🏆 Beat the Market', subtext: 'I want to compete and build real skill' },
   ];
 
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isStrongPassword = (pass: string) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pass);
+
+  const hasValidEmail = !email || isValidEmail(email);
+  const hasStrongPassword = !password || isStrongPassword(password);
+
   const isNextDisabled = 
     (step === 1 && !experience) || 
     (step === 2 && !goal) || 
-    (step === 3 && !name.trim());
+    (step === 3 && (!name.trim() || !email.trim() || !isValidEmail(email) || !password || !isStrongPassword(password) || password !== confirmPassword));
 
   return (
     <div className="relative h-screen w-full bg-bg-primary flex flex-col overflow-hidden">
@@ -188,19 +200,58 @@ export default function Onboarding() {
                   Your InvestSim identity
                 </p>
                 
-                <div className="relative mb-12">
+                <div className="relative mb-4">
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder="Enter your name (e.g. Alisha)"
                     className="w-full h-14 bg-bg-card border border-border rounded-xl px-4 text-lg font-mono text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-gold transition-colors"
                     autoFocus
                   />
-                  <motion.div 
-                    layoutId="underline"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-gold scale-x-0 focus-within:scale-x-100 transition-transform origin-left"
+                  <motion.div className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-gold scale-x-0 focus-within:scale-x-100 transition-transform origin-left" />
+                </div>
+                
+                <div className="relative mb-6">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full h-14 bg-bg-card border border-border rounded-xl px-4 text-lg font-mono text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-gold transition-colors"
                   />
+                  <motion.div className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-gold scale-x-0 focus-within:scale-x-100 transition-transform origin-left" />
+                  {!hasValidEmail && (
+                    <p className="absolute -bottom-5 left-2 text-xs font-mono text-accent-red">Invalid email format</p>
+                  )}
+                </div>
+
+                <div className="relative mb-6">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    className="w-full h-14 bg-bg-card border border-border rounded-xl px-4 text-lg font-mono text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-gold transition-colors"
+                  />
+                  <motion.div className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-gold scale-x-0 focus-within:scale-x-100 transition-transform origin-left" />
+                  {!hasStrongPassword && (
+                    <p className="absolute -bottom-5 left-2 text-xs font-mono text-accent-red">Must be 8+ chars (upper, lower, num, special)</p>
+                  )}
+                </div>
+
+                <div className="relative mb-8">
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm Password"
+                    className="w-full h-14 bg-bg-card border border-border rounded-xl px-4 text-lg font-mono text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-gold transition-colors"
+                  />
+                  <motion.div className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-gold scale-x-0 focus-within:scale-x-100 transition-transform origin-left" />
+                  {password && confirmPassword && password !== confirmPassword && (
+                    <p className="absolute -bottom-6 left-2 text-xs font-mono text-accent-red">Passwords do not match</p>
+                  )}
                 </div>
                 {initError && (
                   <p className="text-xs font-mono text-accent-red mb-4">{initError}</p>
@@ -269,22 +320,24 @@ export default function Onboarding() {
                 transition={{ delay: 0.8 }}
                 className="text-2xl font-heading font-bold text-text-primary mb-2"
               >
-                Account Created!
+                {isNewUser ? 'Account Created!' : `Welcome Back, ${name.trim()}!`}
               </motion.h2>
               
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="space-y-1"
-              >
-                <p className="text-accent-green font-bold text-lg">
-                  <Counter value={100000} />
-                </p>
-                <p className="text-sm text-text-muted font-mono">
-                  deposited to your account
-                </p>
-              </motion.div>
+              {isNewUser && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 }}
+                  className="space-y-1"
+                >
+                  <p className="text-accent-green font-bold text-lg">
+                    <Counter value={100000} />
+                  </p>
+                  <p className="text-sm text-text-muted font-mono">
+                    deposited to your account
+                  </p>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}

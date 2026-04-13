@@ -4,19 +4,45 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime, timezone
 
-from routers import user, portfolio, stocks, trades, ai, learn, time_machine, dashboard
-
 load_dotenv()
+
+from routers import user, portfolio, stocks, trades, ai, learn, time_machine, dashboard
 
 app = FastAPI(title="InvestSim API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from starlette.types import ASGIApp, Receive, Scope, Send
+from services.db import active_user_email
+
+class UserEmailASGIMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "http":
+            email = ""
+            for name, value in scope.get("headers", []):
+                if name.lower() == b"x-user-email":
+                    email = value.decode("latin1")
+                    break
+            
+            if email:
+                token = active_user_email.set(email)
+                try:
+                    await self.app(scope, receive, send)
+                finally:
+                    active_user_email.reset(token)
+                return
+        await self.app(scope, receive, send)
+
+app.add_middleware(UserEmailASGIMiddleware)
 
 app.include_router(user.router, prefix="/api/user")
 app.include_router(portfolio.router, prefix="/api/portfolio")
@@ -48,4 +74,4 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

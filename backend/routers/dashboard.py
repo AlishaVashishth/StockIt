@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from services.db import read_json
+from services.db import read_json, enforce_streak_on_app_open
 from services.stock_service import get_stock_price
 import asyncio
 import random
@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get("")
 async def get_dashboard_summary():
-    user = read_json("user.json")
+    user = enforce_streak_on_app_open()
     holdings = read_json("holdings.json")
     if not isinstance(holdings, list): holdings = []
     

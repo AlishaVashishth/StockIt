@@ -6,6 +6,8 @@ class XpUpdateRequest(BaseModel):
 
 class StartSessionRequest(BaseModel):
     name: str
+    email: str
+    password: str
 
 class BuyTradeRequest(BaseModel):
     stockSymbol: str
@@ -19,6 +21,8 @@ class SellTradeRequest(BaseModel):
 class MentorInsightRequest(BaseModel):
     action: str
     symbol: str
+    timeframe: Optional[str] = "1d"
+    requestId: Optional[str] = None
 
 class LossDebriefRequest(BaseModel):
     stockSymbol: str

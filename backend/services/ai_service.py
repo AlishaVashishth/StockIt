@@ -2,13 +2,19 @@ import os
 import json
 import httpx
 from typing import Dict, Any, List
+from dotenv import load_dotenv
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+_BACKEND_ROOT = os.path.dirname(os.path.dirname(__file__))
+load_dotenv(os.path.join(_BACKEND_ROOT, ".env"))
 
 async def call_groq(messages: List[Dict[str, str]], max_tokens: int = 300) -> str:
+    groq_api_key = (os.getenv("GROQ_API_KEY", "") or "").strip()
+    if not groq_api_key or groq_api_key.lower().startswith("your_"):
+        raise RuntimeError("GROQ_API_KEY is missing. Cannot call Groq.")
+
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {groq_api_key}",
         "Content-Type": "application/json"
     }
     payload = {
@@ -17,51 +23,86 @@ async def call_groq(messages: List[Dict[str, str]], max_tokens: int = 300) -> st
         "max_tokens": max_tokens,
         "temperature": 0.8
     }
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, headers=headers, json=payload, timeout=12.0)
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-    except Exception as e:
-        print(f"Groq API Error: {e}")
-        return "The market is unpredictable today, mere dost. Let's take a deep breath and keep watching."
+    print(f"[DEBUG] Sending this prompt to Groq: {messages}")
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, json=payload, timeout=12.0)
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
 
 async def get_reactive_mentor_insight(action: str, symbol: str, portfolio_context: Dict[str, Any]) -> str:
-    system_prompt = """You are Arjun's personal investment mentor — a wise, experienced Indian investor who speaks like a knowledgeable older friend. You notice patterns in Arjun's behavior and speak up proactively. You use Hinglish naturally (not forcefully). You are never preachy. You reference real Indian market events and investors. You keep responses SHORT — max 3 sentences. You always end with one sharp insight or question that makes Arjun think."""
+    system_prompt = """
+You are a precise stock analysis assistant for beginners in India.
+Use ONLY the provided OHLCV and snapshot data, and tailor each answer to those numbers.
+Never give generic boilerplate. Mention at least two concrete numeric references from the data.
+Follow the requested response format exactly.
+"""
 
-    diversity_score = portfolio_context.get("diversityScore", 10)
-    cash = portfolio_context.get("virtualCash", 0.0)
-    total_portfolio = portfolio_context.get("totalPortfolioValue", 1)
-    cash_pct = (cash / total_portfolio) * 100 if total_portfolio > 0 else 100
-    
-    situation_notes = ""
-    if action == "BUY" and diversity_score < 5:
-        situation_notes = "Note: Arjun's diversity score is low (< 5), mention concentration risk gently."
-    elif action == "SELL":
-        situation_notes = "Note: Ask if he sold strategically or panic-sold. Praise discipline if strategic."
-    elif action == "VIEW":
-        situation_notes = "Note: He's just viewing this stock. Perhaps suggest how it fits his portfolio gaps."
-        
-    if cash_pct < 20:
-        situation_notes += " Also Note: Cash is running low (<20% of portfolio), proactively mention it."
+    stock_snapshot = portfolio_context.get("stockSnapshot", {})
+    historical_ohlcv = portfolio_context.get("historicalOhlcv", [])
+    timeframe = portfolio_context.get("timeframe", "1d")
+    stock_name = stock_snapshot.get("companyName") or stock_snapshot.get("name") or symbol.upper()
+    ticker = stock_snapshot.get("symbol") or symbol.upper()
+
+    formatted_rows: List[str] = []
+    for row in historical_ohlcv:
+        formatted_rows.append(
+            "date={date}, open={open}, high={high}, low={low}, close={close}, volume={volume}".format(
+                date=row.get("timestamp", ""),
+                open=row.get("open", ""),
+                high=row.get("high", ""),
+                low=row.get("low", ""),
+                close=row.get("close", ""),
+                volume=row.get("volume", ""),
+            )
+        )
+    history_block = "\n".join(formatted_rows) if formatted_rows else "No historical OHLCV data available."
+    closes = [float(row.get("close", 0) or 0) for row in historical_ohlcv if row.get("close") is not None]
+    highs = [float(row.get("high", 0) or 0) for row in historical_ohlcv if row.get("high") is not None]
+    lows = [float(row.get("low", 0) or 0) for row in historical_ohlcv if row.get("low") is not None]
+    volumes = [float(row.get("volume", 0) or 0) for row in historical_ohlcv if row.get("volume") is not None]
+
+    price_change_pct = 0.0
+    if len(closes) >= 2 and closes[0] != 0:
+        price_change_pct = ((closes[-1] - closes[0]) / closes[0]) * 100
+
+    stats_block = {
+        "candlesCount": len(historical_ohlcv),
+        "periodCloseChangePct": round(price_change_pct, 2),
+        "periodHigh": round(max(highs), 2) if highs else None,
+        "periodLow": round(min(lows), 2) if lows else None,
+        "latestClose": round(closes[-1], 2) if closes else None,
+        "averageVolume": round(sum(volumes) / len(volumes), 2) if volumes else None,
+        "recentCloses": [round(v, 2) for v in closes[-5:]] if closes else []
+    }
 
     user_msg = f"""
-Arjun just took the following action: {action} on stock {symbol}
-Current Portfolio State:
-- Cash remaining: ₹{cash:.2f} ({(cash_pct):.1f}% of total)
-- Diversity Score: {diversity_score}/10
-- Total PnL: {portfolio_context.get("totalPnlPct", 0.0)}%
+You are a stock market analyst helping a young beginner investor in India. Here is the recent price data for {stock_name} ({ticker}) in timeframe {timeframe}:
+{history_block}
 
-{situation_notes}
-React naturally to THIS specific action given THIS specific context.
+Latest snapshot:
+{json.dumps(stock_snapshot, ensure_ascii=True)}
+
+Derived stats for this exact request:
+{json.dumps(stats_block, ensure_ascii=True)}
+
+User action trigger: {action}
+
+Analyze this data and give a response in exactly this format:
+📊 TREND: Is the stock currently Bullish, Bearish, or Sideways? In one sentence, explain what the price movement shows.
+✅ RECOMMENDATION: Should the user Buy, Sell, or Hold right now? State it clearly.
+💡 WHY: In 2–3 simple sentences, explain why — reference actual price levels and movement from the data provided.
+⚠️ RISK: In plain language, explain what could go wrong if the user follows this recommendation. Mention a rough percentage drop/gain if possible.
+🔁 WHY NOT THE OPPOSITE: In 1–2 sentences, explain why the other option (Buy vs Sell) would be the worse choice right now.
+Keep the total response under 150 words. Use simple language. No financial jargon. Write like you're explaining to a 20-year-old who is investing for the first time.
 """
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_msg}
     ]
     
-    insight = await call_groq(messages, max_tokens=150)
+    insight = await call_groq(messages, max_tokens=300)
+    print(f"[AI_MENTOR] Groq response for {ticker} ({timeframe}): {insight}")
     return insight
 
 async def generate_loss_debrief(loss_amount: float, stock_symbol: str, stock_name: str, holdings: list, portfolio_value: float) -> dict:

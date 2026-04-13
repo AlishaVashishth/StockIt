@@ -23,6 +23,7 @@ export default function StockDetail() {
   const [productType, setProductType] = useState<'CNC' | 'MIS'>('CNC');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [tooltipData, setTooltipData] = useState<any>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
@@ -47,9 +48,32 @@ export default function StockDetail() {
     }
   };
 
+  const fetchAiInsight = async (action: 'BUY' | 'SELL' | 'VIEW' = 'VIEW') => {
+    setIsRefreshingAI(true);
+    setAiError(null);
+    try {
+      const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      console.log('[StockDetail] Sending mentor request', { symbol, tab: activeTab, action, requestId });
+      const insight = await api.getMentorInsight(action, symbol, activeTab.toLowerCase(), requestId);
+      console.log('[StockDetail] Mentor API response:', insight);
+      setAiInsight(insight);
+    } catch (err) {
+      console.error(err);
+      setAiError('Could not fetch AI insight right now.');
+    } finally {
+      setIsRefreshingAI(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     loadData();
+  }, [symbol, activeTab]);
+
+  useEffect(() => {
+    // Regenerate AI insight whenever chart timeframe changes.
+    console.log('Fetching AI insight for tab:', activeTab);
+    fetchAiInsight('VIEW');
   }, [symbol, activeTab]);
 
   const drawChart = () => {
@@ -159,7 +183,9 @@ export default function StockDetail() {
       }
       setShowModal(true);
       setTimeout(async () => {
-        const insight = await api.getMentorInsight(buySell, symbol);
+        const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const insight = await api.getMentorInsight(buySell, symbol, activeTab.toLowerCase(), requestId);
+        console.log('[StockDetail] Mentor API response after order:', insight);
         setAiInsight(insight);
       }, 500);
       loadData(); // refresh cash
@@ -169,15 +195,7 @@ export default function StockDetail() {
   };
 
   const handleRefreshAI = async () => {
-    setIsRefreshingAI(true);
-    try {
-      const insight = await api.getMentorInsight("VIEW", symbol);
-      setAiInsight(insight);
-    } catch(err) {
-      console.error(err);
-    } finally {
-      setIsRefreshingAI(false);
-    }
+    fetchAiInsight("VIEW");
   };
 
   if (loading || !stockDetail) {
@@ -189,6 +207,10 @@ export default function StockDetail() {
   const change = Number(stockDetail.change || 0);
   const changePercent = Number(stockDetail.changePercent ?? stockDetail.changePct ?? 0);
   const isPositive = change >= 0;
+  const aiInsightText =
+    typeof aiInsight === 'string'
+      ? aiInsight
+      : aiInsight?.insight || aiInsight?.message || '';
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col overflow-x-hidden">
@@ -277,14 +299,14 @@ export default function StockDetail() {
           </div>
 
           <div className="space-y-4 text-[13px] text-text-primary leading-relaxed">
-            {aiInsight ? (
-              <div>{aiInsight.insight}</div>
+            {isRefreshingAI ? (
+              <p className="text-text-muted italic">Analyzing price data...</p>
+            ) : aiInsightText ? (
+              <div>{aiInsightText}</div>
+            ) : aiError ? (
+              <p className="text-accent-red">{aiError}</p>
             ) : (
-              <>
-                <p>{meta.about}</p>
-                <p><span className="font-bold">Sector:</span> {meta.sector}</p>
-                <p><span className="font-bold">⚖️ Risk Level:</span> <span className="text-accent-green">{meta.riskLevel}</span></p>
-              </>
+              <p className="text-text-muted italic">Generating AI insight from {activeTab} price data...</p>
             )}
           </div>
 
@@ -293,7 +315,7 @@ export default function StockDetail() {
             className="w-full mt-4 py-2 border border-border rounded-xl text-[11px] font-bold text-text-muted flex items-center justify-center space-x-2"
           >
             <RefreshCw size={12} className={isRefreshingAI ? "animate-spin" : ""} />
-            <span>{isRefreshingAI ? "Consulting Mentor..." : "Ask AI Mentor ↻"}</span>
+            <span>{isRefreshingAI ? "Generating AI Insight..." : "Generate AI Insight ↻"}</span>
           </button>
         </div>
       </main>
@@ -371,7 +393,7 @@ export default function StockDetail() {
               
               {aiInsight && (
                 <div className="bg-bg-secondary p-4 mt-6 text-left rounded-xl text-xs border border-accent-gold/20 leading-relaxed text-text-primary">
-                  <span className="text-lg">🤖</span> {aiInsight.insight}
+                  <span className="text-lg">🤖</span> {aiInsightText}
                 </div>
               )}
 

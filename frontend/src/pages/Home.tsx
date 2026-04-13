@@ -10,7 +10,6 @@ import {
 import { api } from '../api';
 
 export default function Home() {
-  const USER_NAME_STORAGE_KEY = 'investsim_user_name';
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [indices, setIndices] = useState<any>(null);
@@ -59,8 +58,8 @@ export default function Home() {
   }
 
   const { user, portfolioSummary, missions, recentActivity, dailyPnlPct, shouldTriggerLossDebrief } = data;
-  const persistedName = localStorage.getItem(USER_NAME_STORAGE_KEY)?.trim();
-  const displayName = persistedName || user.name;
+  const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
+  const displayName = user.name;
 
   // For day-0 users with no holdings, keep baseline at the bottom.
   const sparkPoints = portfolioSummary.holdingsCount === 0
@@ -148,7 +147,7 @@ export default function Home() {
                 <p className="text-[11px] text-text-muted uppercase tracking-tight">Cash Available</p>
               </div>
               <div className="text-right">
-                <p className="text-[18px] font-mono font-bold text-text-primary">{user.daysActive || 0} Days</p>
+                <p className="text-[18px] font-mono font-bold text-text-primary">{streakCount} Days</p>
                 <p className="text-[11px] text-text-muted uppercase tracking-tight">Active Streak 🔥</p>
               </div>
             </div>

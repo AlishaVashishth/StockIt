@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.db import read_json, write_json
+from services.db import read_json, write_json, record_activity_and_update_streak
 from models.schemas import LessonCompleteRequest, MissionCompleteRequest
 from datetime import datetime, timezone
 import uuid
@@ -251,6 +251,7 @@ async def complete_lesson(request: LessonCompleteRequest):
     
     write_json("lessons.json", lessons_json)
     update_user_xp(xp_gained)
+    record_activity_and_update_streak()
     
     mod_target = next((m for m in MODULES_STATIC if m["id"] == request.moduleId), None)
     module_complete = False
@@ -290,6 +291,7 @@ async def complete_mission(request: MissionCompleteRequest):
         
     xp_reward = target.get("xpReward", 0)
     update_user_xp(xp_reward)
+    record_activity_and_update_streak()
     write_json("missions.json", missions)
     
     return {"mission": target, "xpAwarded": xp_reward}

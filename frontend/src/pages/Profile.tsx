@@ -59,12 +59,12 @@ const BADGES = [
 ];
 
 export default function Profile() {
-  const USER_NAME_STORAGE_KEY = 'investsim_user_name';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'returns' | 'learning' | 'risk'>('returns');
   const [showShare, setShowShare] = useState(false);
   const [userData, setUserData] = useState<any>(null);
-  const displayName = localStorage.getItem(USER_NAME_STORAGE_KEY)?.trim() || 'Investor';
+  const streakCount = userData?.streakCount ?? userData?.daysActive ?? 0;
+  const displayName = userData?.name || 'Investor';
   const initials = displayName
     .split(' ')
     .filter(Boolean)
@@ -140,7 +140,7 @@ export default function Profile() {
             { label: 'Worst Trade', value: 'YESBANK', color: 'text-accent-red', sub: '-33.3% 📉', isSmall: true },
             { label: 'Lessons Done', value: '8 / 15', color: 'text-accent-gold', sub: 'Lessons Done' },
             { label: 'Time Machine', value: '225 XP', color: 'text-accent-gold', sub: 'History Score' },
-            { label: 'Active Days', value: String(userData?.daysActive ?? 0), color: 'text-text-primary', sub: 'Day Streak 🔥' },
+            { label: 'Active Days', value: String(streakCount), color: 'text-text-primary', sub: 'Day Streak 🔥' },
           ].map((stat, i) => (
             <motion.div
               key={i}

@@ -2,16 +2,27 @@ const API_BASE_URL = 'http://localhost:8000/api';
 
 const fetchJson = async (endpoint: string, options?: RequestInit) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  const userEmail = localStorage.getItem('investsim_user_email') || '';
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'X-User-Email': userEmail,
         ...options?.headers,
       },
     });
     if (!response.ok) {
-      throw new Error(`API call failed: ${response.statusText}`);
+      let errorMsg = `API call failed: ${response.statusText}`;
+      try {
+        const errorData = await response.clone().json();
+        if (errorData && errorData.detail) {
+          errorMsg = errorData.detail;
+        }
+      } catch (e) {
+        // ignore JSON parse error
+      }
+      throw new Error(errorMsg);
     }
     return await response.json();
   } catch (error) {
@@ -23,7 +34,7 @@ const fetchJson = async (endpoint: string, options?: RequestInit) => {
 export const api = {
   // User
   getUser: () => fetchJson('/user'),
-  startSession: (name: string) => fetchJson('/user/start-session', { method: 'POST', body: JSON.stringify({ name }) }),
+  startSession: (name: string, email: string, password: string) => fetchJson('/user/start-session', { method: 'POST', body: JSON.stringify({ name, email, password }) }),
   patchXP: (xpPoints: number) => fetchJson('/user/xp', { method: 'PATCH', body: JSON.stringify({ xpPoints }) }),
   getLeaderboards: () => fetchJson('/user/leaderboard'),
   
@@ -62,8 +73,8 @@ export const api = {
   getTimeMachineScore: () => fetchJson('/time-machine/score'),
   
   // AI
-  getMentorInsight: (action: string, symbol: string) => 
-    fetchJson('/ai/mentor', { method: 'POST', body: JSON.stringify({ action, symbol }) }),
+  getMentorInsight: (action: string, symbol: string, timeframe = '1d', requestId?: string) => 
+    fetchJson('/ai/mentor', { method: 'POST', body: JSON.stringify({ action, symbol, timeframe, requestId }) }),
   getLossDebrief: (stockSymbol: string, lossAmount: number) => 
     fetchJson('/ai/loss-debrief', { method: 'POST', body: JSON.stringify({ stockSymbol, lossAmount }) }),
   analyzePortfolio: () => 

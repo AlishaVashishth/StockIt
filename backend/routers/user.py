@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.db import read_json, write_json
+from services.db import read_json, write_json, enforce_streak_on_app_open
 from models.schemas import XpUpdateRequest, StartSessionRequest
 from datetime import datetime, timezone
 import uuid
@@ -7,51 +7,48 @@ import re
 
 router = APIRouter()
 
-def _username_to_key(name: str) -> str:
-    key = re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
+def _email_to_key(email: str) -> str:
+    key = re.sub(r"[^a-z0-9]+", "_", email.strip().lower()).strip("_")
     return key or f"user_{uuid.uuid4().hex[:8]}"
+
+from services.db import active_user_email
 
 @router.post("/start-session")
 async def start_session(request: StartSessionRequest):
     trimmed_name = request.name.strip()
-    if not trimmed_name:
-        raise HTTPException(status_code=400, detail="Name is required")
+    email = request.email.strip().lower()
+    password = request.password
+    if not trimmed_name or not email or not password:
+        raise HTTPException(status_code=400, detail="Name, email, and password are required")
 
-    user_key = _username_to_key(trimmed_name)
-    write_json("current_user.json", {"userKey": user_key, "name": trimmed_name})
+    active_user_email.set(email)
+    user_key = _email_to_key(email)
 
     existing_user = read_json("user.json")
     if isinstance(existing_user, dict) and existing_user.get("id"):
-        today = datetime.now(timezone.utc).date()
-        last_active_raw = existing_user.get("lastActiveDate") or existing_user.get("createdAt")
-        try:
-            last_active_date = datetime.strptime(last_active_raw, "%Y-%m-%d").date() if last_active_raw else today
-        except Exception:
-            last_active_date = today
-
-        if today > last_active_date:
-            day_diff = (today - last_active_date).days
-            existing_user["daysActive"] = int(existing_user.get("daysActive", 0)) + day_diff
-            existing_user["lastActiveDate"] = today.strftime("%Y-%m-%d")
-            write_json("user.json", existing_user)
-        elif not existing_user.get("lastActiveDate"):
-            existing_user["lastActiveDate"] = today.strftime("%Y-%m-%d")
-            write_json("user.json", existing_user)
+        if existing_user.get("password") != password:
+            raise HTTPException(status_code=401, detail="Invalid credentials. If you already have an account, please make sure your password is correct.")
+        existing_user = enforce_streak_on_app_open()
+        existing_user["isNewUser"] = False
+        write_json("user.json", existing_user)
         return existing_user
 
     initials = "".join([part[0].upper() for part in trimmed_name.split() if part][:2]) or "IN"
-    user_id = f"user_{uuid.uuid4().hex[:8]}"
+    user_id = email
     user_data = {
         "id": user_id,
         "name": trimmed_name,
-        "email": f"{trimmed_name.lower().replace(' ', '.')}@investsim.local",
+        "email": email,
+        "password": password,
         "avatarInitials": initials,
         "virtualCash": 100000.00,
         "xpPoints": 0,
         "currentTier": 1,
         "daysActive": 0,
+        "streakCount": 0,
+        "isNewUser": True,
         "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "lastActiveDate": datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        "lastActivityDate": None
     }
 
     default_missions = [
@@ -72,7 +69,7 @@ async def start_session(request: StartSessionRequest):
 
 @router.get("")
 async def get_user():
-    user_data = read_json("user.json")
+    user_data = enforce_streak_on_app_open()
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
     return user_data

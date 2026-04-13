@@ -7,7 +7,12 @@ export default function Splash() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/onboarding');
+      const existingEmail = localStorage.getItem('investsim_user_email');
+      if (existingEmail) {
+        navigate('/home');
+      } else {
+        navigate('/onboarding');
+      }
     }, 2500);
 
     return () => clearTimeout(timer);

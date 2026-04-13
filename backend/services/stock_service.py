@@ -33,19 +33,47 @@ STOCK_METADATA = {
         "riskLevel": "LOW",
         "about": "Global IT services giant that turned Bangalore into India's Silicon Valley"
     },
-    "TATAMOTORS": {
-        "companyName": "Tata Motors Ltd",
-        "sector": "Automobile",
+    "SBIN": {
+        "companyName": "State Bank of India",
+        "sector": "Banking",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "India's largest public sector bank with strong retail and corporate reach"
+    },
+    "ICICIBANK": {
+        "companyName": "ICICI Bank Ltd",
+        "sector": "Banking",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Large private bank with broad loan book and strong digital banking growth"
+    },
+    "ITC": {
+        "companyName": "ITC Ltd",
+        "sector": "FMCG",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Diversified FMCG major with cigarettes, foods, hotels, and paperboards"
+    },
+    "HINDUNILVR": {
+        "companyName": "Hindustan Unilever Ltd",
+        "sector": "FMCG",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Consumer staples leader with strong household brands and stable cash flows"
+    },
+    "BHARTIARTL": {
+        "companyName": "Bharti Airtel Ltd",
+        "sector": "Telecom",
         "marketCap": "Large Cap",
         "riskLevel": "MEDIUM",
-        "about": "India's largest auto manufacturer — also owns Jaguar Land Rover"
+        "about": "Leading telecom operator with strong 4G/5G subscriber base in India"
     },
-    "ZOMATO": {
-        "companyName": "Zomato Ltd",
-        "sector": "Food Tech",
-        "marketCap": "Mid Cap",
-        "riskLevel": "HIGH",
-        "about": "India's leading food delivery app — profitable since 2023 but growth story still unfolding"
+    "LT": {
+        "companyName": "Larsen & Toubro Ltd",
+        "sector": "Infrastructure",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Engineering and infra heavyweight with long-term project execution pipeline"
     },
     "YESBANK": {
         "companyName": "Yes Bank Ltd",
@@ -68,10 +96,17 @@ FALLBACK_PRICES = {
     "TCS": 3421.55,
     "HDFCBANK": 1643.20,
     "INFY": 1482.10,
-    "TATAMOTORS": 924.45,
-    "ZOMATO": 182.30,
+    "SBIN": 812.45,
+    "ICICIBANK": 1254.30,
+    "ITC": 428.20,
+    "HINDUNILVR": 2485.70,
+    "BHARTIARTL": 1432.90,
+    "LT": 3621.15,
     "YESBANK": 24.15,
-    "ADANIPORTS": 1247.80
+    "ADANIPORTS": 1247.80,
+    # Legacy symbol fallbacks for old user holdings
+    "TATAMOTORS": 924.45,
+    "ZOMATO": 182.30
 }
 
 FINNHUB_SYMBOL_MAP = {
@@ -79,16 +114,44 @@ FINNHUB_SYMBOL_MAP = {
     "TCS": "TCS.NS",
     "HDFCBANK": "HDFCBANK.NS",
     "INFY": "INFY.NS",
-    "TATAMOTORS": "TATAMOTORS.NS",
-    "ZOMATO": "ZOMATO.NS",
+    "SBIN": "SBIN.NS",
+    "ICICIBANK": "ICICIBANK.NS",
+    "ITC": "ITC.NS",
+    "HINDUNILVR": "HINDUNILVR.NS",
+    "BHARTIARTL": "BHARTIARTL.NS",
+    "LT": "LT.NS",
     "YESBANK": "YESBANK.NS",
-    "ADANIPORTS": "ADANIPORTS.NS"
+    "ADANIPORTS": "ADANIPORTS.NS",
+    # Legacy support for existing holdings
+    "TATAMOTORS": "TATAMOTORS.NS",
+    "ZOMATO": "ETERNAL.NS"
+}
+
+YAHOO_SYMBOL_CANDIDATES = {
+    "SBIN": ["SBIN.NS"],
+    "ICICIBANK": ["ICICIBANK.NS"],
+    "ITC": ["ITC.NS"],
+    "HINDUNILVR": ["HINDUNILVR.NS"],
+    "BHARTIARTL": ["BHARTIARTL.NS"],
+    "LT": ["LT.NS"],
+    "RELIANCE": ["RELIANCE.NS"],
+    "TCS": ["TCS.NS"],
+    "HDFCBANK": ["HDFCBANK.NS"],
+    "INFY": ["INFY.NS"],
+    "YESBANK": ["YESBANK.NS"],
+    "ADANIPORTS": ["ADANIPORTS.NS"],
+    # Legacy support for existing holdings
+    "TATAMOTORS": ["TATAMOTORS.NS"],
+    "ZOMATO": ["ETERNAL.NS", "ZOMATO.NS"]
 }
 
 INDEX_SYMBOLS = {
     "NIFTY": "^NSEI",
     "SENSEX": "^BSESN"
 }
+
+def _candidate_symbols(symbol: str) -> list:
+    return YAHOO_SYMBOL_CANDIDATES.get(symbol, [f"{symbol}.NS"])
 
 async def get_stock_price(symbol: str) -> dict:
     meta = STOCK_METADATA.get(symbol, {})
@@ -102,7 +165,7 @@ async def get_stock_price(symbol: str) -> dict:
     finnhub_api_key = os.getenv("FINNHUB_API_KEY")
 
     if finnhub_api_key:
-        finnhub_symbol = FINNHUB_SYMBOL_MAP.get(symbol, f"{symbol}.NS")
+        finnhub_symbol = FINNHUB_SYMBOL_MAP.get(symbol, _candidate_symbols(symbol)[0])
         try:
             async with httpx.AsyncClient(timeout=8.0) as client:
                 quote_res, profile_res = await asyncio.gather(
@@ -143,30 +206,34 @@ async def get_stock_price(symbol: str) -> dict:
     
     try:
         def fetch_yf():
-            # Apply .NS suffix for Indian Stocks on Yahoo Finance
-            ticker = yf.Ticker(f"{symbol}.NS")
-            hist = ticker.history(period="2d")
-            return ticker.info, hist
-            
-        info, hist = await asyncio.to_thread(fetch_yf)
-        
+            for candidate in _candidate_symbols(symbol):
+                ticker = yf.Ticker(candidate)
+                hist = ticker.history(period="2d")
+                if hist is not None and not hist.empty:
+                    return ticker, hist
+            return None, None
+
+        ticker, hist = await asyncio.to_thread(fetch_yf)
         if hist is None or hist.empty:
             raise Exception("No historical data returned from yfinance")
-            
-        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+        fast_info = {}
+        try:
+            fast_info = dict(getattr(ticker, "fast_info", {}) or {})
+        except Exception:
+            fast_info = {}
+
+        current_price = fast_info.get("lastPrice")
         if current_price is None:
             current_price = float(hist['Close'].iloc[-1])
-            
-        prev_close = info.get("previousClose")
+
+        prev_close = fast_info.get("previousClose")
         if prev_close is None:
-            if len(hist) >= 2:
-                prev_close = float(hist['Close'].iloc[-2])
-            else:
-                prev_close = current_price
-                
-        day_high = info.get("dayHigh") or float(hist['High'].iloc[-1])
-        day_low = info.get("dayLow") or float(hist['Low'].iloc[-1])
-        volume = info.get("volume") or info.get("regularMarketVolume") or int(hist['Volume'].iloc[-1])
+            prev_close = float(hist['Close'].iloc[-2]) if len(hist) >= 2 else current_price
+
+        day_high = fast_info.get("dayHigh") or float(hist['High'].iloc[-1])
+        day_low = fast_info.get("dayLow") or float(hist['Low'].iloc[-1])
+        volume = fast_info.get("lastVolume") or int(hist['Volume'].iloc[-1])
         
         change = current_price - prev_close
         if prev_close != 0:
@@ -247,7 +314,7 @@ async def get_historical_data(symbol: str, period: str) -> list:
             "3mo": "D",
             "1y": "W"
         }
-        finnhub_symbol = FINNHUB_SYMBOL_MAP.get(symbol, f"{symbol}.NS")
+        finnhub_symbol = FINNHUB_SYMBOL_MAP.get(symbol, _candidate_symbols(symbol)[0])
         start_time = now - lookback_seconds.get(period, 60 * 60 * 24 * 30)
 
         try:
@@ -281,8 +348,12 @@ async def get_historical_data(symbol: str, period: str) -> list:
     
     try:
         def fetch_hist():
-            ticker = yf.Ticker(f"{symbol}.NS")
-            return ticker.history(period=period, interval=interval)
+            for candidate in _candidate_symbols(symbol):
+                ticker = yf.Ticker(candidate)
+                hist = ticker.history(period=period, interval=interval)
+                if hist is not None and not hist.empty:
+                    return hist
+            return None
             
         hist = await asyncio.to_thread(fetch_hist)
         

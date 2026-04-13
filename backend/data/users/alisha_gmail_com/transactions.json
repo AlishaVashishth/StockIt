@@ -1,0 +1,13 @@
+[
+  {
+    "id": "2a42dfa0-221a-4b17-bd5b-519cac6e2104",
+    "stockSymbol": "TATAMOTORS",
+    "companyName": "Tata Motors Ltd",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 1,
+    "price": 924.45,
+    "totalAmount": 924.45,
+    "createdAt": "2026-04-13T14:13:23Z"
+  }
+]

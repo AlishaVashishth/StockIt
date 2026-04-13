@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from services.db import read_json, write_json
+from services.db import read_json, write_json, record_activity_and_update_streak
 from services.stock_service import get_stock_price
 from models.schemas import BuyTradeRequest, SellTradeRequest
 import uuid
@@ -158,6 +158,7 @@ async def execute_buy(request: BuyTradeRequest):
     transactions.append(new_txn)
     write_json("transactions.json", transactions)
     _update_missions_after_trade()
+    record_activity_and_update_streak()
     
     return {
         "success": True,
@@ -217,6 +218,7 @@ async def execute_sell(request: SellTradeRequest):
     transactions.append(new_txn)
     write_json("transactions.json", transactions)
     _update_missions_after_trade()
+    record_activity_and_update_streak()
     
     return {
         "success": True,

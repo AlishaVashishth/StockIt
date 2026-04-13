@@ -18,6 +18,7 @@ export interface UserProfile {
   tier: string;
   xp: number;
   daysActive: number;
+  streakCount?: number;
   portfolioValue: number;
   todayPnl: number;
   todayPnlPercent: number;

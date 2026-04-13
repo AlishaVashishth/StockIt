@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from services.db import read_json, write_json
+from services.db import read_json, write_json, record_activity_and_update_streak
 from models.schemas import TimeMachineAttemptRequest
 from routers.learn import update_user_xp
 
@@ -113,6 +113,7 @@ async def register_attempt(request: TimeMachineAttemptRequest):
     write_json("time_machine_attempts.json", attempts)
     
     update_user_xp(scenario["xpReward"])
+    record_activity_and_update_streak()
     
     return {
         "outcome": outcome,
