@@ -66,11 +66,11 @@ export const api = {
   completeMission: (missionKey: string) => 
     fetchJson('/learn/missions/complete', { method: 'POST', body: JSON.stringify({ missionKey }) }),
     
-  // Time Machine
-  getScenarios: () => fetchJson('/time-machine/scenarios'),
+  // Loss Simulator
+  getScenarios: () => fetchJson('/loss-simulator/scenarios'),
   saveAttempt: (scenarioId: number, choice: string) => 
-    fetchJson('/time-machine/attempt', { method: 'POST', body: JSON.stringify({ scenarioId, choice }) }),
-  getTimeMachineScore: () => fetchJson('/time-machine/score'),
+    fetchJson('/loss-simulator/attempt', { method: 'POST', body: JSON.stringify({ scenarioId, choice }) }),
+  getTimeMachineScore: () => fetchJson('/loss-simulator/score'),
   
   // AI
   getMentorInsight: (action: string, symbol: string, timeframe = '1d', requestId?: string) => 

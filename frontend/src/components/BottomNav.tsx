@@ -29,11 +29,10 @@ const TradeIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
-const HistoryIcon = ({ color }: { color: string }) => (
+const SimulateIcon = ({ color }: { color: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
-    <path d="m12 7 0 5 3 3" />
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 3" />
   </svg>
 );
 
@@ -52,7 +51,7 @@ export default function BottomNav() {
     { id: 'home', label: 'Home', path: '/home', icon: HomeIcon },
     { id: 'learn', label: 'Learn', path: '/learn', icon: LearnIcon },
     { id: 'trade', label: 'Trade', path: '/trade', icon: TradeIcon, isCenter: true },
-    { id: 'history', label: 'History', path: '/time-machine', icon: HistoryIcon },
+    { id: 'loss', label: 'Replay', path: '/loss-simulator', icon: SimulateIcon },
     { id: 'profile', label: 'Profile', path: '/profile', icon: ProfileIcon },
   ];
 

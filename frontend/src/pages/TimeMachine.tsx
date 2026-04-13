@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  History, ArrowLeft, Clock, TrendingUp, AlertCircle, CheckCircle2, ChevronRight, Info, RefreshCw
+  AlertTriangle, ArrowLeft, Clock, TrendingUp, AlertCircle, CheckCircle2, ChevronRight, Info, RefreshCw
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -71,7 +71,7 @@ export default function TimeMachine() {
   };
 
   if (loading && gameState === 'browsing') {
-    return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Time Traveling...</div>;
+    return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Loss Simulator...</div>;
   }
 
   return (
@@ -81,7 +81,7 @@ export default function TimeMachine() {
           <button onClick={reset} className="mr-3 p-1"><ArrowLeft size={20} /></button>
         ) : null}
         <h1 className="text-xl font-heading font-bold flex items-center">
-          <History className="mr-2 text-accent-gold" size={20} /> Time Machine
+          <AlertTriangle className="mr-2 text-accent-gold" size={20} /> Loss Simulator
         </h1>
       </header>
 
@@ -92,7 +92,7 @@ export default function TimeMachine() {
               <div className="bg-bg-card border border-border rounded-2xl p-5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-accent-gold/5 blur-3xl rounded-full -mr-16 -mt-16" />
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-lg font-heading font-bold text-accent-gold">Relive History</h2>
+                  <h2 className="text-lg font-heading font-bold text-accent-gold">Simulate Loss Scenarios</h2>
                   <div className="px-2 py-0.5 rounded bg-accent-gold/10 text-accent-gold text-xs font-bold border border-accent-gold/20">
                     {userScore?.totalSuccess} Won
                   </div>

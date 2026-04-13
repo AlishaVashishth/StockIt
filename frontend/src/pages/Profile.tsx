@@ -210,7 +210,7 @@ export default function Profile() {
             { label: 'Best Trade', value: 'TATAMOTORS', color: 'text-accent-green', sub: '+12.7% 🏆', isSmall: true },
             { label: 'Worst Trade', value: 'YESBANK', color: 'text-accent-red', sub: '-33.3% 📉', isSmall: true },
             { label: 'Lessons Done', value: '8 / 15', color: 'text-accent-gold', sub: 'Lessons Done' },
-            { label: 'Time Machine', value: '225 XP', color: 'text-accent-gold', sub: 'History Score' },
+            { label: 'Loss Sim', value: '225 XP', color: 'text-accent-gold', sub: 'Simulator Score' },
             { label: 'Active Days', value: String(streakCount), color: 'text-text-primary', sub: 'Day Streak 🔥' },
           ].map((stat, i) => (
             <motion.div

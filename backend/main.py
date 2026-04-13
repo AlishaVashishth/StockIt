@@ -50,7 +50,7 @@ app.include_router(stocks.router, prefix="/api/stocks")
 app.include_router(trades.router, prefix="/api/trades")
 app.include_router(ai.router, prefix="/api/ai")
 app.include_router(learn.router, prefix="/api/learn")
-app.include_router(time_machine.router, prefix="/api/time-machine")
+app.include_router(time_machine.router, prefix="/api/loss-simulator")
 app.include_router(dashboard.router, prefix="/api/dashboard")
 
 @app.get("/api/health")

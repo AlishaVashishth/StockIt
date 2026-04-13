@@ -25,7 +25,7 @@ function AnimatedRoutes() {
   const location = useLocation();
   
   // Routes that should show the global BottomNav
-  const mainTabs = ['/home', '/learn', '/trade', '/time-machine', '/portfolio', '/profile'];
+  const mainTabs = ['/home', '/learn', '/trade', '/loss-simulator', '/portfolio', '/profile'];
   const isMainTab = mainTabs.includes(location.pathname);
   
   // Routes that should show the global TopBar and MarketTicker
@@ -47,7 +47,8 @@ function AnimatedRoutes() {
             <Route path="/learn/:moduleId" element={<PageWrapper><LearnLesson /></PageWrapper>} />
             <Route path="/trade" element={<PageWrapper><Trade /></PageWrapper>} />
             <Route path="/trade/:symbol" element={<PageWrapper><StockDetail /></PageWrapper>} />
-            <Route path="/time-machine" element={<PageWrapper><TimeMachine /></PageWrapper>} />
+            <Route path="/loss-simulator" element={<PageWrapper><TimeMachine /></PageWrapper>} />
+            <Route path="/time-machine" element={<Navigate to="/loss-simulator" replace />} />
             <Route path="/portfolio" element={<PageWrapper><Portfolio /></PageWrapper>} />
             <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
             <Route path="/loss-debrief" element={<PageWrapper><LossDebrief /></PageWrapper>} />

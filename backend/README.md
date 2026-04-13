@@ -62,7 +62,7 @@ Verify all services and JSON DB connections are functioning:
 - `POST /api/ai/analyze-portfolio`: Generates fully-aware user specific diversification summaries.
 - `GET /api/ai/mentor-history`: Reads conversation history from logging data store.
 
-### Time Machine (Historical Decisions)
-- `GET /api/time-machine/scenarios`: Replayable era-defining market moments.
-- `POST /api/time-machine/attempt`: Submits outcome-decisions and checks historical context.
-- `GET /api/time-machine/score`: User summary logic across historical plays.
+### Loss Simulator (Historical Decisions)
+- `GET /api/loss-simulator/scenarios`: Replayable era-defining market moments.
+- `POST /api/loss-simulator/attempt`: Submits outcome-decisions and checks historical context.
+- `GET /api/loss-simulator/score`: User summary logic across historical plays.
