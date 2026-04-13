@@ -435,6 +435,16 @@ export default function Profile() {
                   )}
                 </div>
               </div>
+
+              <button
+                onClick={() => {
+                  localStorage.removeItem('investsim_user_email');
+                  navigate('/onboarding');
+                }}
+                className="w-full py-4 rounded-2xl border border-accent-red/40 text-accent-red font-heading font-bold mb-6"
+              >
+                Log Out
+              </button>
             </>
           )}
         </div>
