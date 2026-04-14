@@ -44,7 +44,7 @@ ________________________________________
 
 2. ### Trading Screen
    
-  <img width="332" height="750" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
+  <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
 
 The core trading experience, designed to feel like a real brokerage terminal. Browse a paginated, searchable list of stocks with live prices, and a market status banner indicating whether the exchange is open or closed. Manual refresh and 10-second auto-polling keep data current.
 ________________________________________
@@ -52,8 +52,8 @@ ________________________________________
 3.  ### Stock Detail and Analysis
 
    <div align="center">
-      <img width="332" height="750" alt="image" src="https://github.com/user-attachments/assets/c6a9e54b-7bd1-4303-9ab1-b4b9089c929d" />
-      <img width="332" height="750" alt="image" src="https://github.com/user-attachments/assets/c42a9d8b-5fa3-4755-af0c-9c79404ddd00" />
+      <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c6a9e54b-7bd1-4303-9ab1-b4b9089c929d" />
+      <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c42a9d8b-5fa3-4755-af0c-9c79404ddd00" />
    </div>
 
 Deep-dive into any stock before committing. Features an interactive OHLCV chart across multiple time periods (1D, 1W, 1M, 3M, 1Y), AI-generated contextual insights about the stock's recent movement, and an inline buy/sell panel so you never have to navigate away to trade.
@@ -63,9 +63,9 @@ ________________________________________
 
    
    <div align="center">
-      <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/3bdb9b95-01a0-4fc4-ae9f-36bc13bb564f" />
-    <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/6f8ae47c-88c1-429c-a42f-2aaea42f3f1d" />
-      <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
+      <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/3bdb9b95-01a0-4fc4-ae9f-36bc13bb564f" />
+    <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/6f8ae47c-88c1-429c-a42f-2aaea42f3f1d" />
+      <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
 
    </div>
 <br>
@@ -75,39 +75,56 @@ ________________________________________
 
 5.  ### Learning & Gamification
 
-  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
+  <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
 
 Structured lessons and multiple-choice quizzes covering investing fundamentals. Each completion awards XP, advances your level tier, and can complete active missions. A streak system rewards daily engagement.
 ________________________________________
 6.  ### Loss Simulator (Time Machine)
    
- <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
+ <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
 
 Presents historical market crash scenarios — users make allocation decisions and see how they would have played out. Scores are tracked and explained, turning past market disasters into personalised learning moments.
 
 </div>
 
 ________________________________________
- Key Features
- AI-Powered Investing Assistant
-•	Portfolio analysis
-•	Loss Simulator
-•	Context-aware explanations
-Real-Time Market Simulation
-•	Finnhub integration
-•	Live-like pricing system
-•	Index tracking
- Gamified Learning System
-•	XP & levels
-•	Missions & streaks
-•	Quiz-based progression
- Risk & Scenario Simulator
-•	Time-machine simulation
-•	Learn from past market crashes
- Portfolio Intelligence
-•	Diversity scoring
-•	Performance insights
-________________________________________
+ ## Key Features
+ 
+### AI-Powered Investing Assistant
+The Groq-backed AI mentor operates across three distinct modes:
+ 
+- **Portfolio analysis** — sends your full holdings, P&L, and diversity score to the model and returns a structured critique with actionable suggestions
+- **Contextual mentor chat** — answers natural-language investing questions with awareness of your current portfolio and learning progress
+ 
+Interaction history is persisted per user so the assistant builds continuity across sessions.
+ 
+### Real-Time Market Simulation
+- **Finnhub integration** as the primary data provider for live quotes, company profiles, and OHLCV candle data
+- **Yahoo Finance (yfinance) fallback** — if Finnhub fails or rate-limits, the backend seamlessly falls back to yfinance for quotes and historical data
+- **Static fallback values** as a final safety net, ensuring the UI never breaks due to upstream failures
+- **Live indices** — Nifty 50, Sensex, and select global indices fetched and normalised every 10 seconds on the home and trading screens
+- Normalised quote objects returned by the backend mean the frontend never needs to know which data source was used
+ 
+### Gamified Learning System
+- **XP & level tiers** — every trade, lesson completion, quiz pass, and mission finish awards XP; users level up through named tiers
+- **Daily streaks** — the backend tracks consecutive active days; the frontend displays current streak with visual indicators
+- **Missions** — time-limited challenges (e.g. "Complete 3 trades this week", "Finish the Diversification lesson") that reward bonus XP on completion
+- **Lessons & quizzes** — a structured curriculum stored in static data files, served via the `/api/learn` router, with per-user completion state persisted in JSON
+ 
+### Risk & Scenario Simulator
+- Pre-built historical scenarios (market crashes, sector collapses, black swan events) available via the `/api/loss-simulator` router
+- Users make allocation decisions within the scenario, then see scored outcomes
+- Scores are explained with AI-generated commentary connecting the simulated loss to real risk management principles
+ 
+### Portfolio Intelligence
+- **Diversity score** — a proprietary metric calculated by the backend that penalises over-concentration in a single stock or sector
+- **Best/worst performer cards** — surfaced automatically from live price enrichment on each portfolio fetch
+- **P&L enrichment** — the backend recomputes current holding values against live prices on every `/api/portfolio` request, so numbers are always fresh
+- **Transaction history** — full trade log accessible via `/api/portfolio/transactions`
+ 
+---
+
+
  Tech Stack
 Frontend
 •	React + Vite
