@@ -9,6 +9,7 @@ import {
   isItemComplete,
   markItemComplete,
 } from '../utils/progressUtils';
+import { addXP, calculateQuizXP, XP_VALUES } from '../utils/xpUtils';
 
 type Question = {
   question: string;
@@ -22,6 +23,7 @@ export default function LessonOrQuizPage() {
   const [showCongrats, setShowCongrats] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizXpEarned, setQuizXpEarned] = useState(0);
 
   const module = useMemo(() => courseData.find((m) => m.id === moduleId), [moduleId]);
 
@@ -52,8 +54,19 @@ export default function LessonOrQuizPage() {
     if (next) navigate(`/learn/${next.module.id}/${next.lesson.id}`);
   }
 
+  function addRecentActivity(text: string) {
+    const activity = JSON.parse(localStorage.getItem("recentActivity") || "[]");
+    activity.unshift({ text, date: new Date().toISOString() });
+    localStorage.setItem("recentActivity", JSON.stringify(activity.slice(0, 20)));
+  }
+
   function handleComplete() {
+    const wasCompleted = isItemComplete(currentLessonId);
     markItemComplete(currentLessonId);
+    if (!wasCompleted) {
+      addXP(XP_VALUES.lesson_complete, `Completed lesson: ${item.title}`);
+      addRecentActivity(`Completed Lesson: ${item.title}`);
+    }
     gotoNextIncompleteOrCongrats();
   }
 
@@ -125,8 +138,20 @@ export default function LessonOrQuizPage() {
             {!quizSubmitted ? (
               <button
                 onClick={() => {
+                  const correctCount = questions.reduce(
+                    (acc, q, idx) => (selectedAnswers[idx] === q.correctAnswer ? acc + 1 : acc),
+                    0
+                  );
+                  const scorePercent = questions.length > 0 ? (correctCount / questions.length) * 100 : 0;
                   setQuizSubmitted(true);
+                  const wasCompleted = isItemComplete(currentLessonId);
                   markItemComplete(currentLessonId);
+                  const xpEarned = calculateQuizXP(scorePercent);
+                  setQuizXpEarned(xpEarned);
+                  if (!wasCompleted) {
+                    addXP(xpEarned, `Completed quiz: ${item.title} (${Math.round(scorePercent)}%)`);
+                    addRecentActivity(`Completed Quiz: ${item.title} — earned ${xpEarned} XP`);
+                  }
                 }}
                 className="mt-4 w-full py-3 rounded-xl bg-accent-gold text-bg-primary font-bold"
               >
@@ -136,6 +161,9 @@ export default function LessonOrQuizPage() {
               <div className="mt-4">
                 <div className="mb-3 text-sm">
                   Score: <span className="font-bold">{score}/{questions.length}</span>
+                </div>
+                <div className="mb-3 text-sm text-accent-gold font-bold">
+                  You earned +{quizXpEarned} XP!
                 </div>
                 {isCourseComplete(courseData) ? (
                   <button

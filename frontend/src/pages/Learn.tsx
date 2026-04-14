@@ -15,6 +15,7 @@ import {
   isItemComplete,
 } from '../utils/progressUtils';
 import CongratsModal from '../components/CongratsModal';
+import { getCurrentLevel, getTotalXP, getXPProgress } from '../utils/xpUtils';
 
 interface ModuleCardProps {
   id: string;
@@ -89,7 +90,7 @@ function ModuleCard({
           </span>
           {isLocked && (
             <span className="text-[9px] text-accent-red font-bold uppercase tracking-tighter">
-              {status === 'LOCKED_TIER' ? 'Reach Higher Tier to unlock' : 'Complete Module to unlock'}
+              {status === 'LOCKED_TIER' ? 'Reach Higher Level to unlock' : 'Complete Module to unlock'}
             </span>
           )}
         </div>
@@ -124,6 +125,9 @@ export default function Learn() {
   const [loading, setLoading] = useState(true);
   const [activeConcept, setActiveConcept] = useState<any | null>(null);
   const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
+  const totalXP = getTotalXP();
+  const currentLevel = getCurrentLevel();
+  const xpProgress = getXPProgress(totalXP);
   const todayUtc = new Date().toISOString().slice(0, 10);
   const lastCreditDate = String(user?.lastActivityDate || user?.lastOpenDate || user?.lastActiveDate || '').slice(0, 10);
   const hasStreakToday = lastCreditDate === todayUtc;
@@ -154,7 +158,7 @@ export default function Learn() {
 
   const handleModuleTap = (id: string, status: string) => {
     if (status.startsWith('LOCKED')) {
-      showToast("🔒 Locked. Tier requirements not met.");
+      showToast("🔒 Locked. Level requirements not met.");
       return;
     }
     const mod = courseData.find((m) => m.id === id);
@@ -370,18 +374,18 @@ export default function Learn() {
           className="p-5 rounded-2xl bg-gradient-to-br from-accent-gold/20 to-transparent border border-accent-gold/30 mb-8"
         >
           <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-mono font-bold text-accent-gold uppercase tracking-widest">TIER {user.currentTier} — Rising Investor 🚀</span>
-            <span className="text-[10px] font-mono text-text-primary">{user.xpPoints} XP</span>
+            <span className="text-[10px] font-mono font-bold text-accent-gold uppercase tracking-widest">{currentLevel.emoji} {currentLevel.name}</span>
+            <span className="text-[10px] font-mono text-text-primary">{totalXP} XP</span>
           </div>
           <div className="h-2 bg-bg-secondary rounded-full overflow-hidden mb-2">
             <motion.div 
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, (user.xpPoints / 500) * 100)}%` }}
+              animate={{ width: `${xpProgress.percent}%` }}
               transition={{ duration: 1.5, ease: "easeOut" }}
               className="h-full bg-accent-gold shadow-[0_0_10px_#F0A500]"
             />
           </div>
-          <p className="text-[11px] text-text-muted">Keep learning to increase your Tier level</p>
+          <p className="text-[11px] text-text-muted">Keep learning to reach the next animal level</p>
           <button
             onClick={handleContinueLearning}
             className="mt-4 w-full py-3 rounded-xl bg-accent-gold text-bg-primary font-bold text-sm"

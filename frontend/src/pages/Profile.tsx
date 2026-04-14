@@ -11,6 +11,7 @@ import {
   Star
 } from 'lucide-react';
 import { api } from '../api';
+import { getCurrentLevel, getTotalXP, getXPProgress, LEVELS } from '../utils/xpUtils';
 
 interface Holding {
   stockSymbol: string;
@@ -160,12 +161,9 @@ export default function Profile() {
     virtualCash: Number(portfolioData?.virtualCash || 0),
     diversityScore: Number(portfolioData?.diversityScore || 0),
   };
-  const userTier = Number(userData?.currentTier || 1);
-  const userXp = Number(userData?.xpPoints || 0);
-  const currentTierFloor = (userTier - 1) * 500;
-  const nextTierTarget = userTier * 500;
-  const tierProgressPct = Math.max(0, Math.min(100, ((userXp - currentTierFloor) / 500) * 100));
-  const xpToNextTier = Math.max(0, nextTierTarget - userXp);
+  const userXp = getTotalXP();
+  const currentLevel = getCurrentLevel();
+  const levelProgress = getXPProgress(userXp);
   const cashPercentage = metrics.totalValue > 0 ? (metrics.virtualCash / metrics.totalValue) * 100 : 100;
   const sortedHoldings = useMemo(() => {
     const list = [...holdings];
@@ -217,20 +215,38 @@ export default function Profile() {
             
             <div className="w-full p-4 rounded-2xl border border-accent-gold/30 bg-bg-secondary/50 backdrop-blur-sm">
               <div className="text-sm font-heading font-bold text-accent-gold mb-3 tracking-wide">
-                🚀 TIER {userTier} — RISING INVESTOR
+                {currentLevel.emoji} {currentLevel.name}
               </div>
               <div className="h-2 bg-bg-primary rounded-full overflow-hidden mb-2">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: `${tierProgressPct}%` }}
+                  animate={{ width: `${levelProgress.percent}%` }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className="h-full bg-accent-gold shadow-[0_0_10px_#F0A500]"
                 />
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] text-text-muted">{userXp} XP total</span>
-                <span className="text-[10px] text-text-muted font-bold">{xpToNextTier} XP to Tier {userTier + 1} 🎯</span>
+                {levelProgress.nextLevel ? (
+                  <span className="text-[10px] text-text-muted font-bold">
+                    {levelProgress.xpInLevel} / {levelProgress.xpNeeded} XP to {levelProgress.nextLevel.emoji} {levelProgress.nextLevel.name}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-text-muted font-bold">Max level reached</span>
+                )}
               </div>
+            </div>
+            <div className="w-full mt-4 grid grid-cols-1 gap-2">
+              {LEVELS.map((lvl) => {
+                const active = lvl.id === currentLevel.id;
+                const unlocked = userXp >= lvl.minXP;
+                return (
+                  <div key={lvl.id} className={`rounded-xl border px-3 py-2 text-left ${active ? 'border-accent-gold bg-accent-gold/10' : 'border-border'} ${unlocked ? '' : 'opacity-50'}`}>
+                    <div className="text-xs font-bold">{lvl.emoji} {lvl.name} · {lvl.minXP}{Number.isFinite(lvl.maxXP) ? `-${lvl.maxXP}` : '+'} XP</div>
+                    <div className="text-[10px] text-text-muted">{lvl.description}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </motion.div>

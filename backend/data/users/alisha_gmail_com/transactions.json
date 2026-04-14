@@ -9,5 +9,16 @@
     "price": 924.45,
     "totalAmount": 924.45,
     "createdAt": "2026-04-13T14:13:23Z"
+  },
+  {
+    "id": "f94cd573-297b-432e-ba17-90ba37f6c4bd",
+    "stockSymbol": "ICICIBANK",
+    "companyName": "ICICI Bank Ltd",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 2,
+    "price": 1351.1,
+    "totalAmount": 2702.2,
+    "createdAt": "2026-04-14T07:17:25Z"
   }
 ]

@@ -2,7 +2,7 @@ import { Stock, Holding, UserProfile } from './types';
 
 export const MOCK_USER: UserProfile = {
   name: "Arjun Kumar",
-  tier: "Tier 2 — Rising Investor",
+  tier: "🐇 Rabbit — Building Momentum",
   xp: 340,
   daysActive: 12,
   portfolioValue: 114230,

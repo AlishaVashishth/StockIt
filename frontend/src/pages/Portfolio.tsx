@@ -88,6 +88,7 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('P&L');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
+  const [isRefreshingPortfolio, setIsRefreshingPortfolio] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
   const [showDetailedInsight, setShowDetailedInsight] = useState(false);
   const parsedAiInsight = useMemo(() => {
@@ -131,6 +132,18 @@ export default function Portfolio() {
       console.error(err);
     } finally {
       setIsRefreshingAI(false);
+    }
+  };
+
+  const handleRefreshPortfolio = async () => {
+    setIsRefreshingPortfolio(true);
+    try {
+      const portData = await api.getPortfolio();
+      setData(portData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRefreshingPortfolio(false);
     }
   };
 
@@ -187,6 +200,14 @@ export default function Portfolio() {
           </button>
           <h1 className="text-xl font-heading font-bold text-text-primary">💼 Portfolio</h1>
         </div>
+        <button
+          onClick={handleRefreshPortfolio}
+          disabled={isRefreshingPortfolio}
+          className="p-2 rounded-lg border border-border text-text-muted"
+          aria-label="Refresh portfolio"
+        >
+          <RefreshCw size={16} className={isRefreshingPortfolio ? "animate-spin" : ""} />
+        </button>
       </header>
 
       <main className="flex-1 pt-[70px] pb-[90px] px-4 overflow-y-auto no-scrollbar">

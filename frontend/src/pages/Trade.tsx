@@ -28,6 +28,7 @@ export default function Trade() {
   const [nextOffset, setNextOffset] = useState(0);
   const [hasMoreStocks, setHasMoreStocks] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   useEffect(() => {
     const mergeUniqueStocks = (existing: any[], incoming: any[]) => {
@@ -115,13 +116,42 @@ export default function Trade() {
     (stock.companyName || stock.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleRefreshMarket = async () => {
+    setIsRefreshing(true);
+    try {
+      const [stocksRes, indicesRes] = await Promise.all([
+        api.getStocks(PAGE_SIZE, 0),
+        api.getMarketIndices(),
+      ]);
+      const data = Array.isArray(stocksRes) ? stocksRes : [];
+      setStocks(data);
+      setIndices(indicesRes);
+      setNextOffset(data.length);
+      setHasMoreStocks(data.length === PAGE_SIZE);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col">
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border px-4 py-3">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-heading font-bold text-text-primary">📈 Market</h1>
-          <div className="px-2 py-0.5 rounded-full bg-accent-green/10 border border-accent-green/20">
-            <span className="text-[10px] font-bold text-accent-green uppercase tracking-wider">🟢 OPEN</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefreshMarket}
+              disabled={isRefreshing}
+              className="p-2 rounded-lg border border-border text-text-muted"
+              aria-label="Refresh market"
+            >
+              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            </button>
+            <div className="px-2 py-0.5 rounded-full bg-accent-green/10 border border-accent-green/20">
+              <span className="text-[10px] font-bold text-accent-green uppercase tracking-wider">🟢 OPEN</span>
+            </div>
           </div>
         </div>
         <p className="text-[11px] font-mono text-text-muted">NSE · Mon–Fri · 9:15 AM – 3:30 PM (Simulated)</p>

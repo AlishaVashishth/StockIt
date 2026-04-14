@@ -11,6 +11,14 @@ import { api } from '../api';
 import { courseData } from '../data/courseData';
 import { getCompletedItems, getNextIncompleteItem } from '../utils/progressUtils';
 import CongratsModal from '../components/CongratsModal';
+import { missionsData } from '../data/missionsData';
+import {
+  completeMission,
+  getMissionProgress,
+  isMissionComplete,
+  updateMissionProgress,
+} from '../utils/missionUtils';
+import { addXP, getCurrentLevel, getTotalXP, getXPProgress } from '../utils/xpUtils';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -20,6 +28,12 @@ export default function Home() {
   const [cachedProfile, setCachedProfile] = useState<any>(null);
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const [showCongrats, setShowCongrats] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [totalXP, setTotalXP] = useState(0);
+  const [missionDone, setMissionDone] = useState<string[]>([]);
+  const [missionProgressMap, setMissionProgressMap] = useState<Record<string, { current: number; target: number }>>({});
+  const [recentActivityLog, setRecentActivityLog] = useState<Array<{ text: string; date: string }>>([]);
+  const [xpMessage, setXpMessage] = useState<string | null>(null);
   const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
   const MANDATORY_FALLBACKS = {
     nifty: { name: 'NIFTY 50', value: null, change: null, changePct: null },
@@ -80,6 +94,18 @@ export default function Home() {
       }
     };
 
+    const refreshLocalStats = () => {
+      setCompletedItems(getCompletedItems());
+      setTotalXP(getTotalXP());
+      setMissionDone(missionsData.filter((m) => isMissionComplete(m.id)).map((m) => m.id));
+      const progressMap: Record<string, { current: number; target: number }> = {};
+      missionsData.forEach((m) => {
+        progressMap[m.id] = getMissionProgress(m.id);
+      });
+      setMissionProgressMap(progressMap);
+      setRecentActivityLog(JSON.parse(localStorage.getItem("recentActivity") || "[]"));
+    };
+
     const loadDashboard = async () => {
       try {
         const dashboardData = await api.getDashboard();
@@ -97,7 +123,7 @@ export default function Home() {
     };
 
     loadDashboard();
-    setCompletedItems(getCompletedItems());
+    refreshLocalStats();
     refreshIndices();
     const interval = setInterval(async () => {
       await refreshIndices();
@@ -113,7 +139,7 @@ export default function Home() {
     );
   }
 
-  const { user, portfolioSummary, missions, recentActivity, dailyPnlPct, shouldTriggerLossDebrief } = data;
+  const { user, portfolioSummary, dailyPnlPct, shouldTriggerLossDebrief } = data;
   const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
   const displayName = user?.name || cachedProfile?.name || 'Investor';
   const hour = new Date().getHours();
@@ -137,13 +163,37 @@ export default function Home() {
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
+  const currentLevel = getCurrentLevel();
+  const xpProgress = getXPProgress(totalXP);
+
   const handleMissionClick = (mission: any) => {
-    if (mission.completed || mission.requiredTier > user.currentTier) return;
-    if (mission.missionKey === 'hold_3_days') {
-      navigate('/portfolio');
-      return;
+    const done = isMissionComplete(mission.id);
+    if (done) return;
+
+    if (mission.type === "progress") {
+      const prog = getMissionProgress(mission.id);
+      const nextCurrent = Math.min((prog.current || 0) + 1, mission.target);
+      updateMissionProgress(mission.id, nextCurrent, mission.target);
+      if (nextCurrent < mission.target) {
+        setMissionProgressMap((prev) => ({ ...prev, [mission.id]: { current: nextCurrent, target: mission.target } }));
+        setXpMessage(`Progress updated: ${nextCurrent}/${mission.target}`);
+        setTimeout(() => setXpMessage(null), 2000);
+        return;
+      }
     }
-    navigate('/trade');
+
+    const xpAwarded = completeMission(mission.id, mission.xp);
+    if (xpAwarded > 0) {
+      addXP(mission.xp, `Completed mission: ${mission.title}`);
+      const activity = JSON.parse(localStorage.getItem("recentActivity") || "[]");
+      activity.unshift({ text: `Completed Mission: ${mission.title}`, date: new Date().toISOString() });
+      localStorage.setItem("recentActivity", JSON.stringify(activity.slice(0, 20)));
+      setXpMessage(`+${mission.xp} XP earned!`);
+      setTimeout(() => setXpMessage(null), 2000);
+      setTotalXP(getTotalXP());
+      setMissionDone(missionsData.filter((m: any) => isMissionComplete(m.id)).map((m: any) => m.id));
+      setRecentActivityLog(activity.slice(0, 20));
+    }
   };
 
   const globalItems = Array.isArray(indices?.global) ? indices.global : [];
@@ -181,11 +231,55 @@ export default function Home() {
     }
   }
 
+  const handleRefreshDashboard = async () => {
+    setIsRefreshing(true);
+    try {
+      const [dashboardData, latestIndices] = await Promise.all([
+        api.getDashboard(),
+        api.getMarketIndices(),
+      ]);
+      setData(dashboardData);
+      if (dashboardData?.user) {
+        localStorage.setItem(USER_PROFILE_CACHE_KEY, JSON.stringify(dashboardData.user));
+        setCachedProfile(dashboardData.user);
+      }
+      setIndices((prev: any) => ({
+        ...prev,
+        ...latestIndices,
+        nifty: latestIndices?.nifty || prev?.nifty || null,
+        sensex: latestIndices?.sensex || prev?.sensex || null,
+        global:
+          Array.isArray(latestIndices?.global) && latestIndices.global.length > 0
+            ? latestIndices.global
+            : Array.isArray(prev?.global)
+            ? prev.global
+            : [],
+      }));
+      setCompletedItems(getCompletedItems());
+      setTotalXP(getTotalXP());
+      setMissionDone(missionsData.filter((m) => isMissionComplete(m.id)).map((m) => m.id));
+      setRecentActivityLog(JSON.parse(localStorage.getItem("recentActivity") || "[]"));
+      animate(count, dashboardData.portfolioSummary.totalValue, { duration: 1.2, ease: "easeOut" });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full bg-bg-primary bg-dots flex flex-col">
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border">
         <div className="h-[60px] flex items-center justify-between px-4">
           <span className="font-heading font-bold text-base">{greeting}, {displayName.split(' ')[0]} 👋</span>
+          <button
+            onClick={handleRefreshDashboard}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg border border-border text-text-muted"
+            aria-label="Refresh dashboard"
+          >
+            <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+          </button>
         </div>
         <div className="h-[30px] bg-bg-secondary border-t border-border overflow-hidden flex items-center">
           <div className="flex animate-ticker whitespace-nowrap">
@@ -221,7 +315,7 @@ export default function Home() {
             <div className="flex justify-between items-start mb-2">
               <span className="text-[12px] font-mono text-text-muted uppercase tracking-wider">Total Portfolio</span>
               <div className="px-2 py-0.5 rounded bg-accent-gold/10 border border-accent-gold/20">
-                <span className="text-[10px] font-bold text-accent-gold">TIER {user.currentTier} 🚀</span>
+                <span className="text-[10px] font-bold text-accent-gold">{currentLevel.emoji} {currentLevel.name}</span>
               </div>
             </div>
 
@@ -333,40 +427,40 @@ export default function Home() {
                 <div className="w-48 h-1.5 bg-bg-secondary rounded-full mt-2 overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, (user.xpPoints / 500) * 100)}%` }}
+                    animate={{ width: `${xpProgress.percent}%` }}
                     transition={{ duration: 1, delay: 0.5 }}
                     className="h-full bg-accent-gold"
                   />
                 </div>
               </div>
               <button onClick={() => navigate('/profile')} className="text-xs font-bold text-accent-gold uppercase tracking-wider">
-                {user.xpPoints} XP →
+                {totalXP} XP →
               </button>
             </div>
+            {xpMessage && <p className="text-xs text-accent-gold font-bold">{xpMessage}</p>}
 
             <div className="space-y-3">
-              {missions.map((m: any, i: number) => {
-                const isComplete = m.completed;
-                const isLocked = m.requiredTier > user.currentTier;
+              {missionsData.map((m: any, i: number) => {
+                const isComplete = missionDone.includes(m.id);
+                const progress = missionProgressMap[m.id] || { current: 0, target: m.target || 1 };
                 return (
                   <button
                     key={i}
                     onClick={() => handleMissionClick(m)}
-                    className={`w-full flex items-center p-4 rounded-xl border border-border text-left ${isComplete ? 'bg-bg-card opacity-80' : isLocked ? 'bg-bg-card opacity-50 cursor-not-allowed' : 'bg-bg-card cursor-pointer'}`}
+                    className={`w-full flex items-center p-4 rounded-xl border border-border text-left ${isComplete ? 'bg-bg-card opacity-80' : 'bg-bg-card cursor-pointer'}`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 ${isComplete ? 'bg-accent-green/20' : isLocked ? 'bg-border' : 'bg-accent-gold/20'}`}>
-                      {isComplete ? <CheckCircle2 size={18} className="text-accent-green" /> : isLocked ? <Lock size={18} className="text-text-muted" /> : <RefreshCw size={18} className="text-accent-gold animate-spin-slow" />}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 ${isComplete ? 'bg-accent-green/20' : 'bg-accent-gold/20'}`}>
+                      {isComplete ? <CheckCircle2 size={18} className="text-accent-green" /> : <RefreshCw size={18} className="text-accent-gold animate-spin-slow" />}
                     </div>
                     <div className="flex-1">
                       <p className={`text-sm text-text-primary ${isComplete ? 'line-through decoration-text-muted' : ''}`}>{m.title}</p>
-                      {!isComplete && !isLocked && <p className="text-[10px] text-accent-gold mt-1">Tap to work on this mission</p>}
-                      {!isComplete && typeof m.progress === 'number' && typeof m.total === 'number' && (
-                        <p className="text-[10px] text-text-muted">{m.progress}/{m.total} complete</p>
+                      {!isComplete && <p className="text-[10px] text-accent-gold mt-1">{m.description}</p>}
+                      {!isComplete && m.type === 'progress' && (
+                        <p className="text-[10px] text-text-muted">{progress.current}/{progress.target} complete</p>
                       )}
-                      {isLocked && <p className="text-[10px] text-text-muted">Unlock at Tier {m.requiredTier}</p>}
                     </div>
-                    <div className={`px-2 py-0.5 rounded border ${isComplete ? 'bg-accent-green/10 border-accent-green/20 text-accent-green' : isLocked ? 'bg-bg-secondary border-border text-text-muted' : 'bg-accent-gold/10 border-accent-gold/20 text-accent-gold'}`}>
-                      <span className="text-[10px] font-bold">+{m.xpReward} XP</span>
+                    <div className={`px-2 py-0.5 rounded border ${isComplete ? 'bg-accent-green/10 border-accent-green/20 text-accent-green' : 'bg-accent-gold/10 border-accent-gold/20 text-accent-gold'}`}>
+                      <span className="text-[10px] font-bold">+{m.xp} XP</span>
                     </div>
                   </button>
                 );
@@ -378,14 +472,14 @@ export default function Home() {
             <h2 className="text-lg font-heading font-bold text-text-primary">Recent Activity</h2>
             <div className="relative pl-6 space-y-6">
               <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-accent-gold/30" />
-              {recentActivity.length === 0 ? (
+              {recentActivityLog.length === 0 ? (
                 <p className="text-xs text-text-muted">No activity yet. Start trading or learning!</p>
               ) : (
-                recentActivity.map((act: any, idx: number) => (
+                recentActivityLog.slice(0, 5).map((act: any, idx: number) => (
                   <div key={idx} className="relative">
-                    <div className={`absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-bg-primary ${act.type === 'TRADE' ? 'bg-accent-green' : 'bg-accent-gold'}`} />
-                    <p className="text-[13px] font-mono text-text-primary">{act.description}</p>
-                    <p className="text-[11px] text-text-muted">{new Date(act.timestamp).toLocaleDateString()}</p>
+                    <div className={`absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-bg-primary ${String(act.text || '').toLowerCase().includes('trade') ? 'bg-accent-green' : 'bg-accent-gold'}`} />
+                    <p className="text-[13px] font-mono text-text-primary">{act.text}</p>
+                    <p className="text-[11px] text-text-muted">{new Date(act.date).toLocaleDateString('en-GB')}</p>
                   </div>
                 ))
               )}

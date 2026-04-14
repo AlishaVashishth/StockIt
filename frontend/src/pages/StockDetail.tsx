@@ -511,28 +511,6 @@ export default function StockDetail() {
               <h2 className="text-2xl font-heading font-bold text-text-primary mb-2">Order Executed!</h2>
               <p className="text-sm text-text-primary mb-1">{buySell === 'BUY' ? 'Bought' : 'Sold'} {quantity} shares of {symbol}</p>
               
-              {aiInsight && (
-                <div className="bg-bg-secondary p-4 mt-6 text-left rounded-xl text-xs border border-accent-gold/20 leading-relaxed text-text-primary space-y-2">
-                  <div className="flex items-start gap-2">
-                    <span className="text-lg shrink-0" aria-hidden="true">🤖</span>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      {parsedInsight.conciseBullets.length > 0 ? (
-                        <ul className="list-disc pl-4 space-y-1">
-                          {parsedInsight.conciseBullets.map((point, idx) => (
-                            <li key={idx}>{point}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>{aiInsightText}</p>
-                      )}
-                      {parsedInsight.detailedText ? (
-                        <p className="text-text-primary/90">{parsedInsight.detailedText}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="space-y-3 mt-8">
                 <button onClick={() => navigate('/portfolio')} className="w-full py-3.5 bg-accent-gold text-bg-primary rounded-xl font-bold">View Portfolio</button>
                 <button onClick={() => { setShowModal(false); setAiInsight(null); }} className="w-full py-3.5 border border-border text-text-primary rounded-xl font-bold">Trade More</button>

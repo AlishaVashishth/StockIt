@@ -20,6 +20,7 @@ import LossDebrief from './pages/LossDebrief';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
 import MarketTicker from './components/MarketTicker';
+import XPToast from './components/XPToast';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -80,6 +81,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AnimatedRoutes />
+      <XPToast />
     </BrowserRouter>
   );
 }
