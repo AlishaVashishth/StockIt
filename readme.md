@@ -18,7 +18,7 @@ InvestSim bridges the gap by combining:
 ________________________________________
 User Experience
 1. Home Dashboard
-  <img width="293" height="747" alt="image" src="https://github.com/user-attachments/assets/086bcc9a-38df-4eba-9cb4-97f69511f79a" />
+  <img width="502" height="1280" alt="image" src="https://github.com/user-attachments/assets/fe99ef8e-0c5d-4e4a-b648-26afb08e5137" />
 
 •	Portfolio overview
 •	Market indices
