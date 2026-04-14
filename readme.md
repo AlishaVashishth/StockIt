@@ -46,7 +46,7 @@ ________________________________________
 •	Missions & streaks
 ________________________________________
 5.  Loss Simulator (Time Machine)
- <img width="638" height="1600" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
+ <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
 
 •	Simulate market crashes
 •	Learn risk management
