@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "canvas-confetti": "^1.9.4"
+    "canvas-confetti": "^1.9.4",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }
