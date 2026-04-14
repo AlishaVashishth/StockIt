@@ -1,57 +1,78 @@
 <div align="center">
-<h1> StockIt </h1> <I> – Learn Investing Without Losing Money </I>
-A gamified stock market simulator with AI mentorship, real-time data, and risk-free paper trading.
+<h1> StockIt </h1> <I> – Learn Investing Without Losing Money </I> <br>
+A gamified stock market simulator with AI mentorship, real-time data, and risk-free paper trading. <br>
 App deployed on vercel : https://stock-it-gules.vercel.app/
 </div>
-________________________________________
- Problem Statement
+<br>
+
+Overview <br>
+StockIt is an intelligent paper trading and financial education platform that addresses the critical gap between financial awareness and actual investing participation. By combining live-like market data, AI-powered mentorship, and gamified learning mechanics, the platform gives users a psychologically safe environment to build genuine investing skills — before any real money is on the line.
+
+Problem Statement <br>
 Most young investors:
 •	Fear losing real money
 •	Lack practical market experience
 •	Use trading apps that focus on execution, not learning
 Despite high awareness, actual participation remains low.
 ________________________________________
- Our Solution
+ Our Solution<br>
 InvestSim bridges the gap by combining:
 •	Realistic paper trading with live-like market data
 •	 AI-powered mentor for guidance
 •	 Gamified learning system (XP, missions, streaks)
 •	 Scenario-based simulations (loss & crash analysis)
 ________________________________________
+
 User Experience
+
+<div align="center">
+
 1. Home Dashboard
+   
    <img width="331" height="836" alt="image" src="https://github.com/user-attachments/assets/fe99ef8e-0c5d-4e4a-b648-26afb08e5137" />
 
 •	Portfolio overview
 •	Market indices
 •	Missions & streaks
 ________________________________________
+
 2. Trading Screen
+   
   <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
 
 •	Live stock prices
 •	Buy/Sell simulation
 •	Market indicators
 ________________________________________
+
 3.  Portfolio Analytics
+   
  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
 
 •	Profit & Loss tracking
 •	Diversity score
 •	Best/Worst performers
 ________________________________________
+
 4.  Learning & Gamification
+
   <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
 
 •	Lessons & quizzes
 •	XP system
 •	Missions & streaks
 ________________________________________
+
 5.  Loss Simulator (Time Machine)
+   
  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
 
 •	Simulate market crashes
 •	Learn risk management
+
+</div>
+
+
 ________________________________________
  Key Features
  AI-Powered Investing Assistant
