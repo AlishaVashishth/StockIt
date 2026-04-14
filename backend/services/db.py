@@ -72,24 +72,69 @@ def _today_utc() -> date:
     return datetime.now(timezone.utc).date()
 
 
+def _get_last_credit_date(user_data: Dict) -> Optional[date]:
+    """
+    Returns the most recent day the user "kept streak alive".
+    We treat either an app open or a completed activity as a streak credit.
+    """
+    last_open = _parse_yyyy_mm_dd(str(user_data.get("lastOpenDate", "") or ""))
+    last_activity = _parse_yyyy_mm_dd(
+        str(user_data.get("lastActivityDate", "") or user_data.get("lastActiveDate", "") or "")
+    )
+    if last_open and last_activity:
+        return max(last_open, last_activity)
+    return last_open or last_activity
+
+
 def enforce_streak_on_app_open() -> Dict:
-    """Reset streak if user skipped at least one full calendar day."""
+    """
+    Enforce streak rules on first API touch of the day.
+
+    Rules:
+    - Streak credit counts if user opens the app OR completes a learning/trading activity.
+    - If the user skips at least one full calendar day (gap > 1), streak resets to 0.
+    - On first open of a new day, streak increments by 1 (or becomes 1 after a reset).
+    """
     user_data = read_json("user.json")
     if not isinstance(user_data, dict) or not user_data:
         return user_data if isinstance(user_data, dict) else {}
 
-    streak = int(user_data.get("streakCount", 0) or 0)
-    last_activity = _parse_yyyy_mm_dd(
-        user_data.get("lastActivityDate", "") or user_data.get("lastActiveDate", "")
-    )
     today = _today_utc()
+    current_streak = int(user_data.get("streakCount", 0) or 0)
+    last_credit = _get_last_credit_date(user_data)
+    last_open = _parse_yyyy_mm_dd(str(user_data.get("lastOpenDate", "") or ""))
 
     changed = False
-    if last_activity and (today - last_activity).days > 1 and streak != 0:
-        user_data["streakCount"] = 0
+    # Always stamp the open date (used by UI to decide filled vs hollow icon).
+    if last_open != today:
+        user_data["lastOpenDate"] = today.strftime("%Y-%m-%d")
         changed = True
-    elif "streakCount" not in user_data:
-        user_data["streakCount"] = streak
+
+    if last_credit is None:
+        # First ever credit: opening today starts the streak at 1.
+        if current_streak != 1:
+            user_data["streakCount"] = 1
+            changed = True
+    else:
+        gap = (today - last_credit).days
+        if gap > 1:
+            # Missed at least one full day; reset to 0, then today's open starts at 1.
+            if current_streak != 0:
+                user_data["streakCount"] = 0
+                changed = True
+            user_data["streakCount"] = 1
+            changed = True
+        elif gap == 1:
+            # New calendar day: opening app credits streak +1 (only once per day).
+            user_data["streakCount"] = (current_streak + 1) if current_streak > 0 else 1
+            changed = True
+        else:
+            # gap <= 0: already credited today; do nothing.
+            pass
+
+    # Back-compat: if older user files only have daysActive.
+    if "streakCount" not in user_data:
+        user_data["streakCount"] = int(user_data.get("daysActive", 0) or 0)
         changed = True
 
     if changed:
@@ -105,18 +150,18 @@ def record_activity_and_update_streak() -> Dict:
         return user_data if isinstance(user_data, dict) else {}
 
     today = _today_utc()
-    last_activity = _parse_yyyy_mm_dd(
-        user_data.get("lastActivityDate", "") or user_data.get("lastActiveDate", "")
-    )
+    last_credit = _get_last_credit_date(user_data)
     current_streak = int(user_data.get("streakCount", 0) or 0)
 
-    if last_activity is None:
+    # Completing an activity counts as a streak credit, but should not double-increment
+    # if an app open already credited the same day.
+    if last_credit is None:
         new_streak = 1
     else:
-        day_gap = (today - last_activity).days
-        if day_gap <= 0:
+        gap = (today - last_credit).days
+        if gap <= 0:
             new_streak = current_streak if current_streak > 0 else 1
-        elif day_gap == 1:
+        elif gap == 1:
             new_streak = current_streak + 1 if current_streak > 0 else 1
         else:
             new_streak = 1

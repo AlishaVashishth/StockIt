@@ -48,6 +48,7 @@ async def start_session(request: StartSessionRequest):
         "streakCount": 0,
         "isNewUser": True,
         "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "lastOpenDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "lastActivityDate": None
     }
 

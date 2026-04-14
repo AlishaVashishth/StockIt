@@ -114,6 +114,9 @@ export default function Learn() {
   const [loading, setLoading] = useState(true);
   const [activeConcept, setActiveConcept] = useState<any | null>(null);
   const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const lastCreditDate = String(user?.lastActivityDate || user?.lastOpenDate || user?.lastActiveDate || '').slice(0, 10);
+  const hasStreakToday = lastCreditDate === todayUtc;
 
   const showToast = (message: string) => {
     setToast(message);
@@ -327,8 +330,8 @@ export default function Learn() {
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col">
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border h-[60px] flex items-center justify-between px-4">
         <h1 className="text-xl font-heading font-bold text-text-primary">📚 Learning</h1>
-        <div className="flex items-center space-x-1 text-accent-gold">
-          <Flame size={16} fill="currentColor" />
+        <div className={`flex items-center space-x-1 ${hasStreakToday ? 'text-accent-gold' : 'text-text-muted'}`}>
+          <Flame size={16} fill={hasStreakToday ? "currentColor" : "none"} />
           <span className="text-xs font-mono font-bold">{streakCount} Day Streak</span>
         </div>
       </header>
