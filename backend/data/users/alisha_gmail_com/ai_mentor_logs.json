@@ -310,5 +310,359 @@
     "symbol": "SBIN",
     "response": "\ud83d\udcca **TREND:** Sideways to slightly bearish \u2013 after climbing about\u202f2.4% during the session, the last five 5\u2011minute candles fell from\u202f1065.4 to\u202f1061.85, and the current price (1063.55) is below yesterday\u2019s close (1066).  \n\n\u2705 **RECOMMENDATION:** Hold.  \n\n\ud83d\udca1 **WHY:** The stock",
     "timestamp": "2026-04-13T16:18:32.438617+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HCLTECH",
+    "response": "\ud83d\udcca **TREND:** Bearish\u2011to\u2011sideways \u2013 the price slipped from the early\u2011session high of\u202f1446.6 to today\u2019s close of\u202f1429.4, a 0.19% drop in the last 75 minutes.  \n\n\u2705 **RECOMMENDATION:** **Hold** for now.  \n\n\ud83d\udca1 **WHY:** After peaking",
+    "timestamp": "2026-04-13T18:52:53.562612+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "**CONCISE BULLETS:**\n- Trend: bearish \u2013 price fell from the period high\u202f2504.3 to the latest close\u202f2470.5 (\u20110.89%).\n- Recommendation",
+    "timestamp": "2026-04-13T20:08:54.952975+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:13:20.702521+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "**CONCISE BULLETS:**\n- Trend: bearish \u2013 price fell from\u202f2488.0\u202fto\u202f2470.5\u202f(\u20110.89% over 75\u202fcandles)  \n- Recommendation: **Sell**  \n- Why: last\u202f5\u202f",
+    "timestamp": "2026-04-13T20:13:34.538427+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:13:39.301578+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:30:00.750397+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:30:00.769591+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:30:27.691143+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:30:27.694868+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:31:46.909718+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:31:47.090565+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:34:48.599481+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:34:48.601185+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:35:07.466387+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "",
+    "timestamp": "2026-04-13T20:35:07.481047+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "**CONCISE BULLETS:**  \n- Trend: Bearish \u2013 price fell from the period high\u202f2504.3 to the latest close",
+    "timestamp": "2026-04-13T20:38:24.731360+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "**CONCISE BULLETS:**  \n- Trend: Bearish \u2013 price fell from the period high\u202f2504.3 to the latest close",
+    "timestamp": "2026-04-13T20:38:24.732653+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:02:26.541573+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:02:26.542869+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:03:24.130061+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:03:24.132119+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:04:06.763211+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:04:06.969059+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:16:53.844642+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:16:53.846232+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:16:59.971269+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:17:06.893297+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:17:58.939414+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:17:58.940825+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:18:05.148848+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:18:07.092434+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:19:23.934034+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:19:23.935584+00:00"
+  },
+  {
+    "trigger": "REFRESH",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:19:30.908947+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:19:58.644794+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:19:58.646264+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:20:30.400799+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:21:32.883040+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:21:32.885226+00:00"
+  },
+  {
+    "trigger": "REFRESH",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:21:38.395615+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:24:36.049447+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:24:36.051532+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:35:32.313331+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:35:32.314658+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:40:46.419025+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "HDFCBANK",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-13T21:40:46.420632+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-14T04:49:46.230936+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-14T04:49:48.812060+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-14T04:53:55.487465+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-14T04:53:55.488368+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-14T04:54:28.414137+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "Market data is loading. Please try again.",
+    "timestamp": "2026-04-14T04:54:28.415793+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.23% trend\n- Recommendation: Sell\n- Why: Latest close is 2470.5, near the low of 2470.0\n- Risk: Around 2% risk\n- Why not opposite: Day high is 2504.9, but current price is lower at 2472.6\n\nDETAILED:\nThe trend is bearish, indicated by a -0.23% trend, which suggests a downward movement. The latest close of 2470.5 is near the low of 2470.0, and the current price of 2472.6 is lower than the day high of 2504.9. This downward movement is also reflected in the recent closes, which have been fluctuating around 2470-2474.9. With a risk of around 2%, it's advisable to sell. The company's large market cap and low risk level may provide some stability, but the current trend and price movement suggest a bearish outlook.",
+    "error": null,
+    "timestamp": "2026-04-14T04:59:26.832582+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.23% trend\n- Recommendation: Sell\n- Why: Latest close is 2470.5, near the low of 2470.0\n- Risk: Around 2% risk\n- Why not opposite: Day high is 2504.9, but current price is lower at 2472.6\n\nDETAILED:\nThe trend is bearish, indicated by a -0.23% trend, which suggests a downward movement. The latest close of 2470.5 is near the low of 2470.0, and the current price of 2472.6 is lower than the day high of 2504.9. This downward movement is also reflected in the recent closes, which have been fluctuating around 2470-2474.9. With a risk of around 2%, it's advisable to sell. The company's large market cap and low risk level may provide some stability, but the current trend and price movement suggest a bearish outlook.",
+    "error": null,
+    "timestamp": "2026-04-14T04:59:26.833724+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "AXISBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.64% trend\n- Recommendation: Sell\n- Why: Latest close 1353.6 is lower than recent high 1364.3\n- Risk: Around 1% risk\n- Why not opposite: Trend is negative with low at 1349.6\n\nDETAILED:\nThe trend is bearish, as indicated by the -0.64% trend. The latest close of 1353.6 is lower than the recent high of 1364.3, suggesting a downward movement. Additionally, the recent closes of 1354.4, 1354.6, 1352.4, 1353.2, and 1353.6 show a fluctuating pattern, but with a slight decline. The low of 1349.6 also supports the bearish trend. Therefore, it's recommended to sell, considering the negative trend and the risk of around 1%. The stock's current price is close to its low, making it a good opportunity to exit.",
+    "error": null,
+    "timestamp": "2026-04-14T04:59:59.437459+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "AXISBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.64% trend\n- Recommendation: Sell\n- Why: Latest close 1353.6 is lower than recent high 1364.3\n- Risk: Around 1% risk\n- Why not opposite: Trend is negative with low at 1349.6\n\nDETAILED:\nThe trend is bearish, as indicated by the -0.64% trend. The latest close of 1353.6 is lower than the recent high of 1364.3, suggesting a downward movement. Additionally, the recent closes of 1354.4, 1354.6, 1352.4, 1353.2, and 1353.6 show a fluctuating pattern, but with a slight decline. The low of 1349.6 also supports the bearish trend. Therefore, it's recommended to sell, considering the negative trend and the risk of around 1%. The stock's current price is close to its low, making it a good opportunity to exit.",
+    "error": null,
+    "timestamp": "2026-04-14T04:59:59.439062+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.23% trend\n- Recommendation: Sell\n- Why: Latest close is 2470.5, near the low of 2470.0\n- Risk: Around 2% risk\n- Why not opposite: Day high is 2504.9, but current price is lower at 2472.6\n\nDETAILED:\nThe trend is bearish, indicated by a -0.23% trend, which suggests a downward movement. The latest close of 2470.5 is near the low of 2470.0, and the current price of 2472.6 is lower than the day high of 2504.9. This downward movement is also reflected in the recent closes, which have been fluctuating around 2470-2474.9. With a risk of around 2%, it's advisable to sell. The company's large market cap and low risk level may provide some stability, but the current trend and price movement suggest a bearish outlook.",
+    "error": null,
+    "timestamp": "2026-04-14T05:01:22.517540+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TCS",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.23% trend\n- Recommendation: Sell\n- Why: Latest close is 2470.5, near the low of 2470.0\n- Risk: Around 2% risk\n- Why not opposite: Day high is 2504.9, but current price is lower at 2472.6\n\nDETAILED:\nThe trend is bearish, indicated by a -0.23% trend, which suggests a downward movement. The latest close of 2470.5 is near the low of 2470.0, and the current price of 2472.6 is lower than the day high of 2504.9. This downward movement is also reflected in the recent closes, which have been fluctuating around 2470-2474.9. With a risk of around 2%, it's advisable to sell. The company's large market cap and low risk level may provide some stability, but the current trend and price movement suggest a bearish outlook.",
+    "error": null,
+    "timestamp": "2026-04-14T05:01:24.651145+00:00"
   }
 ]

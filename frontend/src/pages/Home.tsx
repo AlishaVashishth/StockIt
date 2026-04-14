@@ -14,6 +14,14 @@ export default function Home() {
   const [data, setData] = useState<any>(null);
   const [indices, setIndices] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [cachedProfile, setCachedProfile] = useState<any>(null);
+  const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
+  const MANDATORY_FALLBACKS = {
+    nifty: { name: 'NIFTY 50', value: null, change: null, changePct: null },
+    sensex: { name: 'SENSEX', value: null, change: null, changePct: null },
+    gold: { name: 'Gold (XAU/USD)', value: null, change: null, changePct: null },
+    silver: { name: 'Silver (XAG/USD)', value: null, change: null, changePct: null }
+  };
   
   // Count-up
   const count = useMotionValue(0);
@@ -22,14 +30,59 @@ export default function Home() {
   );
 
   useEffect(() => {
+    try {
+      const cachedProfileRaw = localStorage.getItem(USER_PROFILE_CACHE_KEY);
+      if (cachedProfileRaw) {
+        setCachedProfile(JSON.parse(cachedProfileRaw));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    // Show the latest known indices immediately while fresh data loads.
+    try {
+      const cachedIndices = localStorage.getItem('stockit_cached_indices');
+      if (cachedIndices) {
+        setIndices(JSON.parse(cachedIndices));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    const refreshIndices = async () => {
+      try {
+        const latestIndices = await api.getMarketIndices();
+        setIndices((prev: any) => {
+          const merged = {
+            ...prev,
+            ...latestIndices,
+            // Keep last good core indices if API returns null/empty during a refresh.
+            nifty: latestIndices?.nifty || prev?.nifty || null,
+            sensex: latestIndices?.sensex || prev?.sensex || null,
+            // Keep previous global list when transient response misses it.
+            global:
+              Array.isArray(latestIndices?.global) && latestIndices.global.length > 0
+                ? latestIndices.global
+                : Array.isArray(prev?.global)
+                ? prev.global
+                : []
+          };
+          localStorage.setItem('stockit_cached_indices', JSON.stringify(merged));
+          return merged;
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     const loadDashboard = async () => {
       try {
-        const [dashboardData, indicesData] = await Promise.all([
-          api.getDashboard(),
-          api.getMarketIndices()
-        ]);
+        const dashboardData = await api.getDashboard();
         setData(dashboardData);
-        setIndices(indicesData);
+        if (dashboardData?.user) {
+          localStorage.setItem(USER_PROFILE_CACHE_KEY, JSON.stringify(dashboardData.user));
+          setCachedProfile(dashboardData.user);
+        }
         animate(count, dashboardData.portfolioSummary.totalValue, { duration: 2, ease: "easeOut" });
       } catch (err) {
         console.error(err);
@@ -37,14 +90,11 @@ export default function Home() {
         setLoading(false);
       }
     };
+
     loadDashboard();
+    refreshIndices();
     const interval = setInterval(async () => {
-      try {
-        const latestIndices = await api.getMarketIndices();
-        setIndices(latestIndices);
-      } catch (err) {
-        console.error(err);
-      }
+      await refreshIndices();
     }, 10000);
     return () => clearInterval(interval);
   }, [count]);
@@ -59,7 +109,9 @@ export default function Home() {
 
   const { user, portfolioSummary, missions, recentActivity, dailyPnlPct, shouldTriggerLossDebrief } = data;
   const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
-  const displayName = user.name;
+  const displayName = user?.name || cachedProfile?.name || 'Investor';
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   // For day-0 users with no holdings, keep baseline at the bottom.
   const sparkPoints = portfolioSummary.holdingsCount === 0
@@ -88,27 +140,60 @@ export default function Home() {
     navigate('/trade');
   };
 
-  const nifty = indices?.nifty || { value: 0, changePct: 0 };
-  const niftyUp = Number(nifty.changePct) >= 0;
+  const globalItems = Array.isArray(indices?.global) ? indices.global : [];
+  const findGlobalByName = (text: string) =>
+    globalItems.find((item: any) => String(item?.name || '').toLowerCase().includes(text.toLowerCase()));
+
+  const niftyItem = indices?.nifty || MANDATORY_FALLBACKS.nifty;
+  const sensexItem = indices?.sensex || MANDATORY_FALLBACKS.sensex;
+  const goldItem = findGlobalByName('gold') || MANDATORY_FALLBACKS.gold;
+  const silverItem = findGlobalByName('silver') || MANDATORY_FALLBACKS.silver;
+
+  const additionalItems = globalItems
+    .filter((item: any) => !['gold', 'silver'].some((k) => String(item?.name || '').toLowerCase().includes(k)))
+    .slice(0, 2);
+
+  const marketItems = [niftyItem, sensexItem, goldItem, silverItem, ...additionalItems];
+  const formatValue = (v: any) =>
+    typeof v === 'number' && Number.isFinite(v) && v > 0
+      ? Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+      : '--';
+  // Magnitude only — direction comes from ▲/▼ and color (matches Finnhub dp sign via isUp).
+  const formatChange = (v: any) =>
+    typeof v === 'number' && Number.isFinite(v)
+      ? Math.abs(Number(v)).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+      : '--';
+  const formatPct = (v: any) =>
+    typeof v === 'number' && Number.isFinite(v) ? Math.abs(Number(v)).toFixed(2) : '--';
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary bg-dots flex flex-col">
       <header className="fixed top-0 left-0 right-0 max-w-[390px] mx-auto z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border">
         <div className="h-[60px] flex items-center justify-between px-4">
-          <span className="font-heading font-bold text-base">Good morning, {displayName.split(' ')[0]} 👋</span>
+          <span className="font-heading font-bold text-base">{greeting}, {displayName.split(' ')[0]} 👋</span>
         </div>
         <div className="h-[30px] bg-bg-secondary border-t border-border overflow-hidden flex items-center">
           <div className="flex animate-ticker whitespace-nowrap">
             {[1, 2].map((i) => (
               <div key={i} className="flex items-center space-x-6 px-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-[11px] font-mono whitespace-nowrap text-text-muted">NIFTY</span>
-                  <span className="text-[11px] font-mono whitespace-nowrap font-bold">{Number(nifty.value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                  <span className={`text-[11px] font-mono whitespace-nowrap font-bold ${niftyUp ? 'text-accent-green' : 'text-accent-red'}`}>
-                    {niftyUp ? '▲' : '▼'}{Math.abs(Number(nifty.changePct || 0)).toFixed(2)}%
-                  </span>
-                </div>
-                <span className="text-border">|</span>
+                {marketItems.map((item: any, idx: number) => {
+                  const hasNumericPct = typeof item?.changePct === 'number' && Number.isFinite(item.changePct);
+                  const isUp = hasNumericPct ? Number(item.changePct) >= 0 : true;
+                  return (
+                    <React.Fragment key={`${item?.name || 'market'}-${idx}`}>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[11px] font-mono whitespace-nowrap text-text-muted">{item?.name || 'MARKET'}</span>
+                        <span className="text-[11px] font-mono whitespace-nowrap font-bold">
+                          {formatValue(item?.value)}
+                        </span>
+                        <span className={`text-[11px] font-mono whitespace-nowrap font-bold ${isUp ? 'text-accent-green' : 'text-accent-red'}`}>
+                          {isUp ? '▲' : '▼'}{formatChange(item?.change)} ({formatPct(item?.changePct)}%)
+                        </span>
+                      </div>
+                      <span className="text-border">|</span>
+                    </React.Fragment>
+                  );
+                })}
               </div>
             ))}
           </div>

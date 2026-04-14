@@ -83,11 +83,33 @@ const CountUp = ({ value, prefix = "₹" }: { value: number, prefix?: string }) 
 
 export default function Profile() {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<any>(null);
+  const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
+  const [userData, setUserData] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem(USER_PROFILE_CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [portfolioData, setPortfolioData] = useState<any>(null);
   const [sortBy, setSortBy] = useState('P&L');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
+  const [showDetailedInsight, setShowDetailedInsight] = useState(false);
+  const parsedAiInsight = useMemo(() => {
+    const text = String(aiInsight?.insight || '').trim();
+    if (!text) return { bullets: [] as string[], detailed: '' };
+    const detailedMatch = text.match(/DETAILED:\s*([\s\S]*)$/i);
+    const conciseRaw = (detailedMatch ? text.slice(0, detailedMatch.index) : text).replace(/CONCISE BULLETS:\s*/i, '').trim();
+    const detailed = detailedMatch ? detailedMatch[1].trim() : '';
+    const bullets = conciseRaw
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .map((line: string) => line.replace(/^[-*]\s+/, '').replace(/^\d+[\).\s-]+/, ''));
+    return { bullets, detailed };
+  }, [aiInsight]);
   const streakCount = userData?.streakCount ?? userData?.daysActive ?? 0;
   const displayName = userData?.name || 'Investor';
   const initials = displayName
@@ -99,11 +121,14 @@ export default function Profile() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const [user, portfolio] = await Promise.all([
-          api.getUser(),
+        const [dashboard, portfolio] = await Promise.all([
+          api.getDashboard(),
           api.getPortfolio()
         ]);
-        setUserData(user);
+        setUserData(dashboard?.user || null);
+        if (dashboard?.user) {
+          localStorage.setItem(USER_PROFILE_CACHE_KEY, JSON.stringify(dashboard.user));
+        }
         setPortfolioData(portfolio);
       } catch (err) {
         console.error(err);
@@ -114,6 +139,7 @@ export default function Profile() {
 
   const handleRefreshAI = async () => {
     setIsRefreshingAI(true);
+    setShowDetailedInsight(false);
     try {
       const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const insight = await api.analyzePortfolio(requestId);
@@ -134,6 +160,12 @@ export default function Profile() {
     virtualCash: Number(portfolioData?.virtualCash || 0),
     diversityScore: Number(portfolioData?.diversityScore || 0),
   };
+  const userTier = Number(userData?.currentTier || 1);
+  const userXp = Number(userData?.xpPoints || 0);
+  const currentTierFloor = (userTier - 1) * 500;
+  const nextTierTarget = userTier * 500;
+  const tierProgressPct = Math.max(0, Math.min(100, ((userXp - currentTierFloor) / 500) * 100));
+  const xpToNextTier = Math.max(0, nextTierTarget - userXp);
   const cashPercentage = metrics.totalValue > 0 ? (metrics.virtualCash / metrics.totalValue) * 100 : 100;
   const sortedHoldings = useMemo(() => {
     const list = [...holdings];
@@ -181,23 +213,23 @@ export default function Profile() {
               <span className="text-2xl font-heading font-extrabold text-black">{initials}</span>
             </div>
             <h2 className="text-2xl font-heading font-bold text-text-primary">{displayName}</h2>
-            <p className="text-xs text-text-muted mb-6">Member since March 2025</p>
+            <p className="text-xs text-text-muted mb-6">{userData?.email || ''}</p>
             
             <div className="w-full p-4 rounded-2xl border border-accent-gold/30 bg-bg-secondary/50 backdrop-blur-sm">
               <div className="text-sm font-heading font-bold text-accent-gold mb-3 tracking-wide">
-                🚀 TIER 2 — RISING INVESTOR
+                🚀 TIER {userTier} — RISING INVESTOR
               </div>
               <div className="h-2 bg-bg-primary rounded-full overflow-hidden mb-2">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: '68%' }}
+                  animate={{ width: `${tierProgressPct}%` }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className="h-full bg-accent-gold shadow-[0_0_10px_#F0A500]"
                 />
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] text-text-muted">340 / 500 XP to Tier 3</span>
-                <span className="text-[10px] text-text-muted font-bold">160 XP to Full Sandbox 🎯</span>
+                <span className="text-[10px] text-text-muted">{userXp} XP total</span>
+                <span className="text-[10px] text-text-muted font-bold">{xpToNextTier} XP to Tier {userTier + 1} 🎯</span>
               </div>
             </div>
           </div>
@@ -332,7 +364,30 @@ export default function Profile() {
                   <h3 className="text-sm font-heading font-bold text-text-primary">AI Portfolio Analysis</h3>
                 </div>
                 <div className="space-y-4 text-[13px] text-text-primary leading-relaxed">
-                  {aiInsight ? <div>{aiInsight.insight}</div> : <p className="text-text-muted italic">Click below to generate a deep dive analysis of your active positions.</p>}
+                  {aiInsight ? (
+                    <div className="space-y-3">
+                      <ul className="list-disc pl-5 space-y-2">
+                        {parsedAiInsight.bullets.map((point: string, idx: number) => (
+                          <li key={idx}>{point}</li>
+                        ))}
+                      </ul>
+                      {parsedAiInsight.detailed && (
+                        <>
+                          <button
+                            onClick={() => setShowDetailedInsight((prev) => !prev)}
+                            className="text-[12px] font-bold text-accent-gold border border-border rounded-lg px-3 py-1"
+                          >
+                            {showDetailedInsight ? 'Hide detailed view' : 'Understand in depth'}
+                          </button>
+                          {showDetailedInsight && (
+                            <p className="text-text-primary/90">{parsedAiInsight.detailed}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-text-muted italic">Click below to generate a deep dive analysis of your active positions.</p>
+                  )}
                 </div>
                 <button onClick={handleRefreshAI} className="w-full mt-6 py-2 border border-border rounded-xl text-[11px] font-bold text-text-muted flex items-center justify-center space-x-2">
                   <RefreshCw size={12} className={isRefreshingAI ? "animate-spin" : ""} />
@@ -439,6 +494,7 @@ export default function Profile() {
               <button
                 onClick={() => {
                   localStorage.removeItem('investsim_user_email');
+                  localStorage.removeItem(USER_PROFILE_CACHE_KEY);
                   navigate('/onboarding');
                 }}
                 className="w-full py-4 rounded-2xl border border-accent-red/40 text-accent-red font-heading font-bold mb-6"

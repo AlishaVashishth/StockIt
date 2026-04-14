@@ -3,6 +3,16 @@ from datetime import datetime, timedelta
 import os
 import httpx
 import yfinance as yf
+from typing import Optional
+
+# UI and some clients send short codes; Finnhub/Yahoo paths use Yahoo-style period keys.
+CHART_TIMEFRAME_ALIASES = {"1w": "1wk", "1m": "1mo", "3m": "3mo"}
+
+
+def normalize_chart_timeframe(timeframe: Optional[str]) -> str:
+    t = (timeframe or "1d").lower().strip()
+    return CHART_TIMEFRAME_ALIASES.get(t, t)
+
 
 STOCK_METADATA = {
     "RELIANCE": {
@@ -88,6 +98,230 @@ STOCK_METADATA = {
         "marketCap": "Large Cap",
         "riskLevel": "MEDIUM",
         "about": "India's largest port operator handling 30% of all cargo"
+    },
+    "AXISBANK": {
+        "companyName": "Axis Bank Ltd",
+        "sector": "Banking",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "Top private bank with strong retail lending and improving asset quality"
+    },
+    "KOTAKBANK": {
+        "companyName": "Kotak Mahindra Bank Ltd",
+        "sector": "Banking",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Conservative private bank known for solid balance sheet and steady growth"
+    },
+    "MARUTI": {
+        "companyName": "Maruti Suzuki India Ltd",
+        "sector": "Automobile",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "India's passenger vehicle leader with dominant market share in cars"
+    },
+    "ASIANPAINT": {
+        "companyName": "Asian Paints Ltd",
+        "sector": "Consumer",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Market leader in decorative paints with strong brand and distribution"
+    },
+    "BAJFINANCE": {
+        "companyName": "Bajaj Finance Ltd",
+        "sector": "Financial Services",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Leading NBFC with broad consumer lending and digital financing products"
+    },
+    "TITAN": {
+        "companyName": "Titan Company Ltd",
+        "sector": "Consumer",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Jewellery and watches major with strong retail brand presence"
+    },
+    "SUNPHARMA": {
+        "companyName": "Sun Pharmaceutical Industries Ltd",
+        "sector": "Pharmaceuticals",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "India's largest pharma company with global specialty portfolio"
+    },
+    "WIPRO": {
+        "companyName": "Wipro Ltd",
+        "sector": "Technology",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Global IT services player focused on cloud, consulting, and enterprise tech"
+    },
+    "ULTRACEMCO": {
+        "companyName": "UltraTech Cement Ltd",
+        "sector": "Cement",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "India's largest cement manufacturer with nationwide capacity"
+    },
+    "POWERGRID": {
+        "companyName": "Power Grid Corporation of India Ltd",
+        "sector": "Utilities",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Largest electricity transmission utility in India with stable cash flows"
+    },
+    "NTPC": {
+        "companyName": "NTPC Ltd",
+        "sector": "Power",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "India's largest power generation company with growing renewable mix"
+    },
+    "TATAPOWER": {
+        "companyName": "Tata Power Company Ltd",
+        "sector": "Power",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Integrated power company spanning generation, distribution, and renewables"
+    },
+    "COALINDIA": {
+        "companyName": "Coal India Ltd",
+        "sector": "Mining",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "World's largest coal producer and a key supplier to India's power sector"
+    },
+    "ONGC": {
+        "companyName": "Oil and Natural Gas Corporation Ltd",
+        "sector": "Energy",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "State-run upstream oil and gas major with diversified exploration assets"
+    },
+    "INDUSINDBK": {
+        "companyName": "IndusInd Bank Ltd",
+        "sector": "Banking",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Private sector bank with strong vehicle finance and consumer banking presence"
+    },
+    "BAJAJFINSV": {
+        "companyName": "Bajaj Finserv Ltd",
+        "sector": "Financial Services",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Financial conglomerate with insurance, lending, and wealth businesses"
+    },
+    "HCLTECH": {
+        "companyName": "HCL Technologies Ltd",
+        "sector": "Technology",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "Large IT services exporter with strength in engineering and infrastructure services"
+    },
+    "TECHM": {
+        "companyName": "Tech Mahindra Ltd",
+        "sector": "Technology",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "Major IT services company with enterprise and telecom-focused digital transformation work"
+    },
+    "NESTLEIND": {
+        "companyName": "Nestle India Ltd",
+        "sector": "FMCG",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Premium consumer staples giant with strong food and nutrition brands in India"
+    },
+    "HEROMOTOCO": {
+        "companyName": "Hero MotoCorp Ltd",
+        "sector": "Automobile",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Leading two-wheeler manufacturer with deep domestic distribution reach"
+    },
+    "BAJAJAUTO": {
+        "companyName": "Bajaj Auto Ltd",
+        "sector": "Automobile",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Top motorcycle and three-wheeler exporter with strong margins"
+    },
+    "JSWSTEEL": {
+        "companyName": "JSW Steel Ltd",
+        "sector": "Metals",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "One of India's largest private steel producers with integrated operations"
+    },
+    "DRREDDY": {
+        "companyName": "Dr Reddy's Laboratories Ltd",
+        "sector": "Pharmaceuticals",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "Global pharma manufacturer with strong generics and specialty presence"
+    },
+    "BRITANNIA": {
+        "companyName": "Britannia Industries Ltd",
+        "sector": "FMCG",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Leading packaged foods player known for biscuits, dairy, and bakery portfolio"
+    },
+    "EICHERMOT": {
+        "companyName": "Eicher Motors Ltd",
+        "sector": "Automobile",
+        "marketCap": "Large Cap",
+        "riskLevel": "MEDIUM",
+        "about": "Parent of Royal Enfield with premium motorcycle leadership and strong branding"
+    },
+    "PIDILITIND": {
+        "companyName": "Pidilite Industries Ltd",
+        "sector": "Chemicals",
+        "marketCap": "Mid Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "Adhesives and construction chemicals leader with iconic consumer and industrial brands"
+    },
+    "DIXON": {
+        "companyName": "Dixon Technologies (India) Ltd",
+        "sector": "Electronics",
+        "marketCap": "Mid Cap",
+        "riskLevel": "MEDIUM-HIGH",
+        "about": "Fast-growing electronics manufacturing services company in consumer and mobile segments"
+    },
+    "INDIGO": {
+        "companyName": "InterGlobe Aviation Ltd",
+        "sector": "Aviation",
+        "marketCap": "Mid Cap",
+        "riskLevel": "MEDIUM",
+        "about": "India's largest airline operator with strong domestic market share"
+    },
+    "SUZLON": {
+        "companyName": "Suzlon Energy Ltd",
+        "sector": "Renewable Energy",
+        "marketCap": "Small Cap",
+        "riskLevel": "HIGH",
+        "about": "Wind energy company with high-growth potential and higher volatility profile"
+    },
+    "RVNL": {
+        "companyName": "Rail Vikas Nigam Ltd",
+        "sector": "Infrastructure",
+        "marketCap": "Small Cap",
+        "riskLevel": "HIGH",
+        "about": "Railway project execution PSU with cyclical order-flow driven performance"
+    },
+    "AAPL": {
+        "companyName": "Apple Inc",
+        "sector": "Technology",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW-MEDIUM",
+        "about": "Global consumer tech leader known for iPhone, Mac, and services ecosystem"
+    },
+    "MSFT": {
+        "companyName": "Microsoft Corp",
+        "sector": "Technology",
+        "marketCap": "Large Cap",
+        "riskLevel": "LOW",
+        "about": "Cloud and software giant behind Azure, Office, and enterprise platforms"
     }
 }
 
@@ -104,6 +338,38 @@ FALLBACK_PRICES = {
     "LT": 3621.15,
     "YESBANK": 24.15,
     "ADANIPORTS": 1247.80,
+    "AXISBANK": 1184.20,
+    "KOTAKBANK": 1752.40,
+    "MARUTI": 12685.00,
+    "ASIANPAINT": 2864.15,
+    "BAJFINANCE": 7028.30,
+    "TITAN": 3541.25,
+    "SUNPHARMA": 1678.55,
+    "WIPRO": 524.10,
+    "ULTRACEMCO": 11435.70,
+    "POWERGRID": 339.45,
+    "NTPC": 386.60,
+    "TATAPOWER": 438.35,
+    "COALINDIA": 484.20,
+    "ONGC": 305.80,
+    "INDUSINDBK": 1489.10,
+    "BAJAJFINSV": 1684.25,
+    "HCLTECH": 1598.40,
+    "TECHM": 1408.30,
+    "NESTLEIND": 2448.55,
+    "HEROMOTOCO": 4754.20,
+    "BAJAJAUTO": 9528.70,
+    "JSWSTEEL": 928.40,
+    "DRREDDY": 6712.15,
+    "BRITANNIA": 5518.90,
+    "EICHERMOT": 4665.60,
+    "PIDILITIND": 2995.75,
+    "DIXON": 12148.20,
+    "INDIGO": 4486.35,
+    "SUZLON": 58.40,
+    "RVNL": 382.10,
+    "AAPL": 215.40,
+    "MSFT": 426.15,
     # Legacy symbol fallbacks for old user holdings
     "TATAMOTORS": 924.45,
     "ZOMATO": 182.30
@@ -122,6 +388,38 @@ FINNHUB_SYMBOL_MAP = {
     "LT": "LT.NS",
     "YESBANK": "YESBANK.NS",
     "ADANIPORTS": "ADANIPORTS.NS",
+    "AXISBANK": "AXISBANK.NS",
+    "KOTAKBANK": "KOTAKBANK.NS",
+    "MARUTI": "MARUTI.NS",
+    "ASIANPAINT": "ASIANPAINT.NS",
+    "BAJFINANCE": "BAJFINANCE.NS",
+    "TITAN": "TITAN.NS",
+    "SUNPHARMA": "SUNPHARMA.NS",
+    "WIPRO": "WIPRO.NS",
+    "ULTRACEMCO": "ULTRACEMCO.NS",
+    "POWERGRID": "POWERGRID.NS",
+    "NTPC": "NTPC.NS",
+    "TATAPOWER": "TATAPOWER.NS",
+    "COALINDIA": "COALINDIA.NS",
+    "ONGC": "ONGC.NS",
+    "INDUSINDBK": "INDUSINDBK.NS",
+    "BAJAJFINSV": "BAJAJFINSV.NS",
+    "HCLTECH": "HCLTECH.NS",
+    "TECHM": "TECHM.NS",
+    "NESTLEIND": "NESTLEIND.NS",
+    "HEROMOTOCO": "HEROMOTOCO.NS",
+    "BAJAJAUTO": "BAJAJ-AUTO.NS",
+    "JSWSTEEL": "JSWSTEEL.NS",
+    "DRREDDY": "DRREDDY.NS",
+    "BRITANNIA": "BRITANNIA.NS",
+    "EICHERMOT": "EICHERMOT.NS",
+    "PIDILITIND": "PIDILITIND.NS",
+    "DIXON": "DIXON.NS",
+    "INDIGO": "INDIGO.NS",
+    "SUZLON": "SUZLON.NS",
+    "RVNL": "RVNL.NS",
+    "AAPL": "AAPL",
+    "MSFT": "MSFT",
     # Legacy support for existing holdings
     "TATAMOTORS": "TATAMOTORS.NS",
     "ZOMATO": "ETERNAL.NS"
@@ -140,6 +438,38 @@ YAHOO_SYMBOL_CANDIDATES = {
     "INFY": ["INFY.NS"],
     "YESBANK": ["YESBANK.NS"],
     "ADANIPORTS": ["ADANIPORTS.NS"],
+    "AXISBANK": ["AXISBANK.NS"],
+    "KOTAKBANK": ["KOTAKBANK.NS"],
+    "MARUTI": ["MARUTI.NS"],
+    "ASIANPAINT": ["ASIANPAINT.NS"],
+    "BAJFINANCE": ["BAJFINANCE.NS"],
+    "TITAN": ["TITAN.NS"],
+    "SUNPHARMA": ["SUNPHARMA.NS"],
+    "WIPRO": ["WIPRO.NS"],
+    "ULTRACEMCO": ["ULTRACEMCO.NS"],
+    "POWERGRID": ["POWERGRID.NS"],
+    "NTPC": ["NTPC.NS"],
+    "TATAPOWER": ["TATAPOWER.NS"],
+    "COALINDIA": ["COALINDIA.NS"],
+    "ONGC": ["ONGC.NS"],
+    "INDUSINDBK": ["INDUSINDBK.NS"],
+    "BAJAJFINSV": ["BAJAJFINSV.NS"],
+    "HCLTECH": ["HCLTECH.NS"],
+    "TECHM": ["TECHM.NS"],
+    "NESTLEIND": ["NESTLEIND.NS"],
+    "HEROMOTOCO": ["HEROMOTOCO.NS"],
+    "BAJAJAUTO": ["BAJAJ-AUTO.NS"],
+    "JSWSTEEL": ["JSWSTEEL.NS"],
+    "DRREDDY": ["DRREDDY.NS"],
+    "BRITANNIA": ["BRITANNIA.NS"],
+    "EICHERMOT": ["EICHERMOT.NS"],
+    "PIDILITIND": ["PIDILITIND.NS"],
+    "DIXON": ["DIXON.NS"],
+    "INDIGO": ["INDIGO.NS"],
+    "SUZLON": ["SUZLON.NS"],
+    "RVNL": ["RVNL.NS"],
+    "AAPL": ["AAPL"],
+    "MSFT": ["MSFT"],
     # Legacy support for existing holdings
     "TATAMOTORS": ["TATAMOTORS.NS"],
     "ZOMATO": ["ETERNAL.NS", "ZOMATO.NS"]
@@ -149,6 +479,21 @@ INDEX_SYMBOLS = {
     "NIFTY": "^NSEI",
     "SENSEX": "^BSESN"
 }
+
+GLOBAL_MARKET_SYMBOLS = [
+    {"key": "sp500", "name": "S&P 500 (SPY)", "symbols": ["SPY"]},
+    {"key": "nasdaq100", "name": "Nasdaq 100 (QQQ)", "symbols": ["QQQ"]},
+    {"key": "dow30", "name": "Dow 30 (DIA)", "symbols": ["DIA"]},
+    {"key": "russell2000", "name": "Russell 2000 (IWM)", "symbols": ["IWM"]},
+    {"key": "apple", "name": "Apple", "symbols": ["AAPL"]},
+    {"key": "microsoft", "name": "Microsoft", "symbols": ["MSFT"]},
+    {"key": "nvidia", "name": "NVIDIA", "symbols": ["NVDA"]},
+    {"key": "tesla", "name": "Tesla", "symbols": ["TSLA"]},
+    {"key": "amazon", "name": "Amazon", "symbols": ["AMZN"]},
+    {"key": "gold", "name": "Gold (XAU/USD)", "symbols": ["OANDA:XAU_USD"]},
+    {"key": "silver", "name": "Silver (XAG/USD)", "symbols": ["OANDA:XAG_USD"]},
+    {"key": "bitcoinUsd", "name": "Bitcoin USD", "symbols": ["BINANCE:BTCUSDT"]},
+]
 
 # Some legacy symbols can intermittently fail on Yahoo in certain regions/setups.
 # For these, prefer Finnhub or stable fallback pricing to avoid noisy repeated 404 logs.
@@ -310,12 +655,20 @@ async def get_stock_price(symbol: str) -> dict:
             "about": about
         }
 
-async def get_all_stocks() -> list:
+async def get_all_stocks(limit: Optional[int] = None, offset: int = 0) -> list:
     symbols = list(STOCK_METADATA.keys())
+    safe_offset = max(0, int(offset or 0))
+    if limit is not None:
+        safe_limit = max(0, int(limit))
+        symbols = symbols[safe_offset:safe_offset + safe_limit]
+    else:
+        symbols = symbols[safe_offset:]
     tasks = [get_stock_price(sym) for sym in symbols]
     return list(await asyncio.gather(*tasks))
 
 async def get_historical_data(symbol: str, period: str) -> list:
+    period = normalize_chart_timeframe(period)
+
     interval_mapping = {
         "1d": "5m",
         "1wk": "1h",
@@ -336,7 +689,8 @@ async def get_historical_data(symbol: str, period: str) -> list:
             "1y": 60 * 60 * 24 * 365
         }
         resolution_map = {
-            "1d": "5",
+            # Optimization: fewer candles for intraday to reduce payload/latency.
+            "1d": "15",
             "1wk": "60",
             "1mo": "D",
             "3mo": "D",
@@ -370,7 +724,7 @@ async def get_historical_data(symbol: str, period: str) -> list:
                         "volume": int(data["v"][i])
                     })
                 if candles:
-                    return candles
+                    return candles[-20:] if period == "1d" else candles
         except Exception:
             pass
     
@@ -398,7 +752,7 @@ async def get_historical_data(symbol: str, period: str) -> list:
                 "close": round(fallback_price, 2),
                 "volume": 0
             })
-        return candles
+        return candles[-20:] if period == "1d" else candles
 
     try:
         def fetch_hist():
@@ -424,7 +778,7 @@ async def get_historical_data(symbol: str, period: str) -> list:
                 "close": round(row['Close'], 2),
                 "volume": int(row['Volume'])
             })
-        return candles
+        return candles[-20:] if period == "1d" else candles
     except Exception:
         # Final fallback: stable flat candles (not random/simulated trend)
         fallback_price = FALLBACK_PRICES.get(symbol, 100.0)
@@ -455,20 +809,73 @@ async def get_historical_data(symbol: str, period: str) -> list:
                 "volume": 0
             })
             
-        return candles
+        return candles[-20:] if period == "1d" else candles
 
 async def get_market_indices() -> dict:
-    async def fetch_index(name: str, yf_symbol: str):
+    finnhub_api_key = os.getenv("FINNHUB_API_KEY")
+
+    async def fetch_from_finnhub(name: str, candidates: list[str]):
+        if not finnhub_api_key:
+            return {"name": name, "value": 0.0, "change": 0.0, "changePct": 0.0}
+
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            for symbol in candidates:
+                try:
+                    res = await client.get(
+                        "https://finnhub.io/api/v1/quote",
+                        params={"symbol": symbol, "token": finnhub_api_key}
+                    )
+                    if res.status_code != 200:
+                        continue
+                    quote = res.json() or {}
+                    current = float(quote.get("c") or 0.0)
+                    prev = float(quote.get("pc") or 0.0)
+                    # Finnhub /quote: d = absolute change, dp = percent change (use when present)
+                    raw_d = quote.get("d")
+                    raw_dp = quote.get("dp")
+                    if current <= 0:
+                        continue
+                    if raw_d is not None and raw_d != "":
+                        change = float(raw_d)
+                    elif prev > 0:
+                        change = current - prev
+                    else:
+                        continue
+                    if raw_dp is not None and raw_dp != "":
+                        change_pct = float(raw_dp)
+                    elif prev > 0:
+                        change_pct = (change / prev) * 100
+                    else:
+                        change_pct = 0.0
+                    return {
+                        "name": name,
+                        "value": round(current, 2),
+                        "change": round(change, 2),
+                        "changePct": round(change_pct, 2)
+                    }
+                except Exception:
+                    continue
+
+        return {"name": name, "value": 0.0, "change": 0.0, "changePct": 0.0}
+
+    async def fetch_market_item(name: str, finnhub_symbols: list[str]):
+        return await fetch_from_finnhub(name, finnhub_symbols)
+
+    async def fetch_from_yahoo(name: str, yahoo_symbols: list[str]):
         try:
             def fetch():
-                ticker = yf.Ticker(yf_symbol)
-                hist = ticker.history(period="2d")
-                return hist
-            hist = await asyncio.to_thread(fetch)
-            if hist is None or hist.empty:
-                raise Exception("No data")
-            current = float(hist["Close"].iloc[-1])
-            prev = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else current
+                for symbol in yahoo_symbols:
+                    hist = yf.Ticker(symbol).history(period="2d")
+                    if hist is not None and not hist.empty:
+                        current = float(hist["Close"].iloc[-1])
+                        prev = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else current
+                        if current > 0 and prev > 0:
+                            return current, prev
+                return None
+            result = await asyncio.to_thread(fetch)
+            if not result:
+                return {"name": name, "value": 0.0, "change": 0.0, "changePct": 0.0}
+            current, prev = result
             change = current - prev
             change_pct = (change / prev) * 100 if prev else 0.0
             return {
@@ -478,15 +885,44 @@ async def get_market_indices() -> dict:
                 "changePct": round(change_pct, 2)
             }
         except Exception:
-            return {
-                "name": name,
-                "value": 0.0,
-                "change": 0.0,
-                "changePct": 0.0
-            }
+            return {"name": name, "value": 0.0, "change": 0.0, "changePct": 0.0}
 
-    nifty, sensex = await asyncio.gather(
-        fetch_index("NIFTY 50", INDEX_SYMBOLS["NIFTY"]),
-        fetch_index("SENSEX", INDEX_SYMBOLS["SENSEX"])
+    nifty, sensex, *global_items = await asyncio.gather(
+        fetch_market_item("NIFTY 50", ["^NSEI", "NSE:NIFTY", "NSE:NIFTY50-INDEX"]),
+        fetch_market_item("SENSEX", ["^BSESN", "BSE:SENSEX"]),
+        *[
+            fetch_market_item(item["name"], item["symbols"])
+            for item in GLOBAL_MARKET_SYMBOLS
+        ]
     )
-    return {"nifty": nifty, "sensex": sensex}
+
+    nifty = nifty if nifty.get("value", 0) > 0 else None
+    sensex = sensex if sensex.get("value", 0) > 0 else None
+    global_items = [item for item in global_items if item.get("value", 0) > 0]
+
+    # Accuracy fallback: if Finnhub cannot provide these core instruments,
+    # use Yahoo for reliable index/metal values.
+    if nifty is None:
+        fallback_nifty = await fetch_from_yahoo("NIFTY 50", ["^NSEI"])
+        nifty = fallback_nifty if fallback_nifty.get("value", 0) > 0 else None
+    if sensex is None:
+        fallback_sensex = await fetch_from_yahoo("SENSEX", ["^BSESN"])
+        sensex = fallback_sensex if fallback_sensex.get("value", 0) > 0 else None
+
+    has_gold = any("gold" in str(item.get("name", "")).lower() for item in global_items)
+    has_silver = any("silver" in str(item.get("name", "")).lower() for item in global_items)
+
+    if not has_gold:
+        fallback_gold = await fetch_from_yahoo("Gold (XAU/USD)", ["GC=F", "XAUUSD=X"])
+        if fallback_gold.get("value", 0) > 0:
+            global_items.append(fallback_gold)
+    if not has_silver:
+        fallback_silver = await fetch_from_yahoo("Silver (XAG/USD)", ["SI=F", "XAGUSD=X"])
+        if fallback_silver.get("value", 0) > 0:
+            global_items.append(fallback_silver)
+
+    return {
+        "nifty": nifty,
+        "sensex": sensex,
+        "global": global_items
+    }

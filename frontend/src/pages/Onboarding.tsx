@@ -58,6 +58,7 @@ function Counter({ value }: { value: number }) {
 
 export default function Onboarding() {
   const USER_EMAIL_STORAGE_KEY = 'investsim_user_email';
+  const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [experience, setExperience] = useState<string | null>(null);
@@ -81,6 +82,17 @@ export default function Onboarding() {
       (async () => {
         try {
           const user = await api.startSession(trimmedName, email.trim(), password);
+          localStorage.setItem(
+            USER_PROFILE_CACHE_KEY,
+            JSON.stringify({
+              name: user?.name || trimmedName,
+              email: user?.email || email.trim(),
+              currentTier: user?.currentTier,
+              xpPoints: user?.xpPoints,
+              streakCount: user?.streakCount,
+              daysActive: user?.daysActive
+            })
+          );
           setIsNewUser(user.isNewUser);
           setIsCreating(true);
           setTimeout(() => {
@@ -197,7 +209,7 @@ export default function Onboarding() {
                   What should we call you?
                 </h1>
                 <p className="text-sm font-mono text-text-muted mb-10">
-                  Your InvestSim identity
+                  Your StockIt identity
                 </p>
                 
                 <div className="relative mb-4">

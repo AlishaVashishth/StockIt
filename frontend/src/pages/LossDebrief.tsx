@@ -94,7 +94,7 @@ export default function LossDebrief() {
         <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 2.0 }} className="text-center py-8">
           <h5 className="text-[32px] font-heading font-bold text-accent-gold mb-1">+50 XP Earned</h5>
           <p className="text-xs font-mono text-text-muted mb-6">For learning from this loss</p>
-          <p className="text-[12px] font-mono text-text-muted italic leading-relaxed max-w-[280px] mx-auto mb-8">"At InvestSim, losing teaches you more than winning. Every loss you understand is a lesson your future real portfolio never has to learn."</p>
+          <p className="text-[12px] font-mono text-text-muted italic leading-relaxed max-w-[280px] mx-auto mb-8">"At StockIt, losing teaches you more than winning. Every loss you understand is a lesson your future real portfolio never has to learn."</p>
         </motion.div>
       </div>
 

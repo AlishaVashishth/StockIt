@@ -8,6 +8,30 @@ import { api } from '../api';
 
 const TIMEFRAMES = ['1D', '1W', '1M', '3M', '1Y'];
 
+const MENTOR_PLACEHOLDER = 'Market data is loading. Please try again.';
+
+function isMentorPlaceholderText(text: string | undefined | null): boolean {
+  const t = String(text || '').trim();
+  return !t || t === MENTOR_PLACEHOLDER;
+}
+
+function sentencesToBullets(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 12);
+}
+
+/** Lines that look like markdown / numbered bullets */
+function lineLooksLikeBullet(line: string): boolean {
+  const l = line.trim();
+  return (
+    /^[-*•]\s+\S/.test(l) ||
+    /^\d+[\).]\s+\S/.test(l) ||
+    /^(Trend|Recommendation|Why not|Why|Risk):/i.test(l)
+  );
+}
+
 export default function StockDetail() {
   const { symbol = 'RELIANCE' } = useParams();
   const navigate = useNavigate();
@@ -24,6 +48,7 @@ export default function StockDetail() {
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [showDetailedInsight, setShowDetailedInsight] = useState(false);
   const [tooltipData, setTooltipData] = useState<any>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
@@ -48,17 +73,30 @@ export default function StockDetail() {
     }
   };
 
-  const fetchAiInsight = async (action: 'BUY' | 'SELL' | 'VIEW' = 'VIEW') => {
+  const fetchAiInsight = async (action: 'BUY' | 'SELL' | 'VIEW' | 'REFRESH' = 'VIEW') => {
     setIsRefreshingAI(true);
     setAiError(null);
     try {
       const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      console.log('[StockDetail] Sending mentor request', { symbol, tab: activeTab, action, requestId });
-      const insight = await api.getMentorInsight(action, symbol, activeTab.toLowerCase(), requestId);
-      console.log('[StockDetail] Mentor API response:', insight);
-      setAiInsight(insight);
+      console.log('[StockDetail] mentor request', { symbol, tab: activeTab, action, requestId });
+      const res = await api.getMentorInsight(action, symbol, activeTab.toLowerCase(), requestId);
+      console.log('[StockDetail] mentor API response (full)', res);
+
+      if (res?.error) {
+        setAiInsight(null);
+        setAiError(String(res.error));
+        return;
+      }
+      const text = typeof res?.insight === 'string' ? res.insight : '';
+      if (isMentorPlaceholderText(text)) {
+        setAiInsight(null);
+        setAiError('AI returned no usable insight. Check the server log or try again.');
+        return;
+      }
+      setAiInsight(res);
     } catch (err) {
-      console.error(err);
+      console.error('[StockDetail] mentor request failed', err);
+      setAiInsight(null);
       setAiError('Could not fetch AI insight right now.');
     } finally {
       setIsRefreshingAI(false);
@@ -184,9 +222,18 @@ export default function StockDetail() {
       setShowModal(true);
       setTimeout(async () => {
         const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const insight = await api.getMentorInsight(buySell, symbol, activeTab.toLowerCase(), requestId);
-        console.log('[StockDetail] Mentor API response after order:', insight);
-        setAiInsight(insight);
+        try {
+          const res = await api.getMentorInsight(buySell, symbol, activeTab.toLowerCase(), requestId);
+          console.log('[StockDetail] mentor API response after order (full)', res);
+          if (res?.error) {
+            setAiInsight(null);
+            return;
+          }
+          const text = typeof res?.insight === 'string' ? res.insight : '';
+          if (!isMentorPlaceholderText(text)) setAiInsight(res);
+        } catch (e) {
+          console.error('[StockDetail] mentor after order failed', e);
+        }
       }, 500);
       loadData(); // refresh cash
     } catch (e: any) {
@@ -195,8 +242,65 @@ export default function StockDetail() {
   };
 
   const handleRefreshAI = async () => {
-    fetchAiInsight("VIEW");
+    fetchAiInsight("REFRESH");
   };
+
+  const aiInsightText = useMemo(() => {
+    return typeof aiInsight === 'string' ? aiInsight : aiInsight?.insight || aiInsight?.message || '';
+  }, [aiInsight]);
+
+  const parsedInsight = useMemo(() => {
+    const raw = String(aiInsightText || '').trim();
+    if (!raw) return { conciseBullets: [] as string[], detailedText: '' };
+
+    const detailedMatch = raw.match(/DETAILED:\s*([\s\S]*)$/i);
+    const beforeDetailed = detailedMatch ? raw.slice(0, detailedMatch.index).trim() : raw;
+    const detailedText = detailedMatch ? detailedMatch[1].trim() : '';
+
+    const conciseSection = beforeDetailed.replace(/CONCISE BULLETS:\s*/i, '').trim();
+    const lineToBullet = (line: string) =>
+      line
+        .replace(/^[-*•]\s+/, '')
+        .replace(/^\d+[\).\s-]+/, '')
+        .trim();
+
+    let conciseBullets = conciseSection
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map(lineToBullet)
+      .filter(Boolean);
+
+    if (conciseBullets.length === 0 && conciseSection) {
+      conciseBullets = conciseSection.split('. ').map((s) => lineToBullet(s)).filter(Boolean);
+    }
+
+    if (conciseBullets.length === 0) {
+      const lines = beforeDetailed.split('\n').map((l) => l.trim()).filter(Boolean);
+      const bulletLike = lines.filter(lineLooksLikeBullet);
+      if (bulletLike.length > 0) {
+        conciseBullets = bulletLike.map(lineToBullet).filter(Boolean);
+      }
+    }
+
+    if (conciseBullets.length === 0 && !detailedText) {
+      const body = conciseSection || beforeDetailed.replace(/CONCISE BULLETS:\s*/i, '').trim() || raw;
+      const fromSentences = sentencesToBullets(body);
+      if (fromSentences.length > 0) {
+        conciseBullets = fromSentences;
+      }
+    }
+
+    if (conciseBullets.length === 0 && !detailedText && raw) {
+      conciseBullets = [raw];
+    }
+
+    return { conciseBullets, detailedText };
+  }, [aiInsightText]);
+
+  useEffect(() => {
+    setShowDetailedInsight(false);
+  }, [aiInsightText, symbol, activeTab]);
 
   if (loading || !stockDetail) {
     return <div className="min-h-screen bg-bg-primary flex justify-center items-center text-accent-gold"><RefreshCw className="animate-spin mr-2"/> Loading Stock...</div>;
@@ -207,10 +311,6 @@ export default function StockDetail() {
   const change = Number(stockDetail.change || 0);
   const changePercent = Number(stockDetail.changePercent ?? stockDetail.changePct ?? 0);
   const isPositive = change >= 0;
-  const aiInsightText =
-    typeof aiInsight === 'string'
-      ? aiInsight
-      : aiInsight?.insight || aiInsight?.message || '';
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col overflow-x-hidden">
@@ -302,7 +402,26 @@ export default function StockDetail() {
             {isRefreshingAI ? (
               <p className="text-text-muted italic">Analyzing price data...</p>
             ) : aiInsightText ? (
-              <div>{aiInsightText}</div>
+              <div className="space-y-3">
+                <ul className="list-disc pl-5 space-y-1">
+                  {parsedInsight.conciseBullets.map((point, idx) => (
+                    <li key={idx}>{point}</li>
+                  ))}
+                </ul>
+                {parsedInsight.detailedText && (
+                  <>
+                    <button
+                      onClick={() => setShowDetailedInsight((prev) => !prev)}
+                      className="text-[12px] font-bold text-accent-gold border border-border rounded-lg px-3 py-1"
+                    >
+                      {showDetailedInsight ? 'Hide detailed view' : 'Understand in depth'}
+                    </button>
+                    {showDetailedInsight && (
+                      <p className="text-text-primary/90">{parsedInsight.detailedText}</p>
+                    )}
+                  </>
+                )}
+              </div>
             ) : aiError ? (
               <p className="text-accent-red">{aiError}</p>
             ) : (
@@ -312,6 +431,7 @@ export default function StockDetail() {
 
           <button 
             onClick={handleRefreshAI}
+            disabled={isRefreshingAI}
             className="w-full mt-4 py-2 border border-border rounded-xl text-[11px] font-bold text-text-muted flex items-center justify-center space-x-2"
           >
             <RefreshCw size={12} className={isRefreshingAI ? "animate-spin" : ""} />
@@ -392,8 +512,24 @@ export default function StockDetail() {
               <p className="text-sm text-text-primary mb-1">{buySell === 'BUY' ? 'Bought' : 'Sold'} {quantity} shares of {symbol}</p>
               
               {aiInsight && (
-                <div className="bg-bg-secondary p-4 mt-6 text-left rounded-xl text-xs border border-accent-gold/20 leading-relaxed text-text-primary">
-                  <span className="text-lg">🤖</span> {aiInsightText}
+                <div className="bg-bg-secondary p-4 mt-6 text-left rounded-xl text-xs border border-accent-gold/20 leading-relaxed text-text-primary space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg shrink-0" aria-hidden="true">🤖</span>
+                    <div className="min-w-0 flex-1 space-y-2">
+                      {parsedInsight.conciseBullets.length > 0 ? (
+                        <ul className="list-disc pl-4 space-y-1">
+                          {parsedInsight.conciseBullets.map((point, idx) => (
+                            <li key={idx}>{point}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>{aiInsightText}</p>
+                      )}
+                      {parsedInsight.detailedText ? (
+                        <p className="text-text-primary/90">{parsedInsight.detailedText}</p>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               )}
 

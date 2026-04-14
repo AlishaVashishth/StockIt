@@ -1,5 +1,12 @@
 const API_BASE_URL = 'http://localhost:8000/api';
 
+/** Chart tabs send 1w/1m/3m; backend expects 1wk/1mo/3mo for history and AI context. */
+export function normalizeChartTimeframe(tf: string): string {
+  const t = (tf || '1d').toLowerCase().trim();
+  const aliases: Record<string, string> = { '1w': '1wk', '1m': '1mo', '3m': '3mo' };
+  return aliases[t] ?? t;
+}
+
 const fetchJson = async (endpoint: string, options?: RequestInit) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const userEmail = localStorage.getItem('investsim_user_email') || '';
@@ -46,10 +53,17 @@ export const api = {
   getTransactions: () => fetchJson('/portfolio/transactions'),
   
   // Stocks
-  getStocks: () => fetchJson('/stocks'),
+  getStocks: (limit?: number, offset?: number) => {
+    const params = new URLSearchParams();
+    if (typeof limit === 'number') params.set('limit', String(limit));
+    if (typeof offset === 'number') params.set('offset', String(offset));
+    const query = params.toString();
+    return fetchJson(`/stocks${query ? `?${query}` : ''}`);
+  },
   getMarketIndices: () => fetchJson('/stocks/indices/live'),
   getStockDetail: (symbol: string) => fetchJson(`/stocks/${symbol}`),
-  getStockHistory: (symbol: string, period = '1d') => fetchJson(`/stocks/${symbol}/history?period=${period}`),
+  getStockHistory: (symbol: string, period = '1d') =>
+    fetchJson(`/stocks/${symbol}/history?period=${normalizeChartTimeframe(period)}`),
   
   // Trades
   buyTrade: (stockSymbol: string, quantity: number, orderType = "MARKET") => 
@@ -73,8 +87,16 @@ export const api = {
   getTimeMachineScore: () => fetchJson('/loss-simulator/score'),
   
   // AI
-  getMentorInsight: (action: string, symbol: string, timeframe = '1d', requestId?: string) => 
-    fetchJson('/ai/mentor', { method: 'POST', body: JSON.stringify({ action, symbol, timeframe, requestId }) }),
+  getMentorInsight: (action: string, symbol: string, timeframe = '1d', requestId?: string) =>
+    fetchJson('/ai/mentor', {
+      method: 'POST',
+      body: JSON.stringify({
+        action,
+        symbol,
+        timeframe: normalizeChartTimeframe(timeframe),
+        requestId,
+      }),
+    }),
   getLossDebrief: (stockSymbol: string, lossAmount: number) => 
     fetchJson('/ai/loss-debrief', { method: 'POST', body: JSON.stringify({ stockSymbol, lossAmount }) }),
   analyzePortfolio: (requestId?: string) => 

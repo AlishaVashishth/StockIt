@@ -113,7 +113,7 @@ export default function Splash() {
           transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
           className="text-[36px] font-heading font-bold text-text-primary tracking-[0.05em]"
         >
-          InvestSim
+          StockIt
         </motion.h1>
 
         {/* Tagline */}

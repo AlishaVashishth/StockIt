@@ -1,19 +1,31 @@
 from fastapi import APIRouter, HTTPException
 from services.db import read_json, write_json
-from services.ai_service import get_reactive_mentor_insight, call_groq, generate_loss_debrief
+from services.ai_service import (
+    get_reactive_mentor_insight,
+    call_groq,
+    generate_loss_debrief,
+    is_mentor_placeholder,
+)
 from models.schemas import MentorInsightRequest, LossDebriefRequest, AnalyzePortfolioRequest
 import json
 from datetime import datetime, timezone
 import asyncio
-from services.stock_service import get_stock_price, get_historical_data
+from services.stock_service import get_stock_price, get_historical_data, normalize_chart_timeframe
+import time
+from typing import Dict
 
 router = APIRouter()
 
+# Hard rate-limit guard for burst requests.
+# Key: SYMBOL|TIMEFRAME -> {ts, response}
+_mentor_recent: Dict[str, Dict[str, object]] = {}
+
 @router.post("/mentor")
 async def ai_mentor(request: MentorInsightRequest):
+    action_upper = (request.action or "").strip().upper()
     print(
         f"[AI_MENTOR_ROUTE] request received symbol={request.symbol} "
-        f"timeframe={request.timeframe} action={request.action} requestId={request.requestId}"
+        f"timeframe={request.timeframe} request_type={action_upper} requestId={request.requestId}"
     )
     user_data = read_json("user.json")
     holdings = read_json("holdings.json")
@@ -23,7 +35,7 @@ async def ai_mentor(request: MentorInsightRequest):
     total_invested = sum([h.get("quantity", 0) * h.get("avgBuyPrice", 0) for h in holdings])
     
     stock_snapshot = await get_stock_price(request.symbol.upper())
-    selected_period = (request.timeframe or "1d").lower()
+    selected_period = normalize_chart_timeframe(request.timeframe)
     historical_ohlcv = await get_historical_data(request.symbol.upper(), selected_period)
 
     portfolio_context = {
@@ -35,30 +47,57 @@ async def ai_mentor(request: MentorInsightRequest):
         "historicalOhlcv": historical_ohlcv,
         "timeframe": selected_period
     }
-    
-    try:
-        insight = await get_reactive_mentor_insight(request.action, request.symbol, portfolio_context)
-    except RuntimeError as e:
-        message = str(e)
-        if "rate limit" in message.lower():
-            raise HTTPException(status_code=429, detail=message)
-        raise HTTPException(status_code=503, detail=message)
-    
+
+    # Sub-second debounce: VIEW only, and only when the last stored insight was real (never the placeholder).
+    guard_key = f"{request.symbol.upper()}|{selected_period}"
+    now_ts = time.time()
+    if action_upper == "VIEW":
+        prev = _mentor_recent.get(guard_key) or {}
+        prev_ts = float(prev.get("ts", 0.0) or 0.0)
+        if prev_ts > 0 and (now_ts - prev_ts) < 1.0:
+            cached_resp = str(prev.get("response") or "").strip()
+            if cached_resp and not is_mentor_placeholder(cached_resp):
+                print(f"[AI_MENTOR_ROUTE] VIEW debounce hit guard_key={guard_key} (non-placeholder cache)")
+                return {
+                    "insight": cached_resp,
+                    "error": None,
+                    "action": request.action,
+                    "symbol": request.symbol,
+                }
+
+    result = await get_reactive_mentor_insight(request.action, request.symbol, portfolio_context)
+    insight = str(result.get("insight") or "")
+    err = result.get("error")
+
+    if not err and insight and not is_mentor_placeholder(insight):
+        _mentor_recent[guard_key] = {"ts": now_ts, "response": insight}
+        print(
+            f"[AI_MENTOR_ROUTE] success request_type={action_upper} "
+            f"insight_len={len(insight)} guard_key={guard_key}"
+        )
+    else:
+        print(
+            f"[AI_MENTOR_ROUTE] no short-term cache update request_type={action_upper} "
+            f"error={bool(err)} insight_len={len(insight)} detail={err!r}"
+        )
+
     logs = read_json("ai_mentor_logs.json")
     if not isinstance(logs, list): logs = []
-    
+
     logs.append({
         "trigger": request.action,
         "symbol": request.symbol,
         "response": insight,
+        "error": err,
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
     write_json("ai_mentor_logs.json", logs)
-    
+
     return {
         "insight": insight,
+        "error": err,
         "action": request.action,
-        "symbol": request.symbol
+        "symbol": request.symbol,
     }
 
 @router.post("/loss-debrief")
@@ -196,33 +235,26 @@ async def analyze_portfolio(request: AnalyzePortfolioRequest):
 
     user_msg = f"""
 You are an institutional-grade portfolio analyst helping a beginner investor.
-Write the response in polished professional narrative style (NOT bullet points, NOT headings).
-Use this 4-paragraph structure exactly:
 
-Paragraph 1:
-- Start with specific transaction recap using date, stock, quantity, buy/sell price, invested amount.
-- Mention current market value and exact P/L (or no P/L).
-- Mention current cash balance and invested vs uninvested capital.
+Return EXACTLY in this structure:
 
-Paragraph 2:
-- Describe user behavior pattern (concentration, inactivity, premature selling, panic behavior, etc.).
-- Mention what is missing in their process (stop-loss, targets, position sizing, allocation discipline).
-- Explain opportunity cost if cash is idle.
+CONCISE BULLETS:
+- Snapshot: <1 line using concrete numbers from portfolio/trades>
+- Key behavior: <1 line about user behavior pattern>
+- Biggest risk: <1 line>
+- Action plan: <3 short actionable bullets personalized to this user>
+- Overall verdict: <1 line>
 
-Paragraph 3:
-- Explain portfolio risk clearly (concentration risk, sector risk, volatility, lack of exit rules).
-- Give practical disciplined alternatives (diversification, staged deployment, rules-based exits, SIP/index approach).
+DETAILED:
+<A deeper 4-paragraph explanation using trade dates, symbols, quantities, prices, behavior, risk, opportunity cost, and practical alternatives. Keep it clear and constructive.>
 
-Paragraph 4:
-- Give an overall verdict in one concise concluding paragraph.
-- Tone: clear, analytical, constructive, and direct.
-
-Critical requirements:
-- Use exact numbers from provided data wherever possible.
-- Mention specific dates and symbols.
-- Do not use jargon-heavy language.
-- Keep total response concise (~170-240 words).
-- Return plain text only.
+Rules:
+- Concise bullets must be short and to the point.
+- Use exact numbers and symbols from provided data.
+- Mention at least one date from trade history if available.
+- No jargon-heavy language.
+- Detailed section target: ~170-240 words.
+- Do not add extra headings beyond "CONCISE BULLETS:" and "DETAILED:".
 
 Portfolio context:
 - Cash Remaining: ₹{cash:.2f}
@@ -241,7 +273,7 @@ Computed sell-behavior events:
 """
     
     messages = [
-        {"role": "system", "content": "You are a precise trading performance analyst. Use user data, not generic advice. Match the exact requested narrative structure."},
+        {"role": "system", "content": "You are a precise trading performance analyst. Use user data, not generic advice. Match the exact requested structure."},
         {"role": "user", "content": user_msg}
     ]
 

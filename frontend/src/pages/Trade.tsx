@@ -5,7 +5,8 @@ import {
   Search, 
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw
+  RefreshCw,
+  ChevronDown
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -17,21 +18,59 @@ const SECTORS = [
 ];
 
 export default function Trade() {
+  const PAGE_SIZE = 15;
   const navigate = useNavigate();
   const [stocks, setStocks] = useState<any[]>([]);
   const [indices, setIndices] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [flashStates, setFlashStates] = useState<Record<string, 'up' | 'down' | null>>({});
+  const [nextOffset, setNextOffset] = useState(0);
+  const [hasMoreStocks, setHasMoreStocks] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   useEffect(() => {
+    const mergeUniqueStocks = (existing: any[], incoming: any[]) => {
+      const map = new Map<string, any>();
+      existing.forEach((s) => map.set(s.symbol, s));
+      incoming.forEach((s) => map.set(s.symbol, s));
+      return Array.from(map.values());
+    };
+
+    const loadMoreStocks = async (background = false) => {
+      if (!hasMoreStocks || isLoadingMore) return;
+      if (!background) setIsLoadingMore(true);
+      try {
+        const chunk = await api.getStocks(PAGE_SIZE, nextOffset);
+        const safeChunk = Array.isArray(chunk) ? chunk : [];
+        setStocks((prev) => mergeUniqueStocks(prev, safeChunk));
+        setNextOffset((prev) => prev + safeChunk.length);
+        if (safeChunk.length < PAGE_SIZE) setHasMoreStocks(false);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!background) setIsLoadingMore(false);
+      }
+    };
+
     const fetchStocks = async () => {
       try {
-        const [data, indicesData] = await Promise.all([
-          api.getStocks(),
+        const [stocksRes, indicesRes] = await Promise.allSettled([
+          api.getStocks(PAGE_SIZE, 0),
           api.getMarketIndices()
         ]);
-        setIndices(indicesData);
+
+        if (indicesRes.status === 'fulfilled') {
+          setIndices(indicesRes.value);
+        }
+
+        if (stocksRes.status !== 'fulfilled') {
+          throw stocksRes.reason;
+        }
+
+        const data = Array.isArray(stocksRes.value) ? stocksRes.value : [];
+        setNextOffset(data.length);
+        setHasMoreStocks(data.length === PAGE_SIZE);
         setStocks(prevStocks => {
           const newFlashStates: Record<string, 'up' | 'down' | null> = {};
           if (prevStocks.length > 0) {
@@ -55,8 +94,15 @@ export default function Trade() {
     };
 
     fetchStocks();
+    // After first paint, prefetch next chunk in background.
+    const prefetchTimer = setTimeout(() => {
+      loadMoreStocks(true);
+    }, 300);
     const interval = setInterval(fetchStocks, 10000); 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(prefetchTimer);
+      clearInterval(interval);
+    };
   }, []);
 
   const nifty = indices?.nifty || { value: 0, changePct: 0 };
@@ -122,7 +168,7 @@ export default function Trade() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
             <input 
               type="text"
-              placeholder="Search stocks..."
+              placeholder="Search assets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-11 bg-bg-secondary border border-border rounded-xl pl-10 pr-4 text-sm font-mono text-text-primary focus:outline-none focus:border-accent-gold transition-colors"
@@ -176,6 +222,38 @@ export default function Trade() {
                   </motion.div>
                 );
               })}
+
+              {searchQuery.trim().length === 0 && hasMoreStocks && (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={async () => {
+                    if (isLoadingMore) return;
+                    setIsLoadingMore(true);
+                    try {
+                      const chunk = await api.getStocks(PAGE_SIZE, nextOffset);
+                      const safeChunk = Array.isArray(chunk) ? chunk : [];
+                      setStocks((prev) => {
+                        const map = new Map<string, any>();
+                        prev.forEach((s) => map.set(s.symbol, s));
+                        safeChunk.forEach((s) => map.set(s.symbol, s));
+                        return Array.from(map.values());
+                      });
+                      setNextOffset((prev) => prev + safeChunk.length);
+                      if (safeChunk.length < PAGE_SIZE) setHasMoreStocks(false);
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setIsLoadingMore(false);
+                    }
+                  }}
+                  className="w-full mt-3 bg-blue-500/10 border border-blue-400/30 rounded-2xl p-4 flex items-center justify-center space-x-2 text-blue-300"
+                >
+                  <span className="text-sm font-heading font-bold">
+                    {isLoadingMore ? 'Loading...' : 'View more'}
+                  </span>
+                  <ChevronDown size={16} />
+                </motion.button>
+              )}
             </div>
           )}
         </div>

@@ -89,6 +89,20 @@ export default function Portfolio() {
   const [sortBy, setSortBy] = useState('P&L');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
+  const [showDetailedInsight, setShowDetailedInsight] = useState(false);
+  const parsedAiInsight = useMemo(() => {
+    const text = String(aiInsight?.insight || '').trim();
+    if (!text) return { bullets: [] as string[], detailed: '' };
+    const detailedMatch = text.match(/DETAILED:\s*([\s\S]*)$/i);
+    const conciseRaw = (detailedMatch ? text.slice(0, detailedMatch.index) : text).replace(/CONCISE BULLETS:\s*/i, '').trim();
+    const detailed = detailedMatch ? detailedMatch[1].trim() : '';
+    const bullets = conciseRaw
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .map((line: string) => line.replace(/^[-*]\s+/, '').replace(/^\d+[\).\s-]+/, ''));
+    return { bullets, detailed };
+  }, [aiInsight]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,6 +120,7 @@ export default function Portfolio() {
 
   const handleRefreshAI = async () => {
     setIsRefreshingAI(true);
+    setShowDetailedInsight(false);
     try {
       const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       console.log('[Portfolio] Sending AI analysis request', { requestId });
@@ -281,7 +296,26 @@ export default function Portfolio() {
 
           <div className="space-y-4 text-[13px] text-text-primary leading-relaxed">
             {aiInsight ? (
-              <div>{aiInsight.insight}</div>
+              <div className="space-y-3">
+                <ul className="list-disc pl-5 space-y-2">
+                  {parsedAiInsight.bullets.map((point: string, idx: number) => (
+                    <li key={idx}>{point}</li>
+                  ))}
+                </ul>
+                {parsedAiInsight.detailed && (
+                  <>
+                    <button
+                      onClick={() => setShowDetailedInsight((prev) => !prev)}
+                      className="text-[12px] font-bold text-accent-gold border border-border rounded-lg px-3 py-1"
+                    >
+                      {showDetailedInsight ? 'Hide detailed view' : 'Understand in depth'}
+                    </button>
+                    {showDetailedInsight && (
+                      <p className="text-text-primary/90">{parsedAiInsight.detailed}</p>
+                    )}
+                  </>
+                )}
+              </div>
             ) : (
               <p className="text-text-muted italic">Click below to generate a deep dive analysis of your active positions.</p>
             )}
