@@ -27,6 +27,8 @@ import { syncMissionProgress } from './utils/missionEngine';
 import { missionsData } from './data/missionsData';
 import { addXP } from './utils/xpUtils';
 import { removeRecentActivityByText } from './utils/activityUtils';
+import { api } from './api';
+import { refreshHoldingPrices } from './utils/priceRefresh';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -113,6 +115,19 @@ export default function App() {
 
     syncMissionProgress({ completedLessons, quizScores, completedModules });
     checkAndAdvanceBatch();
+
+    // Refresh holdings LTP at app startup (with cache) so P&L cards are not stale.
+    const refreshStartupPrices = async () => {
+      try {
+        const portfolio = await api.getPortfolio();
+        const holdings = Array.isArray(portfolio?.holdings) ? portfolio.holdings : [];
+        const symbols = holdings.map((h: any) => String(h?.stockSymbol || '').toUpperCase()).filter(Boolean);
+        await refreshHoldingPrices(symbols);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    refreshStartupPrices();
   }, []);
 
   return (

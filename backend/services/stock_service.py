@@ -495,9 +495,9 @@ GLOBAL_MARKET_SYMBOLS = [
     {"key": "bitcoinUsd", "name": "Bitcoin USD", "symbols": ["BINANCE:BTCUSDT"]},
 ]
 
-# Some legacy symbols can intermittently fail on Yahoo in certain regions/setups.
-# For these, prefer Finnhub or stable fallback pricing to avoid noisy repeated 404 logs.
-YAHOO_UNSTABLE_SYMBOLS = {"TATAMOTORS"}
+# Symbols that should skip Yahoo fallback due to persistent failures.
+# Keep this empty unless a symbol is verified to be consistently broken.
+YAHOO_UNSTABLE_SYMBOLS = set()
 
 def _candidate_symbols(symbol: str) -> list:
     return YAHOO_SYMBOL_CANDIDATES.get(symbol, [f"{symbol}.NS"])

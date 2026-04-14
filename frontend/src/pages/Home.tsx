@@ -23,6 +23,7 @@ import { addXP, getCurrentLevel, getTotalXP, getXPProgress } from '../utils/xpUt
 import { addRecentActivity, removeRecentActivityByText } from '../utils/activityUtils';
 import MissionConfirmModal from '../components/MissionConfirmModal';
 import UndoSnackbar from '../components/UndoSnackbar';
+import { applyLivePricesToPortfolio, refreshHoldingPrices } from '../utils/priceRefresh';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ export default function Home() {
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const [showCongrats, setShowCongrats] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
+  const [livePortfolio, setLivePortfolio] = useState<any>(null);
   const [totalXP, setTotalXP] = useState(0);
   const [missionDone, setMissionDone] = useState<string[]>([]);
   const [missionProgressMap, setMissionProgressMap] = useState<Record<string, { current: number; target: number }>>({});
@@ -117,16 +120,25 @@ export default function Home() {
 
     const loadDashboard = async () => {
       try {
-        const dashboardData = await api.getDashboard();
+        setIsRefreshingPrices(true);
+        const [dashboardData, portfolioData] = await Promise.all([
+          api.getDashboard(),
+          api.getPortfolio(),
+        ]);
         setData(dashboardData);
         if (dashboardData?.user) {
           localStorage.setItem(USER_PROFILE_CACHE_KEY, JSON.stringify(dashboardData.user));
           setCachedProfile(dashboardData.user);
         }
-        animate(count, dashboardData.portfolioSummary.totalValue, { duration: 2, ease: "easeOut" });
+        const symbols = (portfolioData?.holdings || []).map((h: any) => h.stockSymbol);
+        const livePrices = await refreshHoldingPrices(symbols);
+        const livePortfolioData = applyLivePricesToPortfolio(portfolioData, livePrices);
+        setLivePortfolio(livePortfolioData);
+        animate(count, livePortfolioData.totalPortfolioValue || dashboardData.portfolioSummary.totalValue, { duration: 2, ease: "easeOut" });
       } catch (err) {
         console.error(err);
       } finally {
+        setIsRefreshingPrices(false);
         setLoading(false);
       }
     };
@@ -163,6 +175,13 @@ export default function Home() {
   }
 
   const { user, portfolioSummary, dailyPnlPct, shouldTriggerLossDebrief } = data;
+  const effectivePortfolioSummary = {
+    ...portfolioSummary,
+    totalValue: Number(livePortfolio?.totalPortfolioValue ?? portfolioSummary?.totalValue ?? 0),
+    totalPnl: Number(livePortfolio?.totalPnl ?? portfolioSummary?.totalPnl ?? 0),
+    totalPnlPct: Number(livePortfolio?.totalPnlPct ?? portfolioSummary?.totalPnlPct ?? 0),
+    virtualCash: Number(livePortfolio?.virtualCash ?? portfolioSummary?.virtualCash ?? 0),
+  };
   const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
   const displayName = user?.name || cachedProfile?.name || 'Investor';
   const hour = new Date().getHours();
@@ -171,7 +190,7 @@ export default function Home() {
   // For day-0 users with no holdings, keep baseline at the bottom.
   const sparkPoints = portfolioSummary.holdingsCount === 0
     ? [0, 0, 0, 0, 0, 0]
-    : [portfolioSummary.totalValue * 0.8, portfolioSummary.totalValue * 0.85, portfolioSummary.totalValue * 0.9, portfolioSummary.totalValue * 0.95, portfolioSummary.totalValue * 0.98, portfolioSummary.totalValue];
+    : [effectivePortfolioSummary.totalValue * 0.8, effectivePortfolioSummary.totalValue * 0.85, effectivePortfolioSummary.totalValue * 0.9, effectivePortfolioSummary.totalValue * 0.95, effectivePortfolioSummary.totalValue * 0.98, effectivePortfolioSummary.totalValue];
   const min = Math.min(...sparkPoints);
   const max = Math.max(...sparkPoints) || 1;
   const range = (max - min) || 1;
@@ -273,9 +292,11 @@ export default function Home() {
   const handleRefreshDashboard = async () => {
     setIsRefreshing(true);
     try {
-      const [dashboardData, latestIndices] = await Promise.all([
+      setIsRefreshingPrices(true);
+      const [dashboardData, latestIndices, portfolioData] = await Promise.all([
         api.getDashboard(),
         api.getMarketIndices(),
+        api.getPortfolio(),
       ]);
       setData(dashboardData);
       if (dashboardData?.user) {
@@ -298,10 +319,15 @@ export default function Home() {
       setTotalXP(getTotalXP());
       setMissionDone(missionsData.filter((m) => isMissionComplete(m.id)).map((m) => m.id));
       setRecentActivityLog(JSON.parse(localStorage.getItem("recentActivity") || "[]"));
-      animate(count, dashboardData.portfolioSummary.totalValue, { duration: 1.2, ease: "easeOut" });
+      const symbols = (portfolioData?.holdings || []).map((h: any) => h.stockSymbol);
+      const livePrices = await refreshHoldingPrices(symbols, { force: true });
+      const livePortfolioData = applyLivePricesToPortfolio(portfolioData, livePrices);
+      setLivePortfolio(livePortfolioData);
+      animate(count, livePortfolioData.totalPortfolioValue || dashboardData.portfolioSummary.totalValue, { duration: 1.2, ease: "easeOut" });
     } catch (err) {
       console.error(err);
     } finally {
+      setIsRefreshingPrices(false);
       setIsRefreshing(false);
     }
   };
@@ -366,8 +392,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-center space-x-2 mb-6">
-              <span className={`text-sm font-mono font-bold ${portfolioSummary.totalPnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-                {portfolioSummary.totalPnl >= 0 ? '+' : ''}₹{portfolioSummary.totalPnl} ({portfolioSummary.totalPnl >= 0 ? '+' : ''}{portfolioSummary.totalPnlPct}%) {portfolioSummary.totalPnl >= 0 ? '▲' : '▼'}
+              <span className={`text-sm font-mono font-bold ${effectivePortfolioSummary.totalPnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                {isRefreshingPrices ? '—' : `${effectivePortfolioSummary.totalPnl >= 0 ? '+' : ''}₹${effectivePortfolioSummary.totalPnl.toFixed(2)} (${effectivePortfolioSummary.totalPnl >= 0 ? '+' : ''}${effectivePortfolioSummary.totalPnlPct.toFixed(2)}%) ${effectivePortfolioSummary.totalPnl >= 0 ? '▲' : '▼'}`}
               </span>
               <span className="text-[11px] text-text-muted">All time returns</span>
             </div>
@@ -376,7 +402,7 @@ export default function Home() {
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <p className="text-[18px] font-mono font-bold text-text-primary">₹{portfolioSummary.virtualCash.toLocaleString('en-IN')}</p>
+                <p className="text-[18px] font-mono font-bold text-text-primary">₹{effectivePortfolioSummary.virtualCash.toLocaleString('en-IN')}</p>
                 <p className="text-[11px] text-text-muted uppercase tracking-tight">Cash Available</p>
               </div>
               <div className="text-right">
@@ -390,7 +416,7 @@ export default function Home() {
                 <motion.path
                   d={pathData}
                   fill="none"
-                  stroke={portfolioSummary.totalPnl >= 0 ? "#00D4A1" : "#FF4757"}
+                  stroke={effectivePortfolioSummary.totalPnl >= 0 ? "#00D4A1" : "#FF4757"}
                   strokeWidth="2"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}

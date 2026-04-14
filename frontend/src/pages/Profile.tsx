@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { getCurrentLevel, getTotalXP, getXPProgress, LEVELS } from '../utils/xpUtils';
+import { applyLivePricesToPortfolio, getPortfolioStats, refreshHoldingPrices } from '../utils/priceRefresh';
 
 interface Holding {
   stockSymbol: string;
@@ -96,6 +97,7 @@ export default function Profile() {
   const [portfolioData, setPortfolioData] = useState<any>(null);
   const [sortBy, setSortBy] = useState('P&L');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
+  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
   const [showDetailedInsight, setShowDetailedInsight] = useState(false);
   const parsedAiInsight = useMemo(() => {
@@ -122,17 +124,23 @@ export default function Profile() {
   useEffect(() => {
     const loadUser = async () => {
       try {
+        setIsRefreshingPrices(true);
         const [dashboard, portfolio] = await Promise.all([
           api.getDashboard(),
           api.getPortfolio()
         ]);
+        const symbols = (portfolio?.holdings || []).map((h: any) => h.stockSymbol);
+        const livePrices = await refreshHoldingPrices(symbols);
+        const portfolioWithLivePrices = applyLivePricesToPortfolio(portfolio, livePrices);
         setUserData(dashboard?.user || null);
         if (dashboard?.user) {
           localStorage.setItem(USER_PROFILE_CACHE_KEY, JSON.stringify(dashboard.user));
         }
-        setPortfolioData(portfolio);
+        setPortfolioData(portfolioWithLivePrices);
       } catch (err) {
         console.error(err);
+      } finally {
+        setIsRefreshingPrices(false);
       }
     };
     loadUser();
@@ -161,6 +169,7 @@ export default function Profile() {
     virtualCash: Number(portfolioData?.virtualCash || 0),
     diversityScore: Number(portfolioData?.diversityScore || 0),
   };
+  const portfolioStats = useMemo(() => getPortfolioStats(portfolioData), [portfolioData]);
   const userXp = getTotalXP();
   const currentLevel = getCurrentLevel();
   const levelProgress = getXPProgress(userXp);
@@ -254,10 +263,43 @@ export default function Profile() {
         {/* SECTION 2: STATS GRID */}
         <div className="grid grid-cols-2 gap-3 mb-10">
           {[
-            { label: 'Total Return', value: '+14.2%', color: 'text-accent-green', sub: 'Total Return' },
-            { label: 'Best Trade', value: 'TATAMOTORS', color: 'text-accent-green', sub: '+12.7% 🏆', isSmall: true },
-            { label: 'Worst Trade', value: 'YESBANK', color: 'text-accent-red', sub: '-33.3% 📉', isSmall: true },
-            { label: 'Lessons Done', value: '8 / 15', color: 'text-accent-gold', sub: 'Lessons Done' },
+            {
+              label: 'Total Return',
+              value: isRefreshingPrices
+                ? '—'
+                : `${portfolioStats.totalReturn >= 0 ? '+' : ''}${portfolioStats.totalReturnPct.toFixed(2)}%`,
+              color: portfolioStats.totalReturn >= 0 ? 'text-accent-green' : 'text-accent-red',
+              sub: isRefreshingPrices
+                ? 'Refreshing prices...'
+                : `${portfolioStats.totalReturn >= 0 ? '+' : ''}₹${Math.abs(portfolioStats.totalReturn).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`,
+            },
+            {
+              label: 'Best Holding',
+              value: isRefreshingPrices
+                ? '—'
+                : (portfolioStats.bestPerformer?.symbol || '—'),
+              color: 'text-accent-green',
+              sub: isRefreshingPrices
+                ? 'Refreshing prices...'
+                : portfolioStats.bestPerformer
+                ? `${portfolioStats.bestPerformer.pnlPct >= 0 ? '+' : ''}${portfolioStats.bestPerformer.pnlPct.toFixed(2)}%`
+                : 'No holdings',
+              isSmall: true
+            },
+            {
+              label: 'Worst Holding',
+              value: isRefreshingPrices
+                ? '—'
+                : (portfolioStats.worstPerformer?.symbol || '—'),
+              color: 'text-accent-red',
+              sub: isRefreshingPrices
+                ? 'Refreshing prices...'
+                : portfolioStats.worstPerformer
+                ? `${portfolioStats.worstPerformer.pnlPct >= 0 ? '+' : ''}${portfolioStats.worstPerformer.pnlPct.toFixed(2)}%`
+                : 'No holdings',
+              isSmall: true
+            },
+            { label: 'Active Holdings', value: `${portfolioStats.holdingsCount}`, color: 'text-accent-gold', sub: 'Current positions' },
             { label: 'Total XP', value: `${userXp} XP`, color: 'text-accent-gold', sub: `${currentLevel.emoji} ${currentLevel.name}` },
             { label: 'Active Days', value: String(streakCount), color: 'text-text-primary', sub: 'Day Streak 🔥' },
           ].map((stat, i) => (
@@ -296,11 +338,11 @@ export default function Profile() {
                 <div className="relative z-10">
                   <p className="text-xs font-mono text-text-muted mb-1">Total Value</p>
                   <h2 className="text-[48px] font-heading font-bold text-text-primary leading-tight mb-1">
-                    <CountUp value={metrics.totalValue || 100000} />
+                    {isRefreshingPrices ? '—' : <CountUp value={portfolioStats.totalValue} />}
                   </h2>
                   <div className="flex items-center space-x-2 mb-6">
-                    <span className={`text-sm font-mono font-bold ${metrics.totalPnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-                      {metrics.totalPnl >= 0 ? '+' : ''}₹{metrics.totalPnl} ({metrics.totalPnlPct}%)
+                    <span className={`text-sm font-mono font-bold ${portfolioStats.totalReturn >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                      {isRefreshingPrices ? '—' : `${portfolioStats.totalReturn >= 0 ? '+' : ''}₹${portfolioStats.totalReturn.toFixed(2)} (${portfolioStats.totalReturnPct.toFixed(2)}%)`}
                     </span>
                     <span className="text-[10px] text-text-muted">Since you started</span>
                   </div>
@@ -461,7 +503,9 @@ export default function Profile() {
                           </div>
                           <div className="flex justify-between items-center mb-3">
                             <p className="text-[10px] text-text-muted font-mono">{h.quantity} shares × ₹{h.avgBuyPrice.toFixed(2)}</p>
-                            <p className="text-[10px] text-text-muted font-mono">LTP: ₹{h.currentPrice.toFixed(2)}</p>
+                            <p className="text-[10px] text-text-muted font-mono">
+                              LTP: {isRefreshingPrices ? '—' : `₹${h.currentPrice.toFixed(2)}`}
+                            </p>
                           </div>
                           <div className="flex justify-between items-end">
                             <div className={`flex items-center space-x-1 font-mono font-bold ${isPositive ? 'text-accent-green' : 'text-accent-red'}`}>
