@@ -6,8 +6,7 @@ import time
 from typing import Dict, Any, List, Optional, Tuple
 from dotenv import load_dotenv
 
-_BACKEND_ROOT = os.path.dirname(os.path.dirname(__file__))
-load_dotenv(os.path.join(_BACKEND_ROOT, ".env"))
+load_dotenv()
 
 _GROQ_FALLBACK_TEXT = "Market data is loading. Please try again."
 
