@@ -25,26 +25,30 @@ User Experience
 •	Missions & streaks
 ________________________________________
 2. Trading Screen
-  
+  <img width="331" height="836" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
+
 •	Live stock prices
 •	Buy/Sell simulation
 •	Market indicators
 ________________________________________
 3.  Portfolio Analytics
-  
+  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/737f7093-7074-492a-99cd-1832001e8f3d" />
+
 •	Profit & Loss tracking
 •	Diversity score
 •	Best/Worst performers
 ________________________________________
 4.  Learning & Gamification
-  
+  <img width="316" height="795" alt="image" src="https://github.com/user-attachments/assets/12691672-e2c1-4131-bd32-03fcfe68031e" />
+
 
 •	Lessons & quizzes
 •	XP system
 •	Missions & streaks
 ________________________________________
-6.  Loss Simulator (Time Machine)
-  
+5.  Loss Simulator (Time Machine)
+  <img width="328" height="823" alt="image" src="https://github.com/user-attachments/assets/4ab7008f-a847-457d-93cf-88b65c357c4b" />
+
 •	Simulate market crashes
 •	Learn risk management
 ________________________________________
@@ -82,7 +86,8 @@ APIs
 •	Groq (AI processing)
 ________________________________________
  System Architecture
- 
+ <img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/2f4f571d-ea21-483a-95b4-8810f4ded7b2" />
+
 ________________________________________
  Data Flow
  Stock Data Flow
