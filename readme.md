@@ -1,6 +1,8 @@
-StockIt – Learn Investing Without Losing Money
-A gamified stock market simulator with AI mentorship, real-time data, and risk-free trading.
+<div align="center">
+<h3> StockIt </h3> – Learn Investing Without Losing Money
+A gamified stock market simulator with AI mentorship, real-time data, and risk-free paper trading.
 App deployed on vercel : https://stock-it-gules.vercel.app/
+</div>
 ________________________________________
  Problem Statement
 Most young investors:
