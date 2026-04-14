@@ -14,7 +14,7 @@ Fear of financial loss — Even small losses feel devastating to first-time inve
 Lack of practical experience — Financial education is overwhelmingly theoretical. Textbooks explain how markets work; they don't teach how to behave inside one.<br>
 Apps built for execution, not learning — Existing brokerage and trading apps are optimised for fast transactions. They surface prices, charts, and order books, but provide almost no scaffolding for someone who is still learning what any of it means.
 Despite growing awareness of equities and personal finance — driven by social media, fintech marketing, and post-pandemic interest — actual retail participation among young investors remains disproportionately low.
-________________________________________
+
 ### Our Solution<br>
 StockIt reimagines the investing on-ramp by integrating four pillars into one cohesive platform:
  
@@ -27,30 +27,30 @@ StockIt reimagines the investing on-ramp by integrating four pillars into one co
  
 ---
  
-### User Interface
+## User Interface
  
 StockIt features a mobile-first, tab-based interface designed for daily engagement and progressive skill-building.
 ________________________________________
 
-#### User Experience
+### User Experience
 
 <div align="center">
 
-1. #### Home Dashboard
+1. ### Home Dashboard
    
    <img width="331" height="836" alt="image" src="https://github.com/user-attachments/assets/fe99ef8e-0c5d-4e4a-b648-26afb08e5137" />
 
 The personal command centre — displays your portfolio snapshot, live market indices (Nifty 50, Sensex, global markets), active missions with progress bars, your daily streak, and a recent activity feed. Indices refresh automatically every 10 seconds.
 ________________________________________
 
-2. #### Trading Screen
+2. ### Trading Screen
    
   <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
 
 The core trading experience, designed to feel like a real brokerage terminal. Browse a paginated, searchable list of stocks with live prices, and a market status banner indicating whether the exchange is open or closed. Manual refresh and 10-second auto-polling keep data current.
 ________________________________________
 
-3.  #### Stock Detail and Analysis
+3.  ### Stock Detail and Analysis
 
    <div align="center">
       <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/c6a9e54b-7bd1-4303-9ab1-b4b9089c929d" />
@@ -60,30 +60,33 @@ ________________________________________
 Deep-dive into any stock before committing. Features an interactive OHLCV chart across multiple time periods (1D, 1W, 1M, 3M, 1Y), AI-generated contextual insights about the stock's recent movement, and an inline buy/sell panel so you never have to navigate away to trade.
 ________________________________________
 
-4.  #### Portfolio Analytics
+4.  ### Portfolio Analytics
+
    
- <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
+   <div align="center">
+      <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/3bdb9b95-01a0-4fc4-ae9f-36bc13bb564f" />
+    <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/6f8ae47c-88c1-429c-a42f-2aaea42f3f1d" />
+      <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
+
+   </div>
+<br>
 
 A comprehensive performance dashboard showing total portfolio value, unrealised P&L, a diversity score measuring how well-spread your holdings are, best and worst performers, a donut chart of allocations, and a full holdings breakdown per stock. An AI analysis button triggers a Groq-powered deep-dive of your entire portfolio.
 ________________________________________
 
-5.  #### Learning & Gamification
+5.  ### Learning & Gamification
 
   <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
 
-•	Lessons & quizzes
-•	XP system
-•	Missions & streaks
+Structured lessons and multiple-choice quizzes covering investing fundamentals. Each completion awards XP, advances your level tier, and can complete active missions. A streak system rewards daily engagement.
 ________________________________________
-6.  ##### Loss Simulator (Time Machine)
+6.  ### Loss Simulator (Time Machine)
    
  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
 
-•	Simulate market crashes
-•	Learn risk management
+Presents historical market crash scenarios — users make allocation decisions and see how they would have played out. Scores are tracked and explained, turning past market disasters into personalised learning moments.
 
 </div>
-
 
 ________________________________________
  Key Features
