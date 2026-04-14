@@ -25,29 +25,28 @@ User Experience
 •	Missions & streaks
 ________________________________________
 2. Trading Screen
-  <img width="331" height="836" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
+  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
 
 •	Live stock prices
 •	Buy/Sell simulation
 •	Market indicators
 ________________________________________
 3.  Portfolio Analytics
-  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/737f7093-7074-492a-99cd-1832001e8f3d" />
+ <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
 
 •	Profit & Loss tracking
 •	Diversity score
 •	Best/Worst performers
 ________________________________________
 4.  Learning & Gamification
-  <img width="316" height="795" alt="image" src="https://github.com/user-attachments/assets/12691672-e2c1-4131-bd32-03fcfe68031e" />
-
+  <img width="332" height="848" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
 
 •	Lessons & quizzes
 •	XP system
 •	Missions & streaks
 ________________________________________
 5.  Loss Simulator (Time Machine)
-  <img width="328" height="823" alt="image" src="https://github.com/user-attachments/assets/4ab7008f-a847-457d-93cf-88b65c357c4b" />
+ <img width="638" height="1600" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
 
 •	Simulate market crashes
 •	Learn risk management
