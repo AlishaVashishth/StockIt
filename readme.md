@@ -1,7 +1,6 @@
 <div align="center">
 <h1> StockIt </h1> <I> – Learn Investing Without Losing Money </I> <br>
 A gamified stock market simulator with AI mentorship, real-time data, and risk-free paper trading. <br>
-App deployed on vercel : https://stock-it-gules.vercel.app/
 </div>
 <br>
 
