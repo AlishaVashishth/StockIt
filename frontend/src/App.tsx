@@ -20,6 +20,7 @@ import LossDebrief from './pages/LossDebrief';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
 import MarketTicker from './components/MarketTicker';
+import MarketStatusBanner from './components/MarketStatusBanner';
 import XPToast from './components/XPToast';
 import { getCompletedItems } from './utils/progressUtils';
 import { checkAndAdvanceBatch, getCompletedMissions } from './utils/missionUtils';
@@ -122,6 +123,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <MarketStatusBanner />
       <AnimatedRoutes />
       <XPToast />
     </BrowserRouter>

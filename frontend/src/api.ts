@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = `${BASE_URL}/api`;
 
 /** Chart tabs send 1w/1m/3m; backend expects 1wk/1mo/3mo for history and AI context. */
 export function normalizeChartTimeframe(tf: string): string {
@@ -9,13 +11,13 @@ export function normalizeChartTimeframe(tf: string): string {
 
 const fetchJson = async (endpoint: string, options?: RequestInit) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const userEmail = localStorage.getItem('investsim_user_email') || '';
+  const userEmail = localStorage.getItem('investsim_user_email') || "";
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Email': userEmail,
+        'X-User-Email': userEmail || "",
         ...options?.headers,
       },
     });

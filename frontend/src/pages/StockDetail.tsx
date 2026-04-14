@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { fireMissionEvent } from '../utils/missionEngine';
+import { getMarketStatus } from '../utils/marketStatus';
 
 const TIMEFRAMES = ['1D', '1W', '1M', '3M', '1Y'];
 
@@ -311,9 +312,14 @@ export default function StockDetail() {
 
   const meta = stockDetail.meta || stockDetail;
   const currentPrice = Number(stockDetail.currentPrice || 0);
-  const change = Number(stockDetail.change || 0);
-  const changePercent = Number(stockDetail.changePercent ?? stockDetail.changePct ?? 0);
+  const previousClose = Number(stockDetail.previousClose || 0);
+  const change = previousClose > 0 ? currentPrice - previousClose : Number(stockDetail.change || 0);
+  const changePercent = previousClose > 0
+    ? ((currentPrice - previousClose) / previousClose) * 100
+    : Number(stockDetail.changePercent ?? stockDetail.changePct ?? 0);
   const isPositive = change >= 0;
+  const marketStatus = getMarketStatus();
+  const marketOpen = marketStatus.isOpen;
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary flex flex-col overflow-x-hidden">
@@ -343,6 +349,11 @@ export default function StockDetail() {
               {isPositive ? '+' : ''}₹{change.toFixed(2)} ({isPositive ? '+' : ''}{changePercent.toFixed(2)}%) {isPositive ? '▲' : '▼'} Today
             </span>
           </div>
+          <p className="text-[11px] text-text-muted mt-1">
+            {marketOpen
+              ? `Last updated: ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+              : 'Last updated: Last trading session close'}
+          </p>
           <p className="text-[12px] text-text-muted mt-1">{meta.companyName}</p>
         </div>
 
@@ -488,6 +499,14 @@ export default function StockDetail() {
             <span className="text-text-primary">₹{cash.toLocaleString('en-IN')}</span>
           </div>
         </div>
+
+        {!marketOpen && (
+          <div className="mb-4 rounded-xl border border-accent-red/30 bg-accent-red/10 px-3 py-2">
+            <p className="text-[11px] font-semibold text-accent-red">
+              ⚠️ Market is closed. Orders will execute at last traded price.
+            </p>
+          </div>
+        )}
 
         <button 
           onClick={executeOrder}

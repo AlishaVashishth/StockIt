@@ -9,6 +9,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { api } from '../api';
+import { getMarketStatus } from '../utils/marketStatus';
 
 const SECTORS = [
   { name: 'IT', change: 1.8 },
@@ -30,6 +31,8 @@ export default function Trade() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const loadedCountRef = useRef(PAGE_SIZE);
+  const marketStatus = getMarketStatus();
+  const marketOpen = marketStatus.isOpen;
 
   const mergeUniqueStocks = (existing: any[], incoming: any[]) => {
     const map = new Map<string, any>();
@@ -185,15 +188,25 @@ export default function Trade() {
             >
               <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
             </button>
-            <div className="px-2 py-0.5 rounded-full bg-accent-green/10 border border-accent-green/20">
-              <span className="text-[10px] font-bold text-accent-green uppercase tracking-wider">🟢 OPEN</span>
+            <div className={`px-2 py-0.5 rounded-full border ${marketOpen ? 'bg-accent-green/10 border-accent-green/20' : 'bg-accent-red/10 border-accent-red/20'}`}>
+              <span className={`text-[10px] font-bold uppercase tracking-wider ${marketOpen ? 'text-accent-green' : 'text-accent-red'}`}>
+                {marketOpen ? '🟢 OPEN' : '🔴 CLOSED'}
+              </span>
             </div>
           </div>
         </div>
         <p className="text-[11px] font-mono text-text-muted">NSE · Mon–Fri · 9:15 AM – 3:30 PM (Simulated)</p>
       </header>
 
-      <main className="flex-1 pt-[85px] pb-[80px] px-4 overflow-y-auto no-scrollbar">
+      <main className="flex-1 pt-[85px] pb-[80px] overflow-y-auto no-scrollbar">
+        <div className="px-4">
+        {!marketOpen && (
+          <div className="mb-4 rounded-xl border border-accent-red/30 bg-accent-red/10 px-3 py-2">
+            <p className="text-[11px] font-semibold text-accent-red">
+              ⚠️ Market is closed. Orders execute at last traded price.
+            </p>
+          </div>
+        )}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -250,7 +263,11 @@ export default function Trade() {
               {filteredStocks.map((stock) => {
                 const flash = flashStates[stock.symbol];
                 const change = stock.change;
-                const changePercent = stock.changePercent;
+                const current = Number(stock.currentPrice || 0);
+                const prevClose = Number(stock.previousClose || 0);
+                const changePercent = prevClose > 0
+                  ? ((current - prevClose) / prevClose) * 100
+                  : Number(stock.changePercent || stock.changePct || 0);
                 const isPositive = change >= 0;
 
                 return (
@@ -284,6 +301,11 @@ export default function Trade() {
                         </span>
                         {isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                       </div>
+                      <p className="text-[10px] text-text-muted mt-0.5">
+                        {marketOpen
+                          ? `Last updated: ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+                          : 'Last updated: Last trading session close'}
+                      </p>
                     </div>
                   </motion.div>
                 );
@@ -336,6 +358,7 @@ export default function Trade() {
               </div>
             ))}
           </div>
+        </div>
         </div>
       </main>
     </div>
