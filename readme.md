@@ -1,6 +1,6 @@
 StockIt – Learn Investing Without Losing Money
 A gamified stock market simulator with AI mentorship, real-time data, and risk-free trading.
-
+App deployed on vercel : https://stock-it-gules.vercel.app/
 ________________________________________
  Problem Statement
 Most young investors:
@@ -85,7 +85,7 @@ APIs
 •	Frontend URL 
 •	Groq (AI processing)
 GROQ_API_KEY=yourkey
-FRONTEND_URL=yourkey
+FRONTEND_URL=https://localhost:3000
 FINNHUB_API_KEY=yourkey
 _________________
  System Architecture
