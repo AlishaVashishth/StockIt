@@ -24,6 +24,7 @@ import { addRecentActivity, removeRecentActivityByText } from '../utils/activity
 import MissionConfirmModal from '../components/MissionConfirmModal';
 import UndoSnackbar from '../components/UndoSnackbar';
 import { applyLivePricesToPortfolio, refreshHoldingPrices } from '../utils/priceRefresh';
+import { getScopedJson, scopedKey, setScopedItem, removeScopedItem } from '../utils/userScopedStorage';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ export default function Home() {
   const [newMissionBanner, setNewMissionBanner] = useState(false);
   const [confirmMission, setConfirmMission] = useState<any | null>(null);
   const [undoState, setUndoState] = useState<{ open: boolean; missionId?: string; xp?: number; title?: string; timeoutAt?: number }>({ open: false });
-  const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
+  const USER_PROFILE_CACHE_KEY = scopedKey('stockit_user_profile_cache');
   const MANDATORY_FALLBACKS = {
     nifty: { name: 'NIFTY 50', value: null, change: null, changePct: null },
     sensex: { name: 'SENSEX', value: null, change: null, changePct: null },
@@ -115,7 +116,7 @@ export default function Home() {
         progressMap[m.id] = getMissionProgress(m.id);
       });
       setMissionProgressMap(progressMap);
-      setRecentActivityLog(JSON.parse(localStorage.getItem("recentActivity") || "[]"));
+      setRecentActivityLog(getScopedJson("recentActivity", []));
     };
 
     const loadDashboard = async () => {
@@ -225,7 +226,7 @@ export default function Home() {
       setXpMessage(`+${mission.xp} XP earned!`);
       setTimeout(() => setXpMessage(null), 2000);
       const now = Date.now();
-      localStorage.setItem(`mission_completed_at_${mission.id}`, String(now));
+      setScopedItem(`mission_completed_at_${mission.id}`, String(now));
       setUndoState({ open: true, missionId: mission.id, xp: mission.xp, title: mission.title, timeoutAt: now + 60000 });
       setTimeout(() => {
         setUndoState((s) => (s.missionId === mission.id ? { open: false } : s));
@@ -244,10 +245,10 @@ export default function Home() {
       return;
     }
     const completed = getCompletedMissions().filter((id) => id !== undoState.missionId);
-    localStorage.setItem("completedMissions", JSON.stringify(completed));
+    setScopedItem("completedMissions", JSON.stringify(completed));
     addXP(-(undoState.xp || 0), `Undid mission: ${undoState.title || undoState.missionId}`);
     removeRecentActivityByText(`Completed Mission: ${undoState.title}`);
-    localStorage.removeItem(`mission_completed_at_${undoState.missionId}`);
+    removeScopedItem(`mission_completed_at_${undoState.missionId}`);
     setUndoState({ open: false });
     setXpMessage("Mission completion undone");
     setTimeout(() => setXpMessage(null), 1800);
@@ -318,7 +319,7 @@ export default function Home() {
       setCompletedItems(getCompletedItems());
       setTotalXP(getTotalXP());
       setMissionDone(missionsData.filter((m) => isMissionComplete(m.id)).map((m) => m.id));
-      setRecentActivityLog(JSON.parse(localStorage.getItem("recentActivity") || "[]"));
+      setRecentActivityLog(getScopedJson("recentActivity", []));
       const symbols = (portfolioData?.holdings || []).map((h: any) => h.stockSymbol);
       const livePrices = await refreshHoldingPrices(symbols, { force: true });
       const livePortfolioData = applyLivePricesToPortfolio(portfolioData, livePrices);

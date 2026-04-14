@@ -1,3 +1,5 @@
+import { getScopedJson, getScopedItem, setScopedItem } from "./userScopedStorage";
+
 // XP VALUES
 export const XP_VALUES = {
   lesson_complete: 20,
@@ -64,11 +66,11 @@ export function getXPProgress(xp) {
 
 // STORAGE
 export function getTotalXP() {
-  return parseInt(localStorage.getItem("totalXP") || "0");
+  return parseInt(getScopedItem("totalXP") || "0");
 }
 
 export function getXPHistory() {
-  return JSON.parse(localStorage.getItem("xpHistory") || "[]");
+  return getScopedJson("xpHistory", []);
 }
 
 function emitXPEvent(amount) {
@@ -78,7 +80,7 @@ function emitXPEvent(amount) {
 export function addXP(amount, reason) {
   const current = getTotalXP();
   const newTotal = current + amount;
-  localStorage.setItem("totalXP", String(newTotal));
+  setScopedItem("totalXP", String(newTotal));
 
   // Save to XP history log
   const history = getXPHistory();
@@ -88,7 +90,7 @@ export function addXP(amount, reason) {
     total: newTotal,
     date: new Date().toISOString()
   });
-  localStorage.setItem("xpHistory", JSON.stringify(history.slice(0, 50)));
+  setScopedItem("xpHistory", JSON.stringify(history.slice(0, 50)));
   emitXPEvent(amount);
   return newTotal;
 }

@@ -1,12 +1,14 @@
+import { getScopedJson, removeScopedItem, setScopedItem } from "./userScopedStorage";
+
 export function getCompletedItems() {
-  return JSON.parse(localStorage.getItem("completedItems") || "[]");
+  return getScopedJson("completedItems", []);
 }
 
 export function markItemComplete(itemId) {
   const completed = getCompletedItems();
   if (!completed.includes(itemId)) {
     completed.push(itemId);
-    localStorage.setItem("completedItems", JSON.stringify(completed));
+    setScopedItem("completedItems", JSON.stringify(completed));
   }
 }
 
@@ -36,5 +38,5 @@ export function isCourseComplete(courseData) {
 }
 
 export function resetProgress() {
-  localStorage.removeItem("completedItems");
+  removeScopedItem("completedItems");
 }

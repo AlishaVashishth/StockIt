@@ -1,7 +1,8 @@
 import { missionBatches, missionsData } from '../data/missionsData';
+import { getScopedJson, getScopedItem, setScopedItem } from './userScopedStorage';
 
 export function getCompletedMissions() {
-  return JSON.parse(localStorage.getItem("completedMissions") || "[]");
+  return getScopedJson("completedMissions", []);
 }
 
 export function isMissionComplete(missionId) {
@@ -9,14 +10,14 @@ export function isMissionComplete(missionId) {
 }
 
 export function getMissionProgress(missionId) {
-  const all = JSON.parse(localStorage.getItem("missionProgress") || "{}");
+  const all = getScopedJson("missionProgress", {});
   return all[missionId] || { current: 0, target: 1 };
 }
 
 export function updateMissionProgress(missionId, current, target) {
-  const all = JSON.parse(localStorage.getItem("missionProgress") || "{}");
+  const all = getScopedJson("missionProgress", {});
   all[missionId] = { current, target };
-  localStorage.setItem("missionProgress", JSON.stringify(all));
+  setScopedItem("missionProgress", JSON.stringify(all));
 }
 
 export function completeMission(missionId, xpReward, options = {}) {
@@ -27,12 +28,12 @@ export function completeMission(missionId, xpReward, options = {}) {
   const completed = getCompletedMissions();
   if (completed.includes(missionId)) return 0; // already done, no XP
   completed.push(missionId);
-  localStorage.setItem("completedMissions", JSON.stringify(completed));
+  setScopedItem("completedMissions", JSON.stringify(completed));
   return xpReward; // return XP so caller can add it
 }
 
 export function getCurrentMissionBatch() {
-  return parseInt(localStorage.getItem("currentMissionBatch") || "0");
+  return parseInt(getScopedItem("currentMissionBatch") || "0");
 }
 
 export function getActiveMissions() {
@@ -46,7 +47,7 @@ export function checkAndAdvanceBatch() {
   const batch = missionBatches[batchIndex] || [];
   const allComplete = batch.every(id => isMissionComplete(id));
   if (allComplete && batchIndex < missionBatches.length - 1) {
-    localStorage.setItem("currentMissionBatch", String(batchIndex + 1));
+    setScopedItem("currentMissionBatch", String(batchIndex + 1));
     window.dispatchEvent(new CustomEvent('new-missions-unlocked'));
     return true;
   }

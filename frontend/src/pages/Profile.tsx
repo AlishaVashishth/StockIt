@@ -13,6 +13,7 @@ import {
 import { api } from '../api';
 import { getCurrentLevel, getTotalXP, getXPProgress, LEVELS } from '../utils/xpUtils';
 import { applyLivePricesToPortfolio, getPortfolioStats, refreshHoldingPrices } from '../utils/priceRefresh';
+import { scopedKey } from '../utils/userScopedStorage';
 
 interface Holding {
   stockSymbol: string;
@@ -85,7 +86,7 @@ const CountUp = ({ value, prefix = "₹" }: { value: number, prefix?: string }) 
 
 export default function Profile() {
   const navigate = useNavigate();
-  const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
+  const USER_PROFILE_CACHE_KEY = scopedKey('stockit_user_profile_cache');
   const [userData, setUserData] = useState<any>(() => {
     try {
       const cached = localStorage.getItem(USER_PROFILE_CACHE_KEY);

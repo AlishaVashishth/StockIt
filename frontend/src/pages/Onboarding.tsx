@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useTransform, animate } from 'motion/react';
 import { Check } from 'lucide-react';
 import { api } from '../api';
+import { scopedKey } from '../utils/userScopedStorage';
 
 interface SelectionCardProps {
   id: string;
@@ -58,7 +59,6 @@ function Counter({ value }: { value: number }) {
 
 export default function Onboarding() {
   const USER_EMAIL_STORAGE_KEY = 'investsim_user_email';
-  const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [experience, setExperience] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export default function Onboarding() {
         try {
           const user = await api.startSession(trimmedName, email.trim(), password);
           localStorage.setItem(
-            USER_PROFILE_CACHE_KEY,
+            scopedKey('stockit_user_profile_cache'),
             JSON.stringify({
               name: user?.name || trimmedName,
               email: user?.email || email.trim(),

@@ -27,8 +27,7 @@ import { syncMissionProgress } from './utils/missionEngine';
 import { missionsData } from './data/missionsData';
 import { addXP } from './utils/xpUtils';
 import { removeRecentActivityByText } from './utils/activityUtils';
-import { api } from './api';
-import { refreshHoldingPrices } from './utils/priceRefresh';
+import { getScopedJson, getScopedItem, setScopedItem } from './utils/userScopedStorage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -88,7 +87,7 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
 export default function App() {
   useEffect(() => {
     const CLEANUP_KEY = "honor_mission_cleanup_v1_done";
-    if (localStorage.getItem(CLEANUP_KEY) !== "1") {
+    if (getScopedItem(CLEANUP_KEY) !== "1") {
       const completed = getCompletedMissions();
       const honorCompleted = missionsData.filter(
         (m) => m.verificationType === "honor" && completed.includes(m.id)
@@ -96,7 +95,7 @@ export default function App() {
       if (honorCompleted.length > 0) {
         let updated = [...completed];
         honorCompleted.forEach((mission) => {
-          const completionTs = localStorage.getItem(`mission_completed_at_${mission.id}`);
+          const completionTs = getScopedItem(`mission_completed_at_${mission.id}`);
           // If there is no explicit manual completion timestamp, treat as legacy invalid completion.
           if (!completionTs) {
             updated = updated.filter((id) => id !== mission.id);
@@ -104,30 +103,17 @@ export default function App() {
             removeRecentActivityByText(`Completed Mission: ${mission.title}`);
           }
         });
-        localStorage.setItem("completedMissions", JSON.stringify(updated));
+        setScopedItem("completedMissions", JSON.stringify(updated));
       }
-      localStorage.setItem(CLEANUP_KEY, "1");
+      setScopedItem(CLEANUP_KEY, "1");
     }
 
     const completedLessons = getCompletedItems();
-    const quizScores = JSON.parse(localStorage.getItem("quizScores") || "[]");
-    const completedModules = JSON.parse(localStorage.getItem("completedModules") || "[]");
+    const quizScores = getScopedJson("quizScores", []);
+    const completedModules = getScopedJson("completedModules", []);
 
     syncMissionProgress({ completedLessons, quizScores, completedModules });
     checkAndAdvanceBatch();
-
-    // Refresh holdings LTP at app startup (with cache) so P&L cards are not stale.
-    const refreshStartupPrices = async () => {
-      try {
-        const portfolio = await api.getPortfolio();
-        const holdings = Array.isArray(portfolio?.holdings) ? portfolio.holdings : [];
-        const symbols = holdings.map((h: any) => String(h?.stockSymbol || '').toUpperCase()).filter(Boolean);
-        await refreshHoldingPrices(symbols);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    refreshStartupPrices();
   }, []);
 
   return (

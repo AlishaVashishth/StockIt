@@ -12,6 +12,7 @@ import {
 import { addXP, calculateQuizXP, XP_VALUES } from '../utils/xpUtils';
 import { fireMissionEvent } from '../utils/missionEngine';
 import { addRecentActivity } from '../utils/activityUtils';
+import { getScopedJson, setScopedItem } from '../utils/userScopedStorage';
 
 type Question = {
   question: string;
@@ -67,10 +68,10 @@ export default function LessonOrQuizPage() {
     }
     const moduleDone = module.lessons.every((l) => isItemComplete(l.id));
     if (moduleDone) {
-      const completedModules = JSON.parse(localStorage.getItem("completedModules") || "[]");
+      const completedModules = getScopedJson("completedModules", []);
       if (!completedModules.includes(module.id)) {
         completedModules.push(module.id);
-        localStorage.setItem("completedModules", JSON.stringify(completedModules));
+        setScopedItem("completedModules", JSON.stringify(completedModules));
         fireMissionEvent("module_complete", { moduleId: module.id });
       }
     }
@@ -158,9 +159,9 @@ export default function LessonOrQuizPage() {
                   if (!wasCompleted) {
                     addXP(xpEarned, `Completed quiz: ${item.title} (${Math.round(scorePercent)}%)`);
                     addRecentActivity(`Completed Quiz: ${item.title} — earned ${xpEarned} XP`);
-                    const scores = JSON.parse(localStorage.getItem("quizScores") || "[]");
+                    const scores = getScopedJson("quizScores", []);
                     scores.push(scorePercent);
-                    localStorage.setItem("quizScores", JSON.stringify(scores));
+                    setScopedItem("quizScores", JSON.stringify(scores));
                     fireMissionEvent("quiz_complete", { score: scorePercent });
                     if (scorePercent >= 80) fireMissionEvent("quiz_score_80", { score: scorePercent });
                     if (scorePercent >= 100) fireMissionEvent("quiz_score_100", { score: scorePercent });
@@ -168,10 +169,10 @@ export default function LessonOrQuizPage() {
                   }
                   const moduleDone = module.lessons.every((l) => isItemComplete(l.id));
                   if (moduleDone) {
-                    const completedModules = JSON.parse(localStorage.getItem("completedModules") || "[]");
+                    const completedModules = getScopedJson("completedModules", []);
                     if (!completedModules.includes(module.id)) {
                       completedModules.push(module.id);
-                      localStorage.setItem("completedModules", JSON.stringify(completedModules));
+                      setScopedItem("completedModules", JSON.stringify(completedModules));
                       fireMissionEvent("module_complete", { moduleId: module.id });
                     }
                   }
