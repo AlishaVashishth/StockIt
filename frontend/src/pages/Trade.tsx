@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -29,15 +29,64 @@ export default function Trade() {
   const [hasMoreStocks, setHasMoreStocks] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const loadedCountRef = useRef(PAGE_SIZE);
+
+  const mergeUniqueStocks = (existing: any[], incoming: any[]) => {
+    const map = new Map<string, any>();
+    existing.forEach((s) => map.set(s.symbol, s));
+    incoming.forEach((s) => map.set(s.symbol, s));
+    return Array.from(map.values());
+  };
+
+  const fetchStocksSnapshot = async (targetCount: number) => {
+    const minCount = Math.max(PAGE_SIZE, targetCount);
+    let offset = 0;
+    let hasMore = true;
+    let lastChunkLength = 0;
+    let merged: any[] = [];
+
+    while (hasMore && merged.length < minCount) {
+      const chunk = await api.getStocks(PAGE_SIZE, offset);
+      const safeChunk = Array.isArray(chunk) ? chunk : [];
+      merged = mergeUniqueStocks(merged, safeChunk);
+      lastChunkLength = safeChunk.length;
+      if (safeChunk.length < PAGE_SIZE) {
+        hasMore = false;
+      } else {
+        offset += safeChunk.length;
+      }
+    }
+
+    return {
+      stocks: merged,
+      nextOffset: merged.length,
+      hasMoreStocks: hasMore && lastChunkLength === PAGE_SIZE,
+    };
+  };
+
+  const applyRefreshedStocks = (data: any[]) => {
+    setStocks((prevStocks) => {
+      const newFlashStates: Record<string, 'up' | 'down' | null> = {};
+      if (prevStocks.length > 0) {
+        data.forEach((newStock: any) => {
+          const oldStock = prevStocks.find((s) => s.symbol === newStock.symbol);
+          if (oldStock) {
+            if (newStock.currentPrice > oldStock.currentPrice) newFlashStates[newStock.symbol] = 'up';
+            else if (newStock.currentPrice < oldStock.currentPrice) newFlashStates[newStock.symbol] = 'down';
+          }
+        });
+      }
+      setFlashStates(newFlashStates);
+      setTimeout(() => setFlashStates({}), 1000);
+      return data;
+    });
+  };
+
+  useEffect(() => {
+    loadedCountRef.current = Math.max(PAGE_SIZE, stocks.length);
+  }, [stocks.length]);
   
   useEffect(() => {
-    const mergeUniqueStocks = (existing: any[], incoming: any[]) => {
-      const map = new Map<string, any>();
-      existing.forEach((s) => map.set(s.symbol, s));
-      incoming.forEach((s) => map.set(s.symbol, s));
-      return Array.from(map.values());
-    };
-
     const loadMoreStocks = async (background = false) => {
       if (!hasMoreStocks || isLoadingMore) return;
       if (!background) setIsLoadingMore(true);
@@ -57,7 +106,7 @@ export default function Trade() {
     const fetchStocks = async () => {
       try {
         const [stocksRes, indicesRes] = await Promise.allSettled([
-          api.getStocks(PAGE_SIZE, 0),
+          fetchStocksSnapshot(loadedCountRef.current),
           api.getMarketIndices()
         ]);
 
@@ -69,24 +118,11 @@ export default function Trade() {
           throw stocksRes.reason;
         }
 
-        const data = Array.isArray(stocksRes.value) ? stocksRes.value : [];
-        setNextOffset(data.length);
-        setHasMoreStocks(data.length === PAGE_SIZE);
-        setStocks(prevStocks => {
-          const newFlashStates: Record<string, 'up' | 'down' | null> = {};
-          if (prevStocks.length > 0) {
-             data.forEach((newStock: any) => {
-               const oldStock = prevStocks.find(s => s.symbol === newStock.symbol);
-               if (oldStock) {
-                 if (newStock.currentPrice > oldStock.currentPrice) newFlashStates[newStock.symbol] = 'up';
-                 else if (newStock.currentPrice < oldStock.currentPrice) newFlashStates[newStock.symbol] = 'down';
-               }
-             });
-          }
-          setFlashStates(newFlashStates);
-          setTimeout(() => setFlashStates({}), 1000);
-          return data;
-        });
+        const snapshot = stocksRes.value;
+        const data = Array.isArray(snapshot?.stocks) ? snapshot.stocks : [];
+        setNextOffset(Number(snapshot?.nextOffset || data.length));
+        setHasMoreStocks(Boolean(snapshot?.hasMoreStocks));
+        applyRefreshedStocks(data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -119,15 +155,15 @@ export default function Trade() {
   const handleRefreshMarket = async () => {
     setIsRefreshing(true);
     try {
-      const [stocksRes, indicesRes] = await Promise.all([
-        api.getStocks(PAGE_SIZE, 0),
+      const [snapshot, indicesRes] = await Promise.all([
+        fetchStocksSnapshot(loadedCountRef.current),
         api.getMarketIndices(),
       ]);
-      const data = Array.isArray(stocksRes) ? stocksRes : [];
-      setStocks(data);
+      const data = Array.isArray(snapshot?.stocks) ? snapshot.stocks : [];
+      applyRefreshedStocks(data);
       setIndices(indicesRes);
-      setNextOffset(data.length);
-      setHasMoreStocks(data.length === PAGE_SIZE);
+      setNextOffset(Number(snapshot?.nextOffset || data.length));
+      setHasMoreStocks(Boolean(snapshot?.hasMoreStocks));
     } catch (err) {
       console.error(err);
     } finally {

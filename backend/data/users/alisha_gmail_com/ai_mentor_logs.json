@@ -804,5 +804,33 @@
     "response": "CONCISE BULLETS:\n- Trend: Bullish with 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is positive at -0.16% is still close to positive\n\nDETAILED:\nThe trend for ICICI Bank Ltd is bullish, considering the current price of 1351.1 is higher than the previous close of 1322.0, showing a 2.2% increase. The recent closes, such as 1351.7 and 1351.5, also indicate an upward movement. Although the trend percentage is -0.16%, which is slightly negative, the overall trend is still positive due to the high volume of 30572141 and the latest close of 1349.7 being close to the day high of 1357.0. With a market cap of Large Cap and a risk level of LOW, buying ICICI Bank Ltd seems like a good option, with the current price being near the high of 1356.5.",
     "error": null,
     "timestamp": "2026-04-14T12:00:42.618051+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "MARUTI",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -4.62% change\n- Recommendation: Sell\n- Why: Current price 13076.0 is lower than previous close 13709.0\n- Risk: Around 5% risk\n- Why not opposite: Trend is 0.01% which is almost flat but change is -633.0\n\nDETAILED:\nThe stock MARUTI is showing a bearish trend with a -4.62% change in the current price. The current price of 13076.0 is lower than the previous close of 13709.0, and the day low of 12966.0 is also close to the current price. The recent closes like 13079.0, 13068.0, and 13070.0 are also around the same range, indicating a downward trend. Although the trend percentage is 0.01%, the change of -633.0 and the comparison of recent closes suggest a bearish outlook, making it a good time to sell.",
+    "error": null,
+    "timestamp": "2026-04-14T12:28:27.479410+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "MARUTI",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -4.62% change\n- Recommendation: Sell\n- Why: Current price 13076.0 is lower than previous close 13709.0\n- Risk: Around 5% risk\n- Why not opposite: Trend is 0.01% which is almost flat but change is -633.0\n\nDETAILED:\nThe stock MARUTI is showing a bearish trend with a -4.62% change in the current price. The current price of 13076.0 is lower than the previous close of 13709.0, and the day low of 12966.0 is also close to the current price. The recent closes like 13079.0, 13068.0, and 13070.0 are also around the same range, indicating a downward trend. Although the trend percentage is 0.01%, the change of -633.0 and the comparison of recent closes suggest a bearish outlook, making it a good time to sell.",
+    "error": null,
+    "timestamp": "2026-04-14T12:28:27.485652+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with a 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is -0.16% but recent closes are high like 1351.7\n\nDETAILED:\nThe trend for ICICI Bank Ltd is slightly negative at -0.16%, but the current price of 1351.1 is higher than the previous close of 1322.0, indicating a bullish movement. The recent closes, such as 1351.7 and 1351.5, are also higher than the latest close of 1349.7. The high of 1356.5 and low of 1345.1 suggest a relatively stable range. With a large market cap and low risk level, buying ICICI Bank Ltd seems like a good option, considering the overall positive change of 2.2% and a current price near the day high of 1357.0.",
+    "error": null,
+    "timestamp": "2026-04-14T12:42:08.843924+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with a 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is -0.16% but recent closes are high like 1351.7\n\nDETAILED:\nThe trend for ICICI Bank Ltd is slightly negative at -0.16%, but the current price of 1351.1 is higher than the previous close of 1322.0, indicating a bullish movement. The recent closes, such as 1351.7 and 1351.5, are also higher than the latest close of 1349.7. The high of 1356.5 and low of 1345.1 suggest a relatively stable range. With a large market cap and low risk level, buying ICICI Bank Ltd seems like a good option, considering the overall positive change of 2.2% and a current price near the day high of 1357.0.",
+    "error": null,
+    "timestamp": "2026-04-14T12:42:08.851542+00:00"
   }
 ]
