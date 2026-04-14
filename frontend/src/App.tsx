@@ -27,7 +27,7 @@ import { syncMissionProgress } from './utils/missionEngine';
 import { missionsData } from './data/missionsData';
 import { addXP } from './utils/xpUtils';
 import { removeRecentActivityByText } from './utils/activityUtils';
-import { getScopedJson, getScopedItem, setScopedItem } from './utils/userScopedStorage';
+import { getScopedJson, getScopedItem, migrateLegacyKeysForCurrentUser, setScopedItem } from './utils/userScopedStorage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -86,6 +86,10 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   useEffect(() => {
+    // One-time safety migration: preserve existing user's legacy local progress
+    // after introducing per-user scoped storage keys.
+    migrateLegacyKeysForCurrentUser();
+
     const CLEANUP_KEY = "honor_mission_cleanup_v1_done";
     if (getScopedItem(CLEANUP_KEY) !== "1") {
       const completed = getCompletedMissions();

@@ -1,0 +1,16 @@
+{
+  "id": "abhishek@gmail.com",
+  "name": "abhishek",
+  "email": "abhishek@gmail.com",
+  "password": "Abhishek@222",
+  "avatarInitials": "A",
+  "virtualCash": 100000.0,
+  "xpPoints": 0,
+  "currentTier": 1,
+  "daysActive": 0,
+  "streakCount": 0,
+  "isNewUser": true,
+  "createdAt": "2026-04-14",
+  "lastOpenDate": "2026-04-14",
+  "lastActivityDate": null
+}

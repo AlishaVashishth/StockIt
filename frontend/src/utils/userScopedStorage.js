@@ -30,3 +30,36 @@ export function getScopedJson(baseKey, fallback) {
     return fallback;
   }
 }
+
+export function migrateLegacyKeysForCurrentUser() {
+  const email = (localStorage.getItem(USER_EMAIL_STORAGE_KEY) || "").trim().toLowerCase();
+  if (!email) return;
+
+  const migrationFlag = `scoped_migrated_v1::${email}`;
+  if (localStorage.getItem(migrationFlag) === "1") return;
+
+  const keysToMigrate = [
+    "completedItems",
+    "totalXP",
+    "xpHistory",
+    "recentActivity",
+    "completedMissions",
+    "missionProgress",
+    "currentMissionBatch",
+    "quizScores",
+    "completedModules",
+    "honor_mission_cleanup_v1_done",
+  ];
+
+  for (const baseKey of keysToMigrate) {
+    const scoped = scopedKey(baseKey);
+    const scopedVal = localStorage.getItem(scoped);
+    if (scopedVal !== null) continue;
+    const legacyVal = localStorage.getItem(baseKey);
+    if (legacyVal !== null) {
+      localStorage.setItem(scoped, legacyVal);
+    }
+  }
+
+  localStorage.setItem(migrationFlag, "1");
+}
