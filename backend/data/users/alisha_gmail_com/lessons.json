@@ -12,5 +12,12 @@
     "moduleId": 1,
     "completed": true,
     "quizScore": 100
+  },
+  {
+    "id": "l_0cc237cc",
+    "lessonId": 3,
+    "moduleId": 2,
+    "completed": true,
+    "quizScore": 100
   }
 ]

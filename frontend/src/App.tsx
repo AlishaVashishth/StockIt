@@ -7,7 +7,7 @@ import Splash from './pages/Splash';
 import Onboarding from './pages/Onboarding';
 import Home from './pages/Home';
 import Learn from './pages/Learn';
-import LearnLesson from './pages/LearnLesson';
+import LessonOrQuizPage from './pages/LessonOrQuizPage';
 import Trade from './pages/Trade';
 import StockDetail from './pages/StockDetail';
 import TimeMachine from './pages/TimeMachine';
@@ -44,7 +44,8 @@ function AnimatedRoutes() {
             <Route path="/onboarding" element={<PageWrapper><Onboarding /></PageWrapper>} />
             <Route path="/home" element={<PageWrapper><Home /></PageWrapper>} />
             <Route path="/learn" element={<PageWrapper><Learn /></PageWrapper>} />
-            <Route path="/learn/:moduleId" element={<PageWrapper><LearnLesson /></PageWrapper>} />
+            <Route path="/learn/:moduleId" element={<PageWrapper><LessonOrQuizPage /></PageWrapper>} />
+            <Route path="/learn/:moduleId/:lessonId" element={<PageWrapper><LessonOrQuizPage /></PageWrapper>} />
             <Route path="/trade" element={<PageWrapper><Trade /></PageWrapper>} />
             <Route path="/trade/:symbol" element={<PageWrapper><StockDetail /></PageWrapper>} />
             <Route path="/loss-simulator" element={<PageWrapper><TimeMachine /></PageWrapper>} />

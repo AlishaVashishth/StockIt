@@ -8,6 +8,9 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { api } from '../api';
+import { courseData } from '../data/courseData';
+import { getCompletedItems, getNextIncompleteItem } from '../utils/progressUtils';
+import CongratsModal from '../components/CongratsModal';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -15,6 +18,8 @@ export default function Home() {
   const [indices, setIndices] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cachedProfile, setCachedProfile] = useState<any>(null);
+  const [completedItems, setCompletedItems] = useState<string[]>([]);
+  const [showCongrats, setShowCongrats] = useState(false);
   const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
   const MANDATORY_FALLBACKS = {
     nifty: { name: 'NIFTY 50', value: null, change: null, changePct: null },
@@ -92,6 +97,7 @@ export default function Home() {
     };
 
     loadDashboard();
+    setCompletedItems(getCompletedItems());
     refreshIndices();
     const interval = setInterval(async () => {
       await refreshIndices();
@@ -165,6 +171,15 @@ export default function Home() {
       : '--';
   const formatPct = (v: any) =>
     typeof v === 'number' && Number.isFinite(v) ? Math.abs(Number(v)).toFixed(2) : '--';
+
+  function handleContinueLearning() {
+    const next = getNextIncompleteItem(courseData);
+    if (!next) {
+      setShowCongrats(true);
+    } else {
+      navigate(`/learn/${next.module.id}/${next.lesson.id}`);
+    }
+  }
 
   return (
     <div className="relative min-h-screen w-full bg-bg-primary bg-dots flex flex-col">
@@ -282,6 +297,19 @@ export default function Home() {
             </div>
           </motion.div>
 
+          <motion.div variants={itemVariants} className="bg-bg-card border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-heading font-bold">Learning Progress</h3>
+              <span className="text-[11px] text-text-muted">{completedItems.length} completed</span>
+            </div>
+            <button
+              onClick={handleContinueLearning}
+              className="w-full py-3 rounded-xl bg-accent-gold text-bg-primary font-bold text-sm"
+            >
+              Continue Learning
+            </button>
+          </motion.div>
+
           {shouldTriggerLossDebrief && (
             <motion.div 
               variants={itemVariants}
@@ -365,6 +393,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </main>
+      <CongratsModal isOpen={showCongrats} onClose={() => setShowCongrats(false)} />
     </div>
   );
 }

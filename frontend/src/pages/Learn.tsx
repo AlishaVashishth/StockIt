@@ -7,9 +7,17 @@ import {
   Lightbulb, Target
 } from 'lucide-react';
 import { api } from '../api';
+import { courseData } from '../data/courseData';
+import {
+  getCompletedItems,
+  getNextIncompleteItem,
+  isCourseComplete,
+  isItemComplete,
+} from '../utils/progressUtils';
+import CongratsModal from '../components/CongratsModal';
 
 interface ModuleCardProps {
-  id: number;
+  id: string;
   number: string;
   status: 'COMPLETED' | 'IN_PROGRESS' | 'NOT_STARTED' | 'LOCKED' | 'LOCKED_TIER';
   title: string;
@@ -19,7 +27,7 @@ interface ModuleCardProps {
   lessons: string;
   xp: string;
   isProminent?: boolean;
-  onTap: (id: number, status: string) => void;
+  onTap: (id: string, status: string) => void;
 }
 
 function ModuleCard({ 
@@ -110,6 +118,8 @@ export default function Learn() {
   const navigate = useNavigate();
   const [toast, setToast] = useState<string | null>(null);
   const [data, setData] = useState<any[]>([]);
+  const [completedItems, setCompletedItems] = useState<string[]>([]);
+  const [showCongrats, setShowCongrats] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeConcept, setActiveConcept] = useState<any | null>(null);
@@ -126,11 +136,8 @@ export default function Learn() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [modulesRes, userRes] = await Promise.all([
-          api.getLearnModules(),
-          api.getUser()
-        ]);
-        setData(modulesRes);
+        const userRes = await api.getUser();
+        setData(courseData);
         setUser(userRes);
       } catch (err) {
         console.error(err);
@@ -141,12 +148,19 @@ export default function Learn() {
     fetchData();
   }, []);
 
-  const handleModuleTap = (id: number, status: string) => {
+  useEffect(() => {
+    setCompletedItems(getCompletedItems());
+  }, []);
+
+  const handleModuleTap = (id: string, status: string) => {
     if (status.startsWith('LOCKED')) {
       showToast("🔒 Locked. Tier requirements not met.");
       return;
     }
-    navigate(`/learn/${id}`);
+    const mod = courseData.find((m) => m.id === id);
+    if (!mod) return;
+    const nextInModule = mod.lessons.find((lesson) => !isItemComplete(lesson.id)) || mod.lessons[0];
+    navigate(`/learn/${mod.id}/${nextInModule.id}`);
   };
 
   if (loading || !user) {
@@ -156,8 +170,8 @@ export default function Learn() {
   // Map backend module progress to UI
   const modules: ModuleCardProps[] = data.map((mod: any, index: number) => {
     let status: 'COMPLETED' | 'IN_PROGRESS' | 'NOT_STARTED' | 'LOCKED' | 'LOCKED_TIER' = 'NOT_STARTED';
-    const completedLessons = Number(mod.completedLessons || 0);
-    const totalLessons = Number(mod.totalLessons || 1);
+    const completedLessons = mod.lessons.filter((lesson: any) => completedItems.includes(lesson.id)).length;
+    const totalLessons = Number(mod.lessons.length || 1);
     const progress = Math.min(100, Math.round((completedLessons / totalLessons) * 100));
 
     if (user.currentTier < mod.requiredTier) {
@@ -170,18 +184,31 @@ export default function Learn() {
 
     return {
       id: mod.id,
-      number: `MODULE 0${mod.id}`,
+      number: String(mod.title || '').toUpperCase(),
       status,
       title: mod.title,
-      description: mod.description,
-      caseStudy: mod.caseStudy,
+      description: mod.lessons?.[0]?.content || 'Start learning',
+      caseStudy: '',
       progress,
-      lessons: `${completedLessons}/${mod.totalLessons} lessons`,
-      xp: `+${mod.xpReward} XP`,
+      lessons: `${completedLessons}/${totalLessons} lessons`,
+      xp: `+100 XP`,
       isProminent: status === 'IN_PROGRESS',
       onTap: handleModuleTap
     };
   });
+
+  const handleContinueLearning = () => {
+    if (isCourseComplete(courseData)) {
+      setShowCongrats(true);
+      return;
+    }
+    const next = getNextIncompleteItem(courseData);
+    if (!next) {
+      setShowCongrats(true);
+      return;
+    }
+    navigate(`/learn/${next.module.id}/${next.lesson.id}`);
+  };
 
   const quickConcepts = [
     {
@@ -355,6 +382,12 @@ export default function Learn() {
             />
           </div>
           <p className="text-[11px] text-text-muted">Keep learning to increase your Tier level</p>
+          <button
+            onClick={handleContinueLearning}
+            className="mt-4 w-full py-3 rounded-xl bg-accent-gold text-bg-primary font-bold text-sm"
+          >
+            Continue Learning
+          </button>
         </motion.div>
 
         <div className="space-y-2">
@@ -465,6 +498,8 @@ export default function Learn() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CongratsModal isOpen={showCongrats} onClose={() => setShowCongrats(false)} />
     </div>
   );
 }
