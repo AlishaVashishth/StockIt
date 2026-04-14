@@ -98,7 +98,6 @@ export default function Profile() {
   const [portfolioData, setPortfolioData] = useState<any>(null);
   const [sortBy, setSortBy] = useState('P&L');
   const [isRefreshingAI, setIsRefreshingAI] = useState(false);
-  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
   const [showDetailedInsight, setShowDetailedInsight] = useState(false);
   const parsedAiInsight = useMemo(() => {
@@ -122,16 +121,36 @@ export default function Profile() {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'IN';
+
+  const fetchAllMarketPrices = async (): Promise<Record<string, number>> => {
+    const liveMap: Record<string, number> = {};
+    const pageSize = 30;
+    let offset = 0;
+    while (true) {
+      const page = await api.getStocks(pageSize, offset);
+      const stocks = Array.isArray(page) ? page : [];
+      if (stocks.length === 0) break;
+      for (const s of stocks) {
+        const symbol = String(s?.symbol || '').toUpperCase().replace('.NS', '').trim();
+        const price = Number(s?.currentPrice ?? NaN);
+        if (symbol && Number.isFinite(price) && price > 0) {
+          liveMap[symbol] = price;
+        }
+      }
+      if (stocks.length < pageSize) break;
+      offset += stocks.length;
+    }
+    return liveMap;
+  };
+
   useEffect(() => {
     const loadUser = async () => {
       try {
-        setIsRefreshingPrices(true);
         const [dashboard, portfolio] = await Promise.all([
           api.getDashboard(),
           api.getPortfolio()
         ]);
-        const symbols = (portfolio?.holdings || []).map((h: any) => h.stockSymbol);
-        const livePrices = await refreshHoldingPrices(symbols);
+        const livePrices = await fetchAllMarketPrices();
         const portfolioWithLivePrices = applyLivePricesToPortfolio(portfolio, livePrices);
         setUserData(dashboard?.user || null);
         if (dashboard?.user) {
@@ -140,8 +159,6 @@ export default function Profile() {
         setPortfolioData(portfolioWithLivePrices);
       } catch (err) {
         console.error(err);
-      } finally {
-        setIsRefreshingPrices(false);
       }
     };
     loadUser();
@@ -266,36 +283,24 @@ export default function Profile() {
           {[
             {
               label: 'Total Return',
-              value: isRefreshingPrices
-                ? '—'
-                : `${portfolioStats.totalReturn >= 0 ? '+' : ''}${portfolioStats.totalReturnPct.toFixed(2)}%`,
+              value: `${portfolioStats.totalReturn >= 0 ? '+' : ''}${portfolioStats.totalReturnPct.toFixed(2)}%`,
               color: portfolioStats.totalReturn >= 0 ? 'text-accent-green' : 'text-accent-red',
-              sub: isRefreshingPrices
-                ? 'Refreshing prices...'
-                : `${portfolioStats.totalReturn >= 0 ? '+' : ''}₹${Math.abs(portfolioStats.totalReturn).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`,
+              sub: `${portfolioStats.totalReturn >= 0 ? '+' : ''}₹${Math.abs(portfolioStats.totalReturn).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`,
             },
             {
               label: 'Best Holding',
-              value: isRefreshingPrices
-                ? '—'
-                : (portfolioStats.bestPerformer?.symbol || '—'),
+              value: portfolioStats.bestPerformer?.symbol || '—',
               color: 'text-accent-green',
-              sub: isRefreshingPrices
-                ? 'Refreshing prices...'
-                : portfolioStats.bestPerformer
+              sub: portfolioStats.bestPerformer
                 ? `${portfolioStats.bestPerformer.pnlPct >= 0 ? '+' : ''}${portfolioStats.bestPerformer.pnlPct.toFixed(2)}%`
                 : 'No holdings',
               isSmall: true
             },
             {
               label: 'Worst Holding',
-              value: isRefreshingPrices
-                ? '—'
-                : (portfolioStats.worstPerformer?.symbol || '—'),
+              value: portfolioStats.worstPerformer?.symbol || '—',
               color: 'text-accent-red',
-              sub: isRefreshingPrices
-                ? 'Refreshing prices...'
-                : portfolioStats.worstPerformer
+              sub: portfolioStats.worstPerformer
                 ? `${portfolioStats.worstPerformer.pnlPct >= 0 ? '+' : ''}${portfolioStats.worstPerformer.pnlPct.toFixed(2)}%`
                 : 'No holdings',
               isSmall: true
@@ -339,11 +344,11 @@ export default function Profile() {
                 <div className="relative z-10">
                   <p className="text-xs font-mono text-text-muted mb-1">Total Value</p>
                   <h2 className="text-[48px] font-heading font-bold text-text-primary leading-tight mb-1">
-                    {isRefreshingPrices ? '—' : <CountUp value={portfolioStats.totalValue} />}
+                    <CountUp value={portfolioStats.totalValue || 100000} />
                   </h2>
                   <div className="flex items-center space-x-2 mb-6">
                     <span className={`text-sm font-mono font-bold ${portfolioStats.totalReturn >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-                      {isRefreshingPrices ? '—' : `${portfolioStats.totalReturn >= 0 ? '+' : ''}₹${portfolioStats.totalReturn.toFixed(2)} (${portfolioStats.totalReturnPct.toFixed(2)}%)`}
+                      {`${portfolioStats.totalReturn >= 0 ? '+' : ''}₹${portfolioStats.totalReturn.toFixed(2)} (${portfolioStats.totalReturnPct.toFixed(2)}%)`}
                     </span>
                     <span className="text-[10px] text-text-muted">Since you started</span>
                   </div>
@@ -505,7 +510,7 @@ export default function Profile() {
                           <div className="flex justify-between items-center mb-3">
                             <p className="text-[10px] text-text-muted font-mono">{h.quantity} shares × ₹{h.avgBuyPrice.toFixed(2)}</p>
                             <p className="text-[10px] text-text-muted font-mono">
-                              LTP: {isRefreshingPrices ? '—' : `₹${h.currentPrice.toFixed(2)}`}
+                              LTP: ₹{Number(h.currentPrice || h.avgBuyPrice || 0).toFixed(2)}
                             </p>
                           </div>
                           <div className="flex justify-between items-end">

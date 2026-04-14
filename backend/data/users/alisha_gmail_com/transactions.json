@@ -31,5 +31,38 @@
     "price": 1351.1,
     "totalAmount": 1351.1,
     "createdAt": "2026-04-14T07:32:39Z"
+  },
+  {
+    "id": "137cc6a7-5d3a-4ac4-94e1-d2ca6b274ae3",
+    "stockSymbol": "TATAMOTORS",
+    "companyName": "TATAMOTORS",
+    "marketCap": "Unknown",
+    "type": "SELL",
+    "quantity": 1,
+    "price": 924.45,
+    "totalAmount": 924.45,
+    "createdAt": "2026-04-14T11:48:15Z"
+  },
+  {
+    "id": "1fbc78bb-6e4c-4fa5-a824-31cef0fb5992",
+    "stockSymbol": "BHARTIARTL",
+    "companyName": "Bharti Airtel Ltd",
+    "marketCap": "Large Cap",
+    "type": "BUY",
+    "quantity": 5,
+    "price": 1870.9,
+    "totalAmount": 9354.5,
+    "createdAt": "2026-04-14T11:52:07Z"
+  },
+  {
+    "id": "3d22aa06-8ea8-443c-b6ff-af8c6f769d61",
+    "stockSymbol": "BHARTIARTL",
+    "companyName": "Bharti Airtel Ltd",
+    "marketCap": "Large Cap",
+    "type": "SELL",
+    "quantity": 3,
+    "price": 1870.9,
+    "totalAmount": 5612.7,
+    "createdAt": "2026-04-14T11:52:36Z"
   }
 ]

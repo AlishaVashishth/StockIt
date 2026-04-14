@@ -1,18 +1,18 @@
 [
   {
-    "id": "fdd72db4-f100-48b3-aa7d-9a890b550f3f",
-    "stockSymbol": "TATAMOTORS",
-    "companyName": "Tata Motors Ltd",
-    "quantity": 1,
-    "avgBuyPrice": 924.45,
-    "sector": "Automobile"
-  },
-  {
     "id": "0e9b49fa-8981-4ecc-b0a4-9434daaa7f1e",
     "stockSymbol": "ICICIBANK",
     "companyName": "ICICI Bank Ltd",
     "quantity": 1,
     "avgBuyPrice": 1351.1,
     "sector": "Banking"
+  },
+  {
+    "id": "4410d93f-c7ac-47e3-8192-bd74624e803b",
+    "stockSymbol": "BHARTIARTL",
+    "companyName": "Bharti Airtel Ltd",
+    "quantity": 2,
+    "avgBuyPrice": 1870.9,
+    "sector": "Telecom"
   }
 ]

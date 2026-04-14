@@ -727,5 +727,82 @@
     "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.16% trend\n- Recommendation: Sell\n- Why: Latest close 1349.7 is lower than recent high 1356.5\n- Risk: Around 2% risk\n- Why not opposite: Trend is slightly negative\n\nDETAILED:\nThe trend is bearish due to a -0.16% decrease, indicating a slight downturn. With a latest close of 1349.7, which is lower than the recent high of 1356.5, it's a good time to sell. The recent closes, such as 1351.7 and 1351.5, are also higher than the current price, supporting the decision to sell. The low of 1345.1 is also close to the latest close, showing that the price is under pressure. Overall, selling seems like the best option given the current bearish trend and the numbers from the summary data.",
     "error": null,
     "timestamp": "2026-04-14T07:32:43.507133+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TATAMOTORS",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 1.01% change\n- Recommendation: Buy\n- Why: Current price 924.45 is higher than previous close 915.21\n- Risk: Approximately 5% risk\n- Why not opposite: Day high 933.69 is greater than day low 905.96\n\nDETAILED:\nThe trend is bullish as indicated by the 1.01% change in the current price. The latest close of 924.45 is also higher than the previous close of 915.21, showing an upward movement. The summary data shows a consistent latest close of 924.45 and a trend of 0.0%, but the recent closes are all at the same level, indicating a potential for further growth. With a day high of 933.69 and a day low of 905.96, the stock has shown its range, and the current price is closer to the high, making it a good buy.",
+    "error": null,
+    "timestamp": "2026-04-14T11:48:11.639701+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "TATAMOTORS",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 1.01% change\n- Recommendation: Buy\n- Why: Current price 924.45 is higher than previous close 915.21\n- Risk: Approximately 5% risk\n- Why not opposite: Day high 933.69 is greater than day low 905.96\n\nDETAILED:\nThe trend is bullish as indicated by the 1.01% change in the current price. The latest close of 924.45 is also higher than the previous close of 915.21, showing an upward movement. The summary data shows a consistent latest close of 924.45 and a trend of 0.0%, but the recent closes are all at the same level, indicating a potential for further growth. With a day high of 933.69 and a day low of 905.96, the stock has shown its range, and the current price is closer to the high, making it a good buy.",
+    "error": null,
+    "timestamp": "2026-04-14T11:48:11.641988+00:00"
+  },
+  {
+    "trigger": "SELL",
+    "symbol": "TATAMOTORS",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 1.01% change\n- Recommendation: Sell\n- Why: Current price 924.45 is near dayHigh 933.69\n- Risk: Around 1% risk\n- Why not opposite: Trend is low at 0.0%\n\nDETAILED:\nThe trend is bullish with a 1.01% change, indicating a slight increase in the stock price. However, considering the user's action trigger to sell, it's essential to look at the numbers. The current price of 924.45 is close to the day's high of 933.69, and the latest close is also 924.45, which is the same as the high and low in the summary data. The recent closes are all at 924.45, showing no significant movement. With the trend at 0.0%, it's not a strong bullish signal, and selling might be a good option to avoid potential losses. The risk is relatively low at around 1%, but it's crucial to consider the user's action trigger and the stable recent closes.",
+    "error": null,
+    "timestamp": "2026-04-14T11:48:21.281579+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Trend is negative with low at 1863.1\n\nDETAILED:\nThe trend for Bharti Airtel Ltd is bearish, indicated by a -0.35% trend. This suggests that the stock price is decreasing. With a latest close of 1870.9, which is lower than the recent high of 1879.4, it's a good time to sell. The stock has been fluctuating, with recent closes of 1874.3, 1869.8, 1864.6, and 1864.5, but the overall trend is downward. The low of 1863.1 also supports this bearish trend. Considering the risk level is medium and the trend is negative, selling the stock seems like the best option.",
+    "error": null,
+    "timestamp": "2026-04-14T11:52:06.899054+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Trend is negative with low at 1863.1\n\nDETAILED:\nThe trend for Bharti Airtel Ltd is bearish, indicated by a -0.35% trend. This suggests that the stock price is decreasing. With a latest close of 1870.9, which is lower than the recent high of 1879.4, it's a good time to sell. The stock has been fluctuating, with recent closes of 1874.3, 1869.8, 1864.6, and 1864.5, but the overall trend is downward. The low of 1863.1 also supports this bearish trend. Considering the risk level is medium and the trend is negative, selling the stock seems like the best option.",
+    "error": null,
+    "timestamp": "2026-04-14T11:52:06.901058+00:00"
+  },
+  {
+    "trigger": "BUY",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Trend is negative with a low of 1863.1\n\nDETAILED:\nThe trend for Bharti Airtel Ltd is bearish, indicated by a -0.35% trend. This suggests that the stock price is decreasing. With a latest close of 1870.9, which is lower than the recent high of 1879.4, it's a sign that the stock might continue to decline. The recent closes, such as 1874.3 and 1869.8, also show a fluctuating but overall downward movement. Considering the low of 1863.1, there's a risk of around 5% if the stock continues to drop. Therefore, it's recommended to sell the stock to minimize potential losses.",
+    "error": null,
+    "timestamp": "2026-04-14T11:52:16.431319+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Trend is negative with low at 1863.1\n\nDETAILED:\nThe trend for Bharti Airtel Ltd is bearish, indicated by a -0.35% trend. This suggests that the stock price is decreasing. With a latest close of 1870.9, which is lower than the recent high of 1879.4, it's a good time to sell. The stock has been fluctuating, with recent closes of 1874.3, 1869.8, 1864.6, and 1864.5, but the overall trend is downward. The low of 1863.1 also supports this bearish trend. Considering the risk level is medium and the trend is negative, selling the stock seems like the best option.",
+    "error": null,
+    "timestamp": "2026-04-14T11:52:30.913048+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Trend is negative with low at 1863.1\n\nDETAILED:\nThe trend for Bharti Airtel Ltd is bearish, indicated by a -0.35% trend. This suggests that the stock price is decreasing. With a latest close of 1870.9, which is lower than the recent high of 1879.4, it's a good time to sell. The stock has been fluctuating, with recent closes of 1874.3, 1869.8, 1864.6, and 1864.5, but the overall trend is downward. The low of 1863.1 also supports this bearish trend. Considering the risk level is medium and the trend is negative, selling the stock seems like the best option.",
+    "error": null,
+    "timestamp": "2026-04-14T11:52:32.554103+00:00"
+  },
+  {
+    "trigger": "SELL",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Day low 1838.0 is far from current price\n\nDETAILED:\nThe trend is bearish with a -0.35% decrease, indicating a downward movement. The latest close of 1870.9 is lower than the recent high of 1879.4, and also lower than some of the recent closes like 1874.3. This suggests that the stock price is falling. With a day low of 1838.0, there is a significant risk of the price dropping further, around 5% risk. Considering these factors, it's a good time to sell the stock. The recent closes, such as 1869.8 and 1864.6, also show a declining pattern, supporting the sell recommendation.",
+    "error": null,
+    "timestamp": "2026-04-14T11:52:42.072627+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is positive at -0.16% is still close to positive\n\nDETAILED:\nThe trend for ICICI Bank Ltd is bullish, considering the current price of 1351.1 is higher than the previous close of 1322.0, showing a 2.2% increase. The recent closes, such as 1351.7 and 1351.5, also indicate an upward movement. Although the trend percentage is -0.16%, which is slightly negative, the overall trend is still positive due to the high volume of 30572141 and the latest close of 1349.7 being close to the day high of 1357.0. With a market cap of Large Cap and a risk level of LOW, buying ICICI Bank Ltd seems like a good option, with the current price being near the high of 1356.5.",
+    "error": null,
+    "timestamp": "2026-04-14T12:00:42.615641+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is positive at -0.16% is still close to positive\n\nDETAILED:\nThe trend for ICICI Bank Ltd is bullish, considering the current price of 1351.1 is higher than the previous close of 1322.0, showing a 2.2% increase. The recent closes, such as 1351.7 and 1351.5, also indicate an upward movement. Although the trend percentage is -0.16%, which is slightly negative, the overall trend is still positive due to the high volume of 30572141 and the latest close of 1349.7 being close to the day high of 1357.0. With a market cap of Large Cap and a risk level of LOW, buying ICICI Bank Ltd seems like a good option, with the current price being near the high of 1356.5.",
+    "error": null,
+    "timestamp": "2026-04-14T12:00:42.618051+00:00"
   }
 ]
