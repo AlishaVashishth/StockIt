@@ -692,5 +692,40 @@
     "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.16% trend\n- Recommendation: Sell\n- Why: Latest close 1349.7 is lower than recent highs like 1356.5\n- Risk: Around 2% risk\n- Why not opposite: Day low 1296.7 is far from current price 1351.1\n\nDETAILED:\nThe trend is bearish due to the -0.16% trend, indicating a slight downturn. With the latest close at 1349.7 and a high of 1356.5, it seems the stock is losing momentum. The recent closes, such as 1351.7 and 1351.5, are also higher than the current price, suggesting a decline. Considering the day low of 1296.7 is significantly lower than the current price of 1351.1, it's wise to sell to minimize potential losses. The risk level is relatively low, around 2%, but it's still important to be cautious and sell to avoid further decline.",
     "error": null,
     "timestamp": "2026-04-14T07:19:25.138861+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Day low 1838.0 is far from current price 1870.9\n\nDETAILED:\nThe trend is bearish, indicated by a -0.35% trend, which suggests a downward movement. The latest close of 1870.9 is lower than the recent high of 1879.4, and also lower than some recent closes like 1874.3. This downward movement, along with a day low of 1838.0, indicates a potential for further decline, making it a good time to sell. The risk is moderate, around 5%, considering the stock's volatility and recent price movements, such as the low of 1863.1 and high of 1879.4.",
+    "error": null,
+    "timestamp": "2026-04-14T07:31:47.426092+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "BHARTIARTL",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.35% trend\n- Recommendation: Sell\n- Why: Latest close 1870.9 is lower than recent high 1879.4\n- Risk: Around 5% risk\n- Why not opposite: Day low 1838.0 is far from current price 1870.9\n\nDETAILED:\nThe trend is bearish, indicated by a -0.35% trend, which suggests a downward movement. The latest close of 1870.9 is lower than the recent high of 1879.4, and also lower than some recent closes like 1874.3. This downward movement, along with a day low of 1838.0, indicates a potential for further decline, making it a good time to sell. The risk is moderate, around 5%, considering the stock's volatility and recent price movements, such as the low of 1863.1 and high of 1879.4.",
+    "error": null,
+    "timestamp": "2026-04-14T07:31:50.849963+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is positive with a high of 1356.5\n\nDETAILED:\nThe trend is bullish, indicated by a 2.2% change and a current price of 1351.1, which is higher than the previous close of 1322.0. The recent closes, such as 1351.7 and 1351.5, also suggest an upward movement. Although the trend percentage is -0.16%, the overall data, including a day high of 1357.0 and a latest close of 1349.7, indicates a positive direction. With a large market cap and low risk level, buying ICICI Bank Ltd stock seems like a good option, considering the strong digital banking growth and broad loan book.",
+    "error": null,
+    "timestamp": "2026-04-14T07:32:28.348222+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is positive with a high of 1356.5\n\nDETAILED:\nThe trend is bullish, indicated by a 2.2% change and a current price of 1351.1, which is higher than the previous close of 1322.0. The recent closes, such as 1351.7 and 1351.5, also suggest an upward movement. Although the trend percentage is -0.16%, the overall data, including a day high of 1357.0 and a latest close of 1349.7, indicates a positive direction. With a large market cap and low risk level, buying ICICI Bank Ltd stock seems like a good option, considering the strong digital banking growth and broad loan book.",
+    "error": null,
+    "timestamp": "2026-04-14T07:32:28.349969+00:00"
+  },
+  {
+    "trigger": "SELL",
+    "symbol": "ICICIBANK",
+    "response": "CONCISE BULLETS:\n- Trend: Bearish with -0.16% trend\n- Recommendation: Sell\n- Why: Latest close 1349.7 is lower than recent high 1356.5\n- Risk: Around 2% risk\n- Why not opposite: Trend is slightly negative\n\nDETAILED:\nThe trend is bearish due to a -0.16% decrease, indicating a slight downturn. With a latest close of 1349.7, which is lower than the recent high of 1356.5, it's a good time to sell. The recent closes, such as 1351.7 and 1351.5, are also higher than the current price, supporting the decision to sell. The low of 1345.1 is also close to the latest close, showing that the price is under pressure. Overall, selling seems like the best option given the current bearish trend and the numbers from the summary data.",
+    "error": null,
+    "timestamp": "2026-04-14T07:32:43.507133+00:00"
   }
 ]

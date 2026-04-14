@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -21,6 +21,12 @@ import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
 import MarketTicker from './components/MarketTicker';
 import XPToast from './components/XPToast';
+import { getCompletedItems } from './utils/progressUtils';
+import { checkAndAdvanceBatch, getCompletedMissions } from './utils/missionUtils';
+import { syncMissionProgress } from './utils/missionEngine';
+import { missionsData } from './data/missionsData';
+import { addXP } from './utils/xpUtils';
+import { removeRecentActivityByText } from './utils/activityUtils';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -78,6 +84,37 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    const CLEANUP_KEY = "honor_mission_cleanup_v1_done";
+    if (localStorage.getItem(CLEANUP_KEY) !== "1") {
+      const completed = getCompletedMissions();
+      const honorCompleted = missionsData.filter(
+        (m) => m.verificationType === "honor" && completed.includes(m.id)
+      );
+      if (honorCompleted.length > 0) {
+        let updated = [...completed];
+        honorCompleted.forEach((mission) => {
+          const completionTs = localStorage.getItem(`mission_completed_at_${mission.id}`);
+          // If there is no explicit manual completion timestamp, treat as legacy invalid completion.
+          if (!completionTs) {
+            updated = updated.filter((id) => id !== mission.id);
+            addXP(-mission.xp, `Cleanup invalid honor mission: ${mission.title}`);
+            removeRecentActivityByText(`Completed Mission: ${mission.title}`);
+          }
+        });
+        localStorage.setItem("completedMissions", JSON.stringify(updated));
+      }
+      localStorage.setItem(CLEANUP_KEY, "1");
+    }
+
+    const completedLessons = getCompletedItems();
+    const quizScores = JSON.parse(localStorage.getItem("quizScores") || "[]");
+    const completedModules = JSON.parse(localStorage.getItem("completedModules") || "[]");
+
+    syncMissionProgress({ completedLessons, quizScores, completedModules });
+    checkAndAdvanceBatch();
+  }, []);
+
   return (
     <BrowserRouter>
       <AnimatedRoutes />

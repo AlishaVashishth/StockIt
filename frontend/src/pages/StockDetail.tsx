@@ -5,6 +5,7 @@ import {
   ArrowLeft, Star, Plus, Minus, ChevronDown, RefreshCw, Check
 } from 'lucide-react';
 import { api } from '../api';
+import { fireMissionEvent } from '../utils/missionEngine';
 
 const TIMEFRAMES = ['1D', '1W', '1M', '3M', '1Y'];
 
@@ -216,6 +217,8 @@ export default function StockDetail() {
     try {
       if (buySell === 'BUY') {
         await api.buyTrade(symbol, quantity, orderType.toUpperCase());
+        fireMissionEvent("stock_added", { ticker: symbol });
+        fireMissionEvent("stock_held_day", { incrementBy: 1 });
       } else {
         await api.sellTrade(symbol, quantity);
       }

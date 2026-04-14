@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, animate, useMotionValue, useTransform } from 'framer-motion';
 import { 
   CheckCircle2, 
-  Lock, 
   RefreshCw,
   ChevronRight
 } from 'lucide-react';
@@ -13,12 +12,17 @@ import { getCompletedItems, getNextIncompleteItem } from '../utils/progressUtils
 import CongratsModal from '../components/CongratsModal';
 import { missionsData } from '../data/missionsData';
 import {
+  checkAndAdvanceBatch,
   completeMission,
+  getActiveMissions,
+  getCompletedMissions,
   getMissionProgress,
   isMissionComplete,
-  updateMissionProgress,
 } from '../utils/missionUtils';
 import { addXP, getCurrentLevel, getTotalXP, getXPProgress } from '../utils/xpUtils';
+import { addRecentActivity, removeRecentActivityByText } from '../utils/activityUtils';
+import MissionConfirmModal from '../components/MissionConfirmModal';
+import UndoSnackbar from '../components/UndoSnackbar';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -32,8 +36,12 @@ export default function Home() {
   const [totalXP, setTotalXP] = useState(0);
   const [missionDone, setMissionDone] = useState<string[]>([]);
   const [missionProgressMap, setMissionProgressMap] = useState<Record<string, { current: number; target: number }>>({});
+  const [activeMissions, setActiveMissions] = useState<any[]>([]);
   const [recentActivityLog, setRecentActivityLog] = useState<Array<{ text: string; date: string }>>([]);
   const [xpMessage, setXpMessage] = useState<string | null>(null);
+  const [newMissionBanner, setNewMissionBanner] = useState(false);
+  const [confirmMission, setConfirmMission] = useState<any | null>(null);
+  const [undoState, setUndoState] = useState<{ open: boolean; missionId?: string; xp?: number; title?: string; timeoutAt?: number }>({ open: false });
   const USER_PROFILE_CACHE_KEY = 'stockit_user_profile_cache';
   const MANDATORY_FALLBACKS = {
     nifty: { name: 'NIFTY 50', value: null, change: null, changePct: null },
@@ -97,7 +105,8 @@ export default function Home() {
     const refreshLocalStats = () => {
       setCompletedItems(getCompletedItems());
       setTotalXP(getTotalXP());
-      setMissionDone(missionsData.filter((m) => isMissionComplete(m.id)).map((m) => m.id));
+      setMissionDone(getCompletedMissions());
+      setActiveMissions(getActiveMissions());
       const progressMap: Record<string, { current: number; target: number }> = {};
       missionsData.forEach((m) => {
         progressMap[m.id] = getMissionProgress(m.id);
@@ -125,10 +134,24 @@ export default function Home() {
     loadDashboard();
     refreshLocalStats();
     refreshIndices();
+    const onMissionEvent = () => refreshLocalStats();
+    const onNewMissions = () => {
+      setNewMissionBanner(true);
+      setTimeout(() => setNewMissionBanner(false), 2500);
+      refreshLocalStats();
+    };
+    window.addEventListener("mission-completed", onMissionEvent);
+    window.addEventListener("mission-progress", onMissionEvent);
+    window.addEventListener("new-missions-unlocked", onNewMissions);
     const interval = setInterval(async () => {
       await refreshIndices();
     }, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("mission-completed", onMissionEvent);
+      window.removeEventListener("mission-progress", onMissionEvent);
+      window.removeEventListener("new-missions-unlocked", onNewMissions);
+    };
   }, [count]);
 
   if (loading || !data) {
@@ -166,34 +189,50 @@ export default function Home() {
   const currentLevel = getCurrentLevel();
   const xpProgress = getXPProgress(totalXP);
 
-  const handleMissionClick = (mission: any) => {
-    const done = isMissionComplete(mission.id);
-    if (done) return;
+  const handleHonorMark = (mission: any) => {
+    if (isMissionComplete(mission.id)) return;
+    setConfirmMission(mission);
+  };
 
-    if (mission.type === "progress") {
-      const prog = getMissionProgress(mission.id);
-      const nextCurrent = Math.min((prog.current || 0) + 1, mission.target);
-      updateMissionProgress(mission.id, nextCurrent, mission.target);
-      if (nextCurrent < mission.target) {
-        setMissionProgressMap((prev) => ({ ...prev, [mission.id]: { current: nextCurrent, target: mission.target } }));
-        setXpMessage(`Progress updated: ${nextCurrent}/${mission.target}`);
-        setTimeout(() => setXpMessage(null), 2000);
-        return;
-      }
-    }
-
-    const xpAwarded = completeMission(mission.id, mission.xp);
+  const confirmHonorMission = () => {
+    if (!confirmMission) return;
+    const mission = confirmMission;
+    setConfirmMission(null);
+    const xpAwarded = completeMission(mission.id, mission.xp, { allowHonor: true });
     if (xpAwarded > 0) {
       addXP(mission.xp, `Completed mission: ${mission.title}`);
-      const activity = JSON.parse(localStorage.getItem("recentActivity") || "[]");
-      activity.unshift({ text: `Completed Mission: ${mission.title}`, date: new Date().toISOString() });
-      localStorage.setItem("recentActivity", JSON.stringify(activity.slice(0, 20)));
+      addRecentActivity(`Completed Mission: ${mission.title}`);
+      const advanced = checkAndAdvanceBatch();
       setXpMessage(`+${mission.xp} XP earned!`);
       setTimeout(() => setXpMessage(null), 2000);
-      setTotalXP(getTotalXP());
-      setMissionDone(missionsData.filter((m: any) => isMissionComplete(m.id)).map((m: any) => m.id));
-      setRecentActivityLog(activity.slice(0, 20));
+      const now = Date.now();
+      localStorage.setItem(`mission_completed_at_${mission.id}`, String(now));
+      setUndoState({ open: true, missionId: mission.id, xp: mission.xp, title: mission.title, timeoutAt: now + 60000 });
+      setTimeout(() => {
+        setUndoState((s) => (s.missionId === mission.id ? { open: false } : s));
+      }, 60000);
+      window.dispatchEvent(new CustomEvent("mission-completed", { detail: { missionId: mission.id } }));
+      if (advanced) {
+        window.dispatchEvent(new CustomEvent("new-missions-unlocked"));
+      }
     }
+  };
+
+  const undoHonorMission = () => {
+    if (!undoState.open || !undoState.missionId || !undoState.timeoutAt) return;
+    if (Date.now() > undoState.timeoutAt) {
+      setUndoState({ open: false });
+      return;
+    }
+    const completed = getCompletedMissions().filter((id) => id !== undoState.missionId);
+    localStorage.setItem("completedMissions", JSON.stringify(completed));
+    addXP(-(undoState.xp || 0), `Undid mission: ${undoState.title || undoState.missionId}`);
+    removeRecentActivityByText(`Completed Mission: ${undoState.title}`);
+    localStorage.removeItem(`mission_completed_at_${undoState.missionId}`);
+    setUndoState({ open: false });
+    setXpMessage("Mission completion undone");
+    setTimeout(() => setXpMessage(null), 1800);
+    window.dispatchEvent(new CustomEvent("mission-progress", { detail: { missionId: undoState.missionId } }));
   };
 
   const globalItems = Array.isArray(indices?.global) ? indices.global : [];
@@ -438,16 +477,16 @@ export default function Home() {
               </button>
             </div>
             {xpMessage && <p className="text-xs text-accent-gold font-bold">{xpMessage}</p>}
+            {newMissionBanner && <p className="text-xs text-accent-green font-bold">🎯 New Missions Unlocked!</p>}
 
             <div className="space-y-3">
-              {missionsData.map((m: any, i: number) => {
+              {activeMissions.map((m: any, i: number) => {
                 const isComplete = missionDone.includes(m.id);
                 const progress = missionProgressMap[m.id] || { current: 0, target: m.target || 1 };
                 return (
-                  <button
+                  <div
                     key={i}
-                    onClick={() => handleMissionClick(m)}
-                    className={`w-full flex items-center p-4 rounded-xl border border-border text-left ${isComplete ? 'bg-bg-card opacity-80' : 'bg-bg-card cursor-pointer'}`}
+                    className={`w-full flex items-center p-4 rounded-xl border border-border text-left ${isComplete ? 'bg-bg-card opacity-80' : 'bg-bg-card'}`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 ${isComplete ? 'bg-accent-green/20' : 'bg-accent-gold/20'}`}>
                       {isComplete ? <CheckCircle2 size={18} className="text-accent-green" /> : <RefreshCw size={18} className="text-accent-gold animate-spin-slow" />}
@@ -455,14 +494,25 @@ export default function Home() {
                     <div className="flex-1">
                       <p className={`text-sm text-text-primary ${isComplete ? 'line-through decoration-text-muted' : ''}`}>{m.title}</p>
                       {!isComplete && <p className="text-[10px] text-accent-gold mt-1">{m.description}</p>}
-                      {!isComplete && m.type === 'progress' && (
+                      {!isComplete && (m.verificationType === 'auto' || m.verificationType === 'progress') && (
+                        <p className="text-[10px] text-text-muted mt-1">Auto-tracked</p>
+                      )}
+                      {!isComplete && m.verificationType === 'progress' && (
                         <p className="text-[10px] text-text-muted">{progress.current}/{progress.target} complete</p>
                       )}
                     </div>
+                    {!isComplete && m.verificationType === 'honor' && (
+                      <button
+                        onClick={() => handleHonorMark(m)}
+                        className="mr-2 px-3 py-1 rounded-lg bg-accent-gold text-bg-primary text-[10px] font-bold"
+                      >
+                        Mark as Done
+                      </button>
+                    )}
                     <div className={`px-2 py-0.5 rounded border ${isComplete ? 'bg-accent-green/10 border-accent-green/20 text-accent-green' : 'bg-accent-gold/10 border-accent-gold/20 text-accent-gold'}`}>
                       <span className="text-[10px] font-bold">+{m.xp} XP</span>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -488,6 +538,17 @@ export default function Home() {
         </motion.div>
       </main>
       <CongratsModal isOpen={showCongrats} onClose={() => setShowCongrats(false)} />
+      <MissionConfirmModal
+        isOpen={!!confirmMission}
+        mission={confirmMission}
+        onConfirm={confirmHonorMission}
+        onCancel={() => setConfirmMission(null)}
+      />
+      <UndoSnackbar
+        open={undoState.open}
+        text="Mission marked complete. Undo?"
+        onUndo={undoHonorMission}
+      />
     </div>
   );
 }

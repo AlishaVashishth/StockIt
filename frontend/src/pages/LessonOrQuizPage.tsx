@@ -10,6 +10,8 @@ import {
   markItemComplete,
 } from '../utils/progressUtils';
 import { addXP, calculateQuizXP, XP_VALUES } from '../utils/xpUtils';
+import { fireMissionEvent } from '../utils/missionEngine';
+import { addRecentActivity } from '../utils/activityUtils';
 
 type Question = {
   question: string;
@@ -54,18 +56,23 @@ export default function LessonOrQuizPage() {
     if (next) navigate(`/learn/${next.module.id}/${next.lesson.id}`);
   }
 
-  function addRecentActivity(text: string) {
-    const activity = JSON.parse(localStorage.getItem("recentActivity") || "[]");
-    activity.unshift({ text, date: new Date().toISOString() });
-    localStorage.setItem("recentActivity", JSON.stringify(activity.slice(0, 20)));
-  }
-
   function handleComplete() {
     const wasCompleted = isItemComplete(currentLessonId);
     markItemComplete(currentLessonId);
     if (!wasCompleted) {
       addXP(XP_VALUES.lesson_complete, `Completed lesson: ${item.title}`);
       addRecentActivity(`Completed Lesson: ${item.title}`);
+      fireMissionEvent("lesson_complete", { lessonId: currentLessonId });
+      fireMissionEvent("learning_day");
+    }
+    const moduleDone = module.lessons.every((l) => isItemComplete(l.id));
+    if (moduleDone) {
+      const completedModules = JSON.parse(localStorage.getItem("completedModules") || "[]");
+      if (!completedModules.includes(module.id)) {
+        completedModules.push(module.id);
+        localStorage.setItem("completedModules", JSON.stringify(completedModules));
+        fireMissionEvent("module_complete", { moduleId: module.id });
+      }
     }
     gotoNextIncompleteOrCongrats();
   }
@@ -151,6 +158,22 @@ export default function LessonOrQuizPage() {
                   if (!wasCompleted) {
                     addXP(xpEarned, `Completed quiz: ${item.title} (${Math.round(scorePercent)}%)`);
                     addRecentActivity(`Completed Quiz: ${item.title} — earned ${xpEarned} XP`);
+                    const scores = JSON.parse(localStorage.getItem("quizScores") || "[]");
+                    scores.push(scorePercent);
+                    localStorage.setItem("quizScores", JSON.stringify(scores));
+                    fireMissionEvent("quiz_complete", { score: scorePercent });
+                    if (scorePercent >= 80) fireMissionEvent("quiz_score_80", { score: scorePercent });
+                    if (scorePercent >= 100) fireMissionEvent("quiz_score_100", { score: scorePercent });
+                    fireMissionEvent("learning_day");
+                  }
+                  const moduleDone = module.lessons.every((l) => isItemComplete(l.id));
+                  if (moduleDone) {
+                    const completedModules = JSON.parse(localStorage.getItem("completedModules") || "[]");
+                    if (!completedModules.includes(module.id)) {
+                      completedModules.push(module.id);
+                      localStorage.setItem("completedModules", JSON.stringify(completedModules));
+                      fireMissionEvent("module_complete", { moduleId: module.id });
+                    }
                   }
                 }}
                 className="mt-4 w-full py-3 rounded-xl bg-accent-gold text-bg-primary font-bold"
