@@ -84,7 +84,10 @@ APIs
 •	Finnhub (market data)
 •	Frontend URL 
 •	Groq (AI processing)
-________________________________________
+GROQ_API_KEY=yourkey
+FRONTEND_URL=yourkey
+FINNHUB_API_KEY=yourkey
+_________________
  System Architecture
  <img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/2f4f571d-ea21-483a-95b4-8810f4ded7b2" />
 
