@@ -120,38 +120,37 @@ Best/worst performer cards — surfaced automatically from live price enrichment
 P&L enrichment — the backend recomputes current holding values against live prices on every /api/portfolio request, so numbers are always fresh
 Transaction history — full trade log accessible via /api/portfolio/transactions
 
-
 ## Tech Stack
 LayerTechnologyFrontendReact + Vite, TypeScript / JavaScript, Tailwind CSS, Framer MotionBackendFastAPI (Python)Market DataFinnhub API (primary), Yahoo Finance / yfinance (fallback)AI ProcessingGroq API
 
 ## System Architecture
  <img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/2f4f571d-ea21-483a-95b4-8810f4ded7b2" />
-Data Flow
-Stock Data Flow
+## Data Flow
+1. Stock Data Flow
 
 Frontend requests stock data
 Backend fetches from Finnhub / Yahoo Finance
 Normalised response is returned to the UI
 
-Portfolio Flow
+2. Portfolio Flow
 
 Backend computes real-time holding values against live prices
 Frontend enhances UI with visual components (charts, cards, P&L indicators)
 
-User Flow
+3. User Flow
 
 Session initiated via email
 All user data stored per-user in JSON files on the backend
 
 
-API Endpoints
-User
+## API Endpoints
+- User
 MethodEndpointDescriptionPOST/api/user/start-sessionInitialise or resume a user sessionGET/api/userFetch current user profile and progress
-Stocks
+- Stocks
 MethodEndpointDescriptionGET/api/stocksPaginated list of available stocks with live pricesGET/api/stocks/{symbol}Full detail for a specific stock including OHLCV data
-Trades
+- Trades
 MethodEndpointDescriptionPOST/api/trades/buyExecute a paper buy orderPOST/api/trades/sellExecute a paper sell order
-AI
+- AI
 MethodEndpointDescriptionPOST/api/ai/mentorSend a message to the contextual AI mentorPOST/api/ai/analyze-portfolioTrigger a full AI portfolio analysis
 
 ## Database Design
@@ -164,21 +163,21 @@ Learning progress — completed lessons, quiz scores, active and completed missi
 AI interaction logs — persisted conversation history for mentor continuity
 
 
-Performance Analysis
-Current Bottlenecks
+## Performance Analysis
+1. Current Bottlenecks
 
 Frequent polling every 10 seconds creates repeated network load
 Duplicate API calls across pages with no shared cache layer
 Lack of centralised state management leads to redundant fetches
 
-Optimization Opportunities
+2. Optimization Opportunities
 
 Implement TTL-based caching on the backend to reduce upstream API calls
 Adopt React Query on the frontend for smart caching, deduplication, and background refetching
 Introduce a global state management solution (e.g. Zustand or Redux Toolkit) to eliminate data duplication across components
 
 
-State Management
+## State Management
 Current approach:
 
 Local component state managed via useState and useEffect
@@ -198,7 +197,7 @@ Passwords stored in plaintext — hashing with bcrypt or argon2 is recommended b
 Identity relies on a header-based system rather than signed session tokens
 
 
-Installation & Setup
+## Installation & Setup
 Prerequisites
 
 Node.js (v18 or above recommended)
@@ -219,7 +218,7 @@ npm install
 npm run dev
 The frontend will be available at http://localhost:3000 and the backend API at http://localhost:8000.
 
-Project Structure
+## Project Structure
 stockit/
 ├── backend/
 │   ├── main.py
@@ -231,14 +230,14 @@ stockit/
     ├── components/
     └── utils/
 
-Impact
+## Impact
 
 Makes investing accessible for beginners by removing the barrier of real financial risk
 Reduces fear of financial loss through realistic simulation in a consequence-free environment
 Encourages long-term financial literacy through consistent, habit-forming practice
 
 
-Future Improvements
+## Future Improvements
 
 Real-time WebSocket updates to replace polling-based data refresh
 Expanded mentorship layer with more personalised learning paths
@@ -246,7 +245,7 @@ Advanced AI insights including sentiment analysis and sector trend detection
 Social trading features — follow other learners, share portfolios, and compare performance
 
 
-Acknowledgements
+## Acknowledgements
 
 Finnhub API — real-time stock market data
 Yahoo Finance (yfinance) — fallback market data
