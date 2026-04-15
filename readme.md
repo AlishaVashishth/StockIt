@@ -1,9 +1,9 @@
-StockIt — Learn Investing Without Losing Money
+## StockIt — Learn Investing Without Losing Money
 
 A gamified stock market simulator with AI mentorship, real-time data, and risk-free paper trading.
 
 
-Table of Contents
+## Table of Contents
 
 Overview
 Problem Statement
@@ -24,21 +24,21 @@ Future Improvements
 Acknowledgements
 
 
-Overview
+## Overview
 StockIt is an intelligent paper trading and financial education platform that addresses the critical gap between financial awareness and actual investing participation. By combining live-like market data, AI-powered mentorship, and gamified learning mechanics, the platform gives users a psychologically safe environment to build genuine investing skills — before any real money is on the line.
 
-Problem Statement
+## Problem Statement
 Most young adults are financially aware but investing-inactive. Three core barriers drive this gap:
 Fear of financial loss — Even small losses feel devastating to first-time investors, creating paralysis rather than participation.
 Lack of practical experience — Financial education is overwhelmingly theoretical. Textbooks explain how markets work; they don't teach how to behave inside one.
 Apps built for execution, not learning — Existing brokerage and trading apps are optimised for fast transactions. They surface prices, charts, and order books, but provide almost no scaffolding for someone who is still learning what any of it means.
 Despite growing awareness of equities and personal finance — driven by social media, fintech marketing, and post-pandemic interest — actual retail participation among young investors remains disproportionately low.
 
-Our Solution
+## Our Solution
 StockIt reimagines the investing on-ramp by integrating four pillars into one cohesive platform:
 PillarWhat It DoesPaper TradingBuy and sell real stocks with virtual cash using live-like market data from FinnhubAI MentorshipGet context-aware portfolio feedback, loss and risk explanations, behavioural analysis, and stock analysis from a Groq-powered assistantGamified LearningEarn XP, complete missions, maintain daily streaks, and progress through structured lessons and quizzesScenario SimulationsStep into historical market crash scenarios to understand risk management without real consequences
 
-User Interface
+## User Interface
 StockIt features a mobile-first, tab-based interface designed for daily engagement and progressive skill-building.
 Home Dashboard
    <img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/fe99ef8e-0c5d-4e4a-b648-26afb08e5137" />
