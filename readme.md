@@ -125,6 +125,8 @@ LayerTechnologyFrontendReact + Vite, TypeScript / JavaScript, Tailwind CSS, Fram
 
 ## System Architecture
  <img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/2f4f571d-ea21-483a-95b4-8810f4ded7b2" />
+ </br>
+ 
 ## Data Flow
 1. Stock Data Flow
 
