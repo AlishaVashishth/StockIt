@@ -42,15 +42,18 @@ PillarWhat It DoesPaper TradingBuy and sell real stocks with virtual cash using 
 StockIt features a mobile-first, tab-based interface designed for daily engagement and progressive skill-building.
 Home Dashboard
    <img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/fe99ef8e-0c5d-4e4a-b648-26afb08e5137" />
+   </br>
 The personal command centre — displays your portfolio snapshot, live market indices (Nifty 50, Sensex, global markets), active missions with progress bars, your daily streak, and a recent activity feed. Indices refresh automatically every 10 seconds.
 
 Trading Screen
 <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
+</br>
 The core trading experience, designed to feel like a real brokerage terminal. Browse a paginated, searchable list of stocks with live prices, and a market status banner indicating whether the exchange is open or closed. Manual refresh and 10-second auto-polling keep data current.
 
 Stock Detail and Analysis
  <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c6a9e54b-7bd1-4303-9ab1-b4b9089c929d" />
  <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c42a9d8b-5fa3-4755-af0c-9c79404ddd00" />
+ </br>
 Deep-dive into any stock before committing. Features an interactive OHLCV chart across multiple time periods (1D, 1W, 1M, 3M, 1Y), AI-generated contextual insights about the stock's recent movement, and an inline buy/sell panel so you never have to navigate away to trade.
 
 Portfolio Analytics
@@ -60,6 +63,7 @@ Portfolio Analytics
       <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
 
    </div>
+   </br>
 A comprehensive performance dashboard showing:
 
 Total portfolio value and unrealised P&L
@@ -72,21 +76,23 @@ An AI analysis button triggers a Groq-powered deep-dive of your entire portfolio
 
 Learning & Gamification
 <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
+</br>
 Structured lessons and multiple-choice quizzes covering investing fundamentals. Each completion awards XP, advances your level tier, and can complete active missions. A streak system rewards daily engagement.
 
 Loss Simulator (Time Machine)
 <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
+</br>
 Presents historical market crash scenarios — users make allocation decisions and see how they would have played out. Scores are tracked and explained, turning past market disasters into personalised learning moments.
 
-Key Features
-AI-Powered Investing Assistant
+## Key Features
+1. AI-Powered Investing Assistant
 The Groq-backed AI mentor operates across three distinct modes:
 
-Portfolio analysis — sends your full holdings, P&L, and diversity score to the model and returns a structured critique with actionable suggestions
+2. Portfolio analysis — sends your full holdings, P&L, and diversity score to the model and returns a structured critique with actionable suggestions
 Contextual mentor chat — answers natural-language investing questions with awareness of your current portfolio and learning progress
 Session continuity — interaction history is persisted per user so the assistant builds context across sessions
 
-Real-Time Market Simulation
+3. Real-Time Market Simulation
 
 Finnhub integration as the primary data provider for live quotes, company profiles, and OHLCV candle data
 Yahoo Finance (yfinance) fallback — if Finnhub fails or rate-limits, the backend seamlessly falls back to yfinance for quotes and historical data
@@ -94,20 +100,20 @@ Static fallback values as a final safety net, ensuring the UI never breaks due t
 Live indices — Nifty 50, Sensex, and select global indices fetched and normalised every 10 seconds on the home and trading screens
 Normalised quote objects returned by the backend mean the frontend never needs to know which data source was used
 
-Gamified Learning System
+4. Gamified Learning System
 
 XP & level tiers — every trade, lesson completion, quiz pass, and mission finish awards XP; users level up through named tiers
 Daily streaks — the backend tracks consecutive active days; the frontend displays current streak with visual indicators
 Missions — time-limited challenges (e.g. "Complete 3 trades this week", "Finish the Diversification lesson") that reward bonus XP on completion
 Lessons & quizzes — a structured curriculum stored in static data files, served via the /api/learn router, with per-user completion state persisted in JSON
 
-Risk & Scenario Simulator
+5. Risk & Scenario Simulator
 
 Pre-built historical scenarios (market crashes, sector collapses, black swan events) available via the /api/loss-simulator router
 Users make allocation decisions within the scenario, then see scored outcomes
 Scores are explained with AI-generated commentary connecting the simulated loss to real risk management principles
 
-Portfolio Intelligence
+6. Portfolio Intelligence
 
 Diversity score — a proprietary metric calculated by the backend that penalises over-concentration in a single stock or sector
 Best/worst performer cards — surfaced automatically from live price enrichment on each portfolio fetch
@@ -115,10 +121,10 @@ P&L enrichment — the backend recomputes current holding values against live pr
 Transaction history — full trade log accessible via /api/portfolio/transactions
 
 
-Tech Stack
+## Tech Stack
 LayerTechnologyFrontendReact + Vite, TypeScript / JavaScript, Tailwind CSS, Framer MotionBackendFastAPI (Python)Market DataFinnhub API (primary), Yahoo Finance / yfinance (fallback)AI ProcessingGroq API
 
-System Architecture
+## System Architecture
  <img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/2f4f571d-ea21-483a-95b4-8810f4ded7b2" />
 Data Flow
 Stock Data Flow
@@ -148,7 +154,7 @@ MethodEndpointDescriptionPOST/api/trades/buyExecute a paper buy orderPOST/api/tr
 AI
 MethodEndpointDescriptionPOST/api/ai/mentorSend a message to the contextual AI mentorPOST/api/ai/analyze-portfolioTrigger a full AI portfolio analysis
 
-Database Design
+## Database Design
 User data is stored in flat JSON files on the backend, scoped per user. The following entities are tracked:
 
 User profile — session info, XP, level tier, streak data
