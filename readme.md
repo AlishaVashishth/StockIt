@@ -257,7 +257,6 @@ https://stockit-production-2ac3.up.railway.app
 
 </div>
 
-### Project Structure<br>
 ## Project Structure
 
 ```
