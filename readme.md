@@ -5,23 +5,23 @@ A gamified stock market simulator with AI mentorship, real-time data, and risk-f
 
 ## Table of Contents
 
-Overview
-Problem Statement
-Our Solution
-User Interface
-Key Features
-Tech Stack
-System Architecture
-API Endpoints
-Database Design
-Performance Analysis
-State Management
-Security Considerations
-Installation & Setup
-Project Structure
-Impact
-Future Improvements
-Acknowledgements
+Overview<br>
+Problem Statement<br>
+Our Solution<br>
+User Interface<br>
+Key Features<br>
+Tech Stack<br>
+System Architecture<br>
+API Endpoints<br>
+Database Design<br>
+Performance Analysis<br>
+State Management<br>
+Security Considerations<br>
+Installation & Setup<br>
+Project Structure<br>
+Impact<br>
+Future Improvements<br>
+Acknowledgements<br>
 
 
 ## Overview
@@ -36,7 +36,13 @@ Despite growing awareness of equities and personal finance — driven by social 
 
 ## Our Solution
 StockIt reimagines the investing on-ramp by integrating four pillars into one cohesive platform:
-PillarWhat It DoesPaper TradingBuy and sell real stocks with virtual cash using live-like market data from FinnhubAI MentorshipGet context-aware portfolio feedback, loss and risk explanations, behavioural analysis, and stock analysis from a Groq-powered assistantGamified LearningEarn XP, complete missions, maintain daily streaks, and progress through structured lessons and quizzesScenario SimulationsStep into historical market crash scenarios to understand risk management without real consequences
+
+| Pillar | What It Does |
+|---|---|
+| **Paper Trading** | Buy and sell real stocks with virtual cash using live-like market data from Finnhub |
+| **AI Mentorship** | Get context-aware portfolio feedback, loss and risk explanations, behavioural analysis, and stock insights from a Groq-powered assistant |
+| **Gamified Learning** | Earn XP, complete missions, maintain daily streaks, and progress through structured lessons and quizzes |
+| **Scenario Simulations** | Step into historical market crash scenarios to understand risk management without real consequences |
 
 ## User Interface
 StockIt features a mobile-first, tab-based interface designed for daily engagement and progressive skill-building.
