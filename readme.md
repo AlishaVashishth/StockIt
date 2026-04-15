@@ -46,28 +46,38 @@ StockIt reimagines the investing on-ramp by integrating four pillars into one co
 | **Scenario Simulations** | Step into historical market crash scenarios to understand risk management without real consequences |
 
 ## User Interface
+
 StockIt features a mobile-first, tab-based interface designed for daily engagement and progressive skill-building.
-Home Dashboard
+
+<div align="center">
+
+### Home Dashboard
+
    <img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/fe99ef8e-0c5d-4e4a-b648-26afb08e5137" />
    </br>
 The personal command centre — displays your portfolio snapshot, live market indices (Nifty 50, Sensex, global markets), active missions with progress bars, your daily streak, and a recent activity feed. Indices refresh automatically every 10 seconds.
 
-Trading Screen
+### Trading Screen
+
 <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/85e895fe-f57d-4116-b406-21ac23992358" />
 </br>
 The core trading experience, designed to feel like a real brokerage terminal. Browse a paginated, searchable list of stocks with live prices, and a market status banner indicating whether the exchange is open or closed. Manual refresh and 10-second auto-polling keep data current.
 
-Stock Detail and Analysis
- <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c6a9e54b-7bd1-4303-9ab1-b4b9089c929d" />
- <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c42a9d8b-5fa3-4755-af0c-9c79404ddd00" />
+### Stock Detail and Analysis
+
+   <div align="center">
+          <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c6a9e54b-7bd1-4303-9ab1-b4b9089c929d" />
+          <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/c42a9d8b-5fa3-4755-af0c-9c79404ddd00" />
+   </div>
  </br>
 Deep-dive into any stock before committing. Features an interactive OHLCV chart across multiple time periods (1D, 1W, 1M, 3M, 1Y), AI-generated contextual insights about the stock's recent movement, and an inline buy/sell panel so you never have to navigate away to trade.
 
-Portfolio Analytics
+### Portfolio Analytics
+
    <div align="center">
-      <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/3bdb9b95-01a0-4fc4-ae9f-36bc13bb564f" />
-    <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/6f8ae47c-88c1-429c-a42f-2aaea42f3f1d" />
-      <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
+         <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/3bdb9b95-01a0-4fc4-ae9f-36bc13bb564f" />
+          <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/6f8ae47c-88c1-429c-a42f-2aaea42f3f1d" />
+         <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/79ae1b53-f054-42c9-a1ec-f1c9eb10bb19" />
 
    </div>
    </br>
@@ -81,17 +91,23 @@ A full holdings breakdown per stock
 
 An AI analysis button triggers a Groq-powered deep-dive of your entire portfolio.
 
-Learning & Gamification
+### Learning & Gamification
+
 <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/f93eeae4-2618-4236-a7a7-550af3836d2e" />
 </br>
 Structured lessons and multiple-choice quizzes covering investing fundamentals. Each completion awards XP, advances your level tier, and can complete active missions. A streak system rewards daily engagement.
 
-Loss Simulator (Time Machine)
+### Loss Simulator (Time Machine)
+
 <img width="300" height="650" alt="image" src="https://github.com/user-attachments/assets/00cc02ce-d647-4a8b-8258-05a77237c4b6" />
 </br>
 Presents historical market crash scenarios — users make allocation decisions and see how they would have played out. Scores are tracked and explained, turning past market disasters into personalised learning moments.
 
+</div>
+
 ## Key Features
+
+
 1. AI-Powered Investing Assistant
 The Groq-backed AI mentor operates across three distinct modes:
 
@@ -165,51 +181,51 @@ MethodEndpointDescriptionPOST/api/ai/mentorSend a message to the contextual AI m
 ## Database Design
 User data is stored in flat JSON files on the backend, scoped per user. The following entities are tracked:
 
-User profile — session info, XP, level tier, streak data
-Holdings — current stock positions with average buy price and quantity
-Transactions — full history of all buy and sell orders
-Learning progress — completed lessons, quiz scores, active and completed missions
-AI interaction logs — persisted conversation history for mentor continuity
+User profile — session info, XP, level tier, streak data<br>
+Holdings — current stock positions with average buy price and quantity<br>
+Transactions — full history of all buy and sell orders<br>
+Learning progress — completed lessons, quiz scores, active and completed missions<br>
+AI interaction logs — persisted conversation history for mentor continuity<br>
 
 
 ## Performance Analysis
 1. Current Bottlenecks
 
-Frequent polling every 10 seconds creates repeated network load
-Duplicate API calls across pages with no shared cache layer
-Lack of centralised state management leads to redundant fetches
+Frequent polling every 10 seconds creates repeated network load<br>
+Duplicate API calls across pages with no shared cache layer<br>
+Lack of centralised state management leads to redundant fetches<br>
 
 2. Optimization Opportunities
 
-Implement TTL-based caching on the backend to reduce upstream API calls
-Adopt React Query on the frontend for smart caching, deduplication, and background refetching
-Introduce a global state management solution (e.g. Zustand or Redux Toolkit) to eliminate data duplication across components
+Implement TTL-based caching on the backend to reduce upstream API calls<br>
+Adopt React Query on the frontend for smart caching, deduplication, and background refetching<br>
+Introduce a global state management solution (e.g. Zustand or Redux Toolkit) to eliminate data duplication across components<br>
 
 
 ## State Management
 Current approach:
 
-Local component state managed via useState and useEffect
-Cross-component updates handled through browser window events
+Local component state managed via useState and useEffect<br>
+Cross-component updates handled through browser window events<br>
 
 Known challenges:
 
-Data duplication across components that fetch the same resource independently
-No global synchronisation — updates in one tab or component are not automatically reflected elsewhere
+Data duplication across components that fetch the same resource independently<br>
+No global synchronisation — updates in one tab or component are not automatically reflected elsewhere<br>
 
 
-Security Considerations
-The current implementation uses a lightweight identity system suitable for a learning/demo context. The following limitations are acknowledged for future hardening:
+Security Considerations<br>
+The current implementation uses a lightweight identity system suitable for a learning/demo context. The following limitations are acknowledged for future hardening:<br>
 
-No token-based authentication (e.g. JWT or OAuth)
-Passwords stored in plaintext — hashing with bcrypt or argon2 is recommended before any production deployment
-Identity relies on a header-based system rather than signed session tokens
+No token-based authentication (e.g. JWT or OAuth)<br>
+Passwords stored in plaintext — hashing with bcrypt or argon2 is recommended before any production deployment<br>
+Identity relies on a header-based system rather than signed session tokens<br>
 
 
 ## Installation & Setup
 Prerequisites
 
-Node.js (v18 or above recommended)
+Node.js (v18 or above recommended)<br>
 Python 3.9+
 
 ## Environment Variables<br>
@@ -236,9 +252,8 @@ https://stockit-production-2ac3.up.railway.app
 <br><br>
 <div align="center">
    
-## .apk file link <br>
-
-https://drive.google.com/file/d/1VkG4sppgUjAlQeu_h6i2qHto-JF8W60C/view?usp=drivesdk
+   ## .apk file link <br>
+   https://drive.google.com/file/d/1VkG4sppgUjAlQeu_h6i2qHto-JF8W60C/view?usp=drivesdk
 
 </div>
 
