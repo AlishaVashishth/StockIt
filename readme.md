@@ -1,7 +1,8 @@
-## StockIt — Learn Investing Without Losing Money
+<div align="center">
+<h1>StockIt</h1> <br> — <I>Learn Investing Without Losing Money</I>
 
 A gamified stock market simulator with AI mentorship, real-time data, and risk-free paper trading.
-
+</div>
 
 ## Table of Contents
 
@@ -211,22 +212,40 @@ Prerequisites
 Node.js (v18 or above recommended)
 Python 3.9+
 
-Environment Variables
-Create a .env file in the backend/ directory with the following keys:
-envGROQ_API_KEY=your_groq_api_key
-FINNHUB_API_KEY=your_finnhub_api_key
-FRONTEND_URL=http://localhost:3000
-Backend Setup
-bashcd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-Frontend Setup
-bashcd frontend
-npm install
-npm run dev
-The frontend will be available at http://localhost:3000 and the backend API at http://localhost:8000.
+## Environment Variables<br>
+Create a `.env` file in the `backend/` directory with the following keys:<br><br>
 
+GROQ_API_KEY=your_groq_api_key<br>
+FINNHUB_API_KEY=your_finnhub_api_key<br>
+FRONTEND_URL=http://localhost:3000
+### Backend Setup<br>
+cd backend <br>
+pip install -r requirements.txt<br>
+uvicorn main:app --reload<br>
+### Frontend Setup<br>
+cd frontend<br>
+npm install<br>
+npm run dev<br>
+
+The frontend will be available at<br>
+http://localhost:3000
+<br><br>
+
+The backend at<br>
+https://stockit-production-2ac3.up.railway.app
+<br><br>
+<div align="center">
+   
+## .apk file link <br>
+
+https://drive.google.com/file/d/1VkG4sppgUjAlQeu_h6i2qHto-JF8W60C/view?usp=drivesdk
+
+</div>
+
+### Project Structure<br>
 ## Project Structure
+
+```
 stockit/
 ├── backend/
 │   ├── main.py
@@ -237,6 +256,7 @@ stockit/
     ├── pages/
     ├── components/
     └── utils/
+```
 
 ## Impact
 
