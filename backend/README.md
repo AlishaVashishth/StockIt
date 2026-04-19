@@ -1,4 +1,4 @@
-# InvestSim Backend
+# StockIt Backend
 
 An interactive, AI-powered paper trading simulator designed for young Indian investors to safely learn the ropes of the market without real capital risk.
 
