@@ -6,3 +6,4 @@ httpx
 pydantic
 pdfplumber
 requests
+python-multipart
