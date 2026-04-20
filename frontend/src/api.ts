@@ -104,4 +104,24 @@ export const api = {
   analyzePortfolio: (requestId?: string) => 
     fetchJson('/ai/analyze-portfolio', { method: 'POST', body: JSON.stringify({ requestId }) }),
   getMentorHistory: () => fetchJson('/ai/mentor-history'),
+  
+  // PDF
+  uploadPdf: (url: string) => fetchJson('/pdf/upload', { method: 'POST', body: JSON.stringify({ url }) }),
+  uploadPdfFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch('/pdf/upload-file', {
+      method: 'POST',
+      body: formData,
+    }).then(res => {
+        if (!res.ok) {
+          return res.json().then(err => { throw new Error(err.detail || 'Upload failed'); });
+        }
+        return res.json();
+      });
+  },
+  getFlashcards: (docId: string) => fetchJson('/pdf/flashcards', { method: 'POST', body: JSON.stringify({ 
+    doc_id: docId, 
+    question: 'Extract 8 to 10 key facts from this document. Return ONLY a raw JSON array, no markdown, no explanation, no code fences. Format: [{"question": "fact text here", "answer": ""}]. Put the fact in the question field and leave answer empty.' 
+  }) }),
 };

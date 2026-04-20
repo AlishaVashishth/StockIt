@@ -832,5 +832,19 @@
     "response": "CONCISE BULLETS:\n- Trend: Bullish with a 2.2% change\n- Recommendation: Buy\n- Why: Current price 1351.1 is higher than previous close 1322.0\n- Risk: Around 2% risk\n- Why not opposite: Trend is -0.16% but recent closes are high like 1351.7\n\nDETAILED:\nThe trend for ICICI Bank Ltd is slightly negative at -0.16%, but the current price of 1351.1 is higher than the previous close of 1322.0, indicating a bullish movement. The recent closes, such as 1351.7 and 1351.5, are also higher than the latest close of 1349.7. The high of 1356.5 and low of 1345.1 suggest a relatively stable range. With a large market cap and low risk level, buying ICICI Bank Ltd seems like a good option, considering the overall positive change of 2.2% and a current price near the day high of 1357.0.",
     "error": null,
     "timestamp": "2026-04-14T12:42:08.851542+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with a 0.12% increase\n- Recommendation: Buy\n- Why: Latest close at 1364.5 is higher than the low of 1359.7\n- Risk: Around 5% risk\n- Why not opposite: Day high of 1368.4 shows upward momentum\n\nDETAILED:\nThe trend is bullish, as shown by the 0.12% increase. With a latest close of 1364.5 and a high of 1366.8, the stock is showing signs of upward movement. The recent closes, ranging from 1364.5 to 1366.1, also indicate a positive trend. The day high of 1368.4 further supports this, suggesting that the stock has the potential to continue rising. Additionally, the low of 1359.7 is higher than the previous close of 1345.8, indicating a strong foundation for the stock's price. Overall, the data suggests that buying Reliance Industries Ltd could be a good decision, with around 5% risk involved.",
+    "error": null,
+    "timestamp": "2026-04-19T23:36:17.329329+00:00"
+  },
+  {
+    "trigger": "VIEW",
+    "symbol": "RELIANCE",
+    "response": "CONCISE BULLETS:\n- Trend: Bullish with a 0.12% increase\n- Recommendation: Buy\n- Why: Latest close at 1364.5 is higher than the low of 1359.7\n- Risk: Around 5% risk\n- Why not opposite: Day high of 1368.4 shows upward momentum\n\nDETAILED:\nThe trend is bullish, as shown by the 0.12% increase. With a latest close of 1364.5 and a high of 1366.8, the stock is showing signs of upward movement. The recent closes, ranging from 1364.5 to 1366.1, also indicate a positive trend. The day high of 1368.4 further supports this, suggesting that the stock has the potential to continue rising. Additionally, the low of 1359.7 is higher than the previous close of 1345.8, indicating a strong foundation for the stock's price. Overall, the data suggests that buying Reliance Industries Ltd could be a good decision, with around 5% risk involved.",
+    "error": null,
+    "timestamp": "2026-04-19T23:36:17.332066+00:00"
   }
 ]

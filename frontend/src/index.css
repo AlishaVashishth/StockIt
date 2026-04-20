@@ -43,6 +43,22 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root {
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 390px;
+  overflow: hidden;
+  position: relative;
 }
 
 h1, h2, h3, h4, h5, h6 {

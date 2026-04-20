@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -86,6 +86,7 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  
   useEffect(() => {
     // One-time safety migration: preserve existing user's legacy local progress
     // after introducing per-user scoped storage keys.

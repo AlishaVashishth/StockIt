@@ -16,6 +16,8 @@ import {
 } from '../utils/progressUtils';
 import CongratsModal from '../components/CongratsModal';
 import { getCurrentLevel, getTotalXP, getXPProgress } from '../utils/xpUtils';
+import FlashcardViewer from '../components/pdf/FlashcardViewer'; 
+
 
 interface ModuleCardProps {
   id: string;
@@ -124,6 +126,125 @@ export default function Learn() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeConcept, setActiveConcept] = useState<any | null>(null);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfAnalyzing, setPdfAnalyzing] = useState(false);
+  const [flashcards, setFlashcards] = useState<{ question: string; answer: string }[] | null>(null);
+  const [docId, setDocId] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [useFileUpload, setUseFileUpload] = useState(false);
+
+  const handleAnalyzePdf = async () => {
+    if (useFileUpload) {
+      await handleFileUpload();
+    } else {
+      await handleUrlUpload();
+    }
+  };
+
+  const handleUrlUpload = async () => {
+    if (!pdfUrl.trim()) return;
+    
+    setPdfAnalyzing(true);
+    setPdfError(null);
+    
+    try {
+      console.log('Starting PDF analysis for:', pdfUrl.trim());
+      
+      // Upload PDF
+      const uploadResponse = await api.uploadPdf(pdfUrl.trim());
+      console.log('Upload response:', uploadResponse);
+      const { doc_id } = uploadResponse;
+      setDocId(doc_id);
+      
+      // Get flashcards
+      await generateFlashcards(doc_id);
+    } catch (error) {
+      console.error('Error analyzing PDF:', error);
+      const errorMessage = error?.message || 'Failed to analyze PDF. Please try again.';
+      setPdfError(errorMessage);
+    } finally {
+      setPdfAnalyzing(false);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,application/pdf';
+    
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      setPdfAnalyzing(true);
+      setPdfError(null);
+      
+      try {
+        console.log('Uploading PDF file:', file.name);
+        
+        // Upload PDF file
+        const uploadResponse = await api.uploadPdfFile(file);
+        console.log('File upload response:', uploadResponse);
+        const { doc_id } = uploadResponse;
+        setDocId(doc_id);
+        
+        // Get flashcards
+        await generateFlashcards(doc_id);
+      } catch (error) {
+        console.error('Error uploading PDF file:', error);
+        const errorMessage = error?.message || 'Failed to upload PDF file. Please try again.';
+        setPdfError(errorMessage);
+      } finally {
+        setPdfAnalyzing(false);
+      }
+    };
+    
+    fileInput.click();
+  };
+
+  const generateFlashcards = async (doc_id: string) => {
+    try {
+      // Get flashcards
+      const flashcardsResponse = await api.getFlashcards(doc_id);
+      console.log('Flashcards response:', flashcardsResponse);
+      
+      // Parse flashcards from the new dedicated endpoint response
+      let flashcards = [];
+      
+      if (flashcardsResponse.flashcards && Array.isArray(flashcardsResponse.flashcards)) {
+        // Direct flashcards array from the new endpoint
+        flashcards = flashcardsResponse.flashcards;
+      } else if (flashcardsResponse.answer) {
+        // Fallback for old endpoint or parsing issues
+        try {
+          // Try to parse JSON from answer field
+          const parsed = JSON.parse(flashcardsResponse.answer);
+          if (Array.isArray(parsed)) {
+            flashcards = parsed;
+          } else {
+            // Single flashcard object
+            flashcards = [parsed];
+          }
+        } catch (e) {
+          // If parsing fails, create a single flashcard with the answer
+          flashcards = [{
+            question: flashcardsResponse.question || "Generated from PDF",
+            answer: flashcardsResponse.answer
+          }];
+        }
+      }
+      
+      if (flashcards.length > 0) {
+        setFlashcards(flashcards);
+        console.log('Parsed flashcards:', flashcards);
+      } else {
+        setPdfError('No flashcards could be generated from this PDF.');
+      }
+    } catch (error) {
+      console.error('Error generating flashcards:', error);
+      setPdfError('Failed to extract insights. Please try again.');
+    }
+  };
   const streakCount = user?.streakCount ?? user?.daysActive ?? 0;
   const totalXP = getTotalXP();
   const currentLevel = getCurrentLevel();
@@ -368,6 +489,141 @@ export default function Learn() {
       </header>
 
       <main className="flex-1 pt-[80px] pb-[90px] px-4 overflow-y-auto no-scrollbar">
+
+        {/* PDF Learn Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8 p-5 rounded-2xl border border-border bg-bg-card"
+        >
+          <h2 className="text-base font-heading font-bold text-text-primary mb-1">Analyse Real Reports</h2>
+          <p className="text-xs text-text-muted mb-4">Upload any annual report or research PDF to get key insights</p>
+
+          {!flashcards ? (
+            <>
+              {/* Toggle between URL and file upload */}
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setUseFileUpload(false)}
+                  className={`text-xs font-mono px-3 py-1 rounded-lg transition-colors ${
+                    !useFileUpload 
+                      ? 'bg-accent-gold text-bg-primary' 
+                      : 'bg-bg-secondary text-text-muted'
+                  }`}
+                >
+                  URL
+                </button>
+                <button
+                  onClick={() => setUseFileUpload(true)}
+                  className={`text-xs font-mono px-3 py-1 rounded-lg transition-colors ${
+                    useFileUpload 
+                      ? 'bg-bg-secondary text-text-muted' 
+                      : 'bg-accent-gold text-bg-primary'
+                  }`}
+                >
+                  Upload File
+                </button>
+              </div>
+
+              {useFileUpload ? (
+                <div className="border-2 border-dashed border-border rounded-xl p-4 text-center">
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={(e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        setPdfUrl(file.name);
+                      }
+                    }}
+                    className="hidden"
+                    id="pdf-file-input"
+                  />
+                  <label 
+                    htmlFor="pdf-file-input" 
+                    className="cursor-pointer flex flex-col items-center justify-center py-4"
+                  >
+                    <div className="w-12 h-12 bg-accent-gold/20 rounded-full flex items-center justify-center mb-2">
+                      <span className="text-lg">📄</span>
+                    </div>
+                    <span className="text-sm text-text-primary">
+                      {pdfUrl || 'Choose PDF file'}
+                    </span>
+                    <span className="text-xs text-text-muted mt-1">
+                      Click to browse or drag file here
+                    </span>
+                  </label>
+                </div>
+              ) : (
+                <input
+                  type="url"
+                  value={pdfUrl}
+                  onChange={(e) => setPdfUrl(e.target.value)}
+                  placeholder="Paste PDF URL"
+                  className="w-full bg-bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-gold/50 mb-3"
+                />
+              )}
+
+              <button
+                onClick={handleAnalyzePdf}
+                disabled={pdfAnalyzing || (!useFileUpload && !pdfUrl.trim())}
+                className="w-full min-h-[48px] rounded-xl bg-accent-gold text-bg-primary font-bold text-sm flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
+              >
+                {pdfAnalyzing ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>{useFileUpload ? 'Processing File...' : 'Analyzing Report...'}</span>
+                  </>
+                ) : (
+                  <span>{useFileUpload ? 'Analyse Report' : 'Analyze Report'}</span>
+                )}
+              </button>
+
+              {pdfAnalyzing && (
+                <div className="mt-4 space-y-2">
+                  {[80, 60, 40].map((w, i) => (
+                    <div key={i} className="h-3 bg-bg-secondary rounded-full overflow-hidden">
+                      <motion.div
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2, ease: 'easeInOut' }}
+                        className="h-full w-1/3 bg-accent-gold/20 rounded-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {pdfError && (
+                <div className="mt-4 p-3 bg-accent-red/10 border border-accent-red/30 rounded-xl">
+                  <p className="text-xs text-accent-red">{pdfError}</p>
+                  {pdfError.includes('blocking automated access') && (
+                    <p className="text-xs text-accent-red mt-2">
+                      💡 Try uploading the PDF file directly instead of using a URL.
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-mono text-accent-gold uppercase tracking-widest">{flashcards.length} INSIGHTS EXTRACTED</span>
+                <button
+                  onClick={() => { setFlashcards(null); setPdfUrl(''); setDocId(null); setPdfError(null); }}
+                  className="text-[10px] font-mono text-text-muted underline underline-offset-2 active:opacity-60"
+                >
+                  Change PDF
+                </button>
+              </div>
+              <FlashcardViewer
+                cards={flashcards}
+                onDone={() => { setFlashcards(null); setPdfUrl(''); setDocId(null); setPdfError(null); }}
+              />
+            </>
+          )}
+        </motion.div>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

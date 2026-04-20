@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 load_dotenv()
 
-from routers import user, portfolio, stocks, trades, ai, learn, time_machine, dashboard
+from routers import user, portfolio, stocks, trades, ai, learn, time_machine, dashboard, pdf
 
 app = FastAPI(title="InvestSim API")
 
@@ -52,6 +52,7 @@ app.include_router(ai.router, prefix="/api/ai")
 app.include_router(learn.router, prefix="/api/learn")
 app.include_router(time_machine.router, prefix="/api/loss-simulator")
 app.include_router(dashboard.router, prefix="/api/dashboard")
+app.include_router(pdf.router, prefix="/api/pdf")
 
 @app.get("/api/health")
 def read_health():

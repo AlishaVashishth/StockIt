@@ -4,3 +4,5 @@ python-dotenv
 yfinance
 httpx
 pydantic
+pdfplumber
+requests
