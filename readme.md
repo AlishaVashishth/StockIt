@@ -12,7 +12,7 @@ A gamified stock market simulator with AI mentorship, real-time data, and risk-f
 
 <br/>
 
-[![Download APK](https://img.shields.io/badge/Download%20APK-Android-brightgreen?style=for-the-badge&logo=android)](https://drive.google.com/file/d/1VkG4sppgUjAlQeu_h6i2qHto-JF8W60C/view?usp=drivesdk)
+[![Download APK](https://img.shields.io/badge/Download%20APK-Android-brightgreen?style=for-the-badge&logo=android)](https://drive.google.com/file/d/1MJzoklsLdJSyu8vYBDwTTM_iTArNW6fv/view?usp=sharing)
 [![Backend](https://img.shields.io/badge/Backend-Live%20on%20Railway-blueviolet?style=for-the-badge)](https://stockit-production-2ac3.up.railway.app)
 
 </div>
