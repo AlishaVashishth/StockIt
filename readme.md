@@ -105,6 +105,16 @@ Deep-dive into any stock before committing. Features an interactive OHLCV chart 
 
 ---
 
+### Report Analyser
+
+<img width="300" height="650" alt="Report Analyser" src="https://github.com/user-attachments/assets/8eefdaf6-a4b3-4285-9137-50cd75a75bc9" />
+<img width="300" height="650" alt="Report Analyser" src="https://github.com/user-attachments/assets/3f970f7b-7fce-414f-a8ea-9c8ec35c9a0e" />
+
+
+Upload any annual report, research note, or financial PDF — either by pasting a direct URL or uploading a file. The AI extracts up to 10 key insights and presents them as swipeable, categorised flashcards (Facts, Risks, Highlights, and more). Users can navigate via swipe gestures or Prev / Next controls. A progress indicator tracks position across the insight deck.
+
+---
+
 ### Portfolio Analytics
 
 <img width="300" height="650" alt="Portfolio 1" src="https://github.com/user-attachments/assets/3bdb9b95-01a0-4fc4-ae9f-36bc13bb564f" />
@@ -141,6 +151,10 @@ The Groq-backed AI mentor operates across three distinct modes:
 
 **Portfolio analysis** — sends your full holdings, P&L, and diversity score to the model and returns a structured critique with actionable suggestions.
 
+**Report analysis** — parses any uploaded annual report or research PDF (via URL or file upload) and extracts up to 10 ranked insights, presented as swipeable categorised flashcards covering facts, risks, and key highlights.
+
+**Stock analysis** — generates contextual, AI-powered insights for any individual stock based on its recent price movement, OHLCV data, surfaced directly on the stock detail screen before you trade.
+
 **Contextual mentor chat** — answers natural-language investing questions with awareness of your current portfolio and learning progress.
 
 **Session continuity** — interaction history is persisted per user so the assistant builds context across sessions.
@@ -155,6 +169,28 @@ The Groq-backed AI mentor operates across three distinct modes:
 
 **Live indices** — Nifty 50, Sensex, and select global indices fetched and normalised every 10 seconds on the home and trading screens. Normalised quote objects returned by the backend mean the frontend never needs to know which data source was used.
 
+### Portfolio Intelligence
+
+**Diversity score** — a proprietary metric calculated by the backend that penalises over-concentration in a single stock or sector.
+
+**Best/worst performer cards** — surfaced automatically from live price enrichment on each portfolio fetch.
+
+**P&L enrichment** — the backend recomputes current holding values against live prices on every `/api/portfolio` request, so numbers are always fresh.
+
+**Transaction history** — full trade log accessible via `/api/portfolio/transactions`.
+
+### Report Analyser
+
+An AI-powered document reader that turns dense financial PDFs into digestible insight decks.
+
+**Dual input modes** — users can paste a direct PDF URL or upload a file from their device, making it compatible with annual reports, SEBI filings, brokerage research notes, and any other financial document.
+
+**Insight extraction** — the backend parses the PDF and passes its content to the AI model, which identifies and returns up to 10 structured insights ranked by relevance and significance.
+
+**Swipeable flashcard UI** — insights are presented one at a time as categorised cards (e.g. FACT, RISK, HIGHLIGHT) with a dot-based progress tracker, swipe-left / swipe-right navigation, and Prev / Next controls for accessibility.
+
+**Learning integration** — completing a report analysis contributes to daily streak maintenance and can satisfy active missions, reinforcing the habit of reading primary financial sources.
+
 ### Gamified Learning System
 
 **XP & level tiers** — every trade, lesson completion, quiz pass, and mission finish awards XP; users level up through named tiers.
@@ -168,16 +204,6 @@ The Groq-backed AI mentor operates across three distinct modes:
 ### Risk & Scenario Simulator
 
 Pre-built historical scenarios (market crashes, sector collapses, black swan events) available via the `/api/loss-simulator` router. Users make allocation decisions within the scenario, then see scored outcomes. Scores are explained with AI-generated commentary connecting the simulated loss to real risk management principles.
-
-### Portfolio Intelligence
-
-**Diversity score** — a proprietary metric calculated by the backend that penalises over-concentration in a single stock or sector.
-
-**Best/worst performer cards** — surfaced automatically from live price enrichment on each portfolio fetch.
-
-**P&L enrichment** — the backend recomputes current holding values against live prices on every `/api/portfolio` request, so numbers are always fresh.
-
-**Transaction history** — full trade log accessible via `/api/portfolio/transactions`.
 
 ---
 
