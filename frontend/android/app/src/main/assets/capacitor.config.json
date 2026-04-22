@@ -1,0 +1,5 @@
+{
+	"appId": "com.stockit.app",
+	"appName": "StockIt",
+	"webDir": "dist"
+}
